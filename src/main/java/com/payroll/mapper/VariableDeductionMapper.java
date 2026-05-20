@@ -13,8 +13,16 @@ public interface VariableDeductionMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "modifiedBy", ignore = true)
     VariableDeduction toEntity(VariableDeductionRequestDTO requestDTO);
 
+    @Mapping(target = "createdById",       source = "createdBy.id")
+    @Mapping(target = "createdByCode",     source = "createdBy.code")
+    @Mapping(target = "createdByUserName", source = "createdBy.userName")
+    @Mapping(target = "modifiedById",      source = "modifiedBy.id")
+    @Mapping(target = "modifiedByCode",    source = "modifiedBy.code")
+    @Mapping(target = "modifiedByUserName",source = "modifiedBy.userName")
     VariableDeductionResponseDTO toResponseDTO(VariableDeduction entity);
 
     List<VariableDeductionResponseDTO> toResponseDTOList(List<VariableDeduction> entities);
@@ -23,5 +31,6 @@ public interface VariableDeductionMapper {
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "modifiedBy", ignore = true)
     void updateEntityFromDTO(VariableDeductionRequestDTO requestDTO, @MappingTarget VariableDeduction entity);
 }

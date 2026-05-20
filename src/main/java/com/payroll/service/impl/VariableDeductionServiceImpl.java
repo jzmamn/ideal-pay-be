@@ -3,9 +3,11 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.VariableDeductionRequestDTO;
 import com.payroll.dto.response.VariableDeductionResponseDTO;
 import com.payroll.entity.VariableDeduction;
+import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.VariableDeductionMapper;
 import com.payroll.repository.VariableDeductionRepository;
+import com.payroll.repository.UsrRepository;
 import com.payroll.service.VariableDeductionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.util.List;
 public class VariableDeductionServiceImpl implements VariableDeductionService {
 
     private final VariableDeductionRepository variableDeductionRepository;
+    private final UsrRepository usrRepository;
     private final VariableDeductionMapper variableDeductionMapper;
 
     @Override
@@ -55,6 +58,8 @@ public class VariableDeductionServiceImpl implements VariableDeductionService {
                     "A variable deduction with code '" + requestDTO.getCode() + "' already exists.");
         }
         VariableDeduction entity = variableDeductionMapper.toEntity(requestDTO);
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return variableDeductionMapper.toResponseDTO(variableDeductionRepository.save(entity));
     }
 
@@ -63,6 +68,9 @@ public class VariableDeductionServiceImpl implements VariableDeductionService {
         VariableDeduction existing = variableDeductionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("VariableDeduction", "id", id));
         variableDeductionMapper.updateEntityFromDTO(requestDTO, existing);
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
         return variableDeductionMapper.toResponseDTO(variableDeductionRepository.save(existing));
     }
 

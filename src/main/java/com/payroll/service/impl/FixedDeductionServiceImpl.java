@@ -3,9 +3,11 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.FixedDeductionRequestDTO;
 import com.payroll.dto.response.FixedDeductionResponseDTO;
 import com.payroll.entity.FixedDeduction;
+import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.FixedDeductionMapper;
 import com.payroll.repository.FixedDeductionRepository;
+import com.payroll.repository.UsrRepository;
 import com.payroll.service.FixedDeductionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.util.List;
 public class FixedDeductionServiceImpl implements FixedDeductionService {
 
     private final FixedDeductionRepository fixedDeductionRepository;
+    private final UsrRepository usrRepository;
     private final FixedDeductionMapper fixedDeductionMapper;
 
     @Override
@@ -55,6 +58,8 @@ public class FixedDeductionServiceImpl implements FixedDeductionService {
                     "A fixed deduction with code '" + requestDTO.getCode() + "' already exists.");
         }
         FixedDeduction entity = fixedDeductionMapper.toEntity(requestDTO);
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return fixedDeductionMapper.toResponseDTO(fixedDeductionRepository.save(entity));
     }
 
@@ -63,6 +68,9 @@ public class FixedDeductionServiceImpl implements FixedDeductionService {
         FixedDeduction existing = fixedDeductionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("FixedDeduction", "id", id));
         fixedDeductionMapper.updateEntityFromDTO(requestDTO, existing);
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
         return fixedDeductionMapper.toResponseDTO(fixedDeductionRepository.save(existing));
     }
 

@@ -3,9 +3,11 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.DepartmentRequestDTO;
 import com.payroll.dto.response.DepartmentResponseDTO;
 import com.payroll.entity.Department;
+import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.DepartmentMapper;
 import com.payroll.repository.DepartmentRepository;
+import com.payroll.repository.UsrRepository;
 import com.payroll.service.DepartmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -20,6 +22,7 @@ import java.util.List;
 public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepository departmentRepository;
+    private final UsrRepository usrRepository;
     private final DepartmentMapper departmentMapper;
 
     @Override
@@ -54,6 +57,8 @@ public class DepartmentServiceImpl implements DepartmentService {
                     "A department with code '" + requestDTO.getCode() + "' already exists.");
         }
         Department entity = departmentMapper.toEntity(requestDTO);
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return departmentMapper.toResponseDTO(departmentRepository.save(entity));
     }
 
@@ -62,6 +67,9 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department existing = departmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Department", "id", id));
         departmentMapper.updateEntityFromDTO(requestDTO, existing);
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
         return departmentMapper.toResponseDTO(departmentRepository.save(existing));
     }
 

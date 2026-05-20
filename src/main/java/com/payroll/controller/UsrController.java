@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/payroll/users")
+@RequestMapping("/payroll/user")
 @RequiredArgsConstructor
 public class UsrController {
 
     private final UsrService usrService;
 
-    // GET /payroll/users
+    // GET /payroll/user
     @GetMapping
     public ResponseEntity<ApiResponseDTO<List<UsrResponseDTO>>> getAllUsers(@RequestParam(value = "showDefaultRow", defaultValue = "false") boolean showDefaultRow, @RequestParam(value = "isActive", defaultValue = "all") String isActive) {
         return ResponseEntity.ok(ApiResponseDTO.success(
@@ -28,7 +28,7 @@ public class UsrController {
                 usrService.getAllUsers(showDefaultRow, isActive)));
     }
 
-    // GET /payroll/users/{id}
+    // GET /payroll/user/{id}
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDTO<UsrResponseDTO>> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponseDTO.success(
@@ -36,7 +36,7 @@ public class UsrController {
                 usrService.getUserById(id)));
     }
 
-    // POST /payroll/users
+    // POST /payroll/user
     @PostMapping
     public ResponseEntity<ApiResponseDTO<UsrResponseDTO>> createUser(
             @Valid @RequestBody UsrRequestDTO requestDTO) {
@@ -46,7 +46,7 @@ public class UsrController {
                         usrService.createUser(requestDTO)));
     }
 
-    // PUT /payroll/users/{id}
+    // PUT /payroll/user/{id}
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponseDTO<UsrResponseDTO>> updateUser(
             @PathVariable Long id,
@@ -56,7 +56,7 @@ public class UsrController {
                 usrService.updateUser(id, requestDTO)));
     }
 
-    // PATCH /payroll/users/{id}/password
+    // PATCH /payroll/user/{id}/password
     @PatchMapping("/{id}/password")
     public ResponseEntity<ApiResponseDTO<Void>> updatePassword(
             @PathVariable Long id,
@@ -65,7 +65,7 @@ public class UsrController {
         return ResponseEntity.ok(ApiResponseDTO.success("Password updated successfully", null));
     }
 
-    // DELETE /payroll/users/{id}
+    // DELETE /payroll/user/{id}
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponseDTO<Void>> deleteUser(@PathVariable Long id) {
         usrService.deleteUser(id);

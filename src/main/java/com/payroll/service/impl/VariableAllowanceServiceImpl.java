@@ -3,9 +3,11 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.VariableAllowanceRequestDTO;
 import com.payroll.dto.response.VariableAllowanceResponseDTO;
 import com.payroll.entity.VariableAllowance;
+import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.VariableAllowanceMapper;
 import com.payroll.repository.VariableAllowanceRepository;
+import com.payroll.repository.UsrRepository;
 import com.payroll.service.VariableAllowanceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.util.List;
 public class VariableAllowanceServiceImpl implements VariableAllowanceService {
 
     private final VariableAllowanceRepository variableAllowanceRepository;
+    private final UsrRepository usrRepository;
     private final VariableAllowanceMapper variableAllowanceMapper;
 
     @Override
@@ -55,6 +58,8 @@ public class VariableAllowanceServiceImpl implements VariableAllowanceService {
                     "A variable allowance with code '" + requestDTO.getCode() + "' already exists.");
         }
         VariableAllowance entity = variableAllowanceMapper.toEntity(requestDTO);
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return variableAllowanceMapper.toResponseDTO(variableAllowanceRepository.save(entity));
     }
 
@@ -63,6 +68,9 @@ public class VariableAllowanceServiceImpl implements VariableAllowanceService {
         VariableAllowance existing = variableAllowanceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("VariableAllowance", "id", id));
         variableAllowanceMapper.updateEntityFromDTO(requestDTO, existing);
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
         return variableAllowanceMapper.toResponseDTO(variableAllowanceRepository.save(existing));
     }
 

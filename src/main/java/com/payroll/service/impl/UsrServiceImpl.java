@@ -3,16 +3,17 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.UsrRequestDTO;
 import com.payroll.dto.response.UsrResponseDTO;
 import com.payroll.entity.Usr;
+import com.payroll.entity.UserRole;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.UsrMapper;
+import com.payroll.repository.UserRoleRepository;
 import com.payroll.repository.UsrRepository;
 import com.payroll.service.UsrService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import org.springframework.data.domain.Sort;
 
 import java.util.List;
 
@@ -22,6 +23,7 @@ import java.util.List;
 public class UsrServiceImpl implements UsrService {
 
     private final UsrRepository usrRepository;
+    private final UserRoleRepository userRoleRepository;
     private final UsrMapper usrMapper;
     private final PasswordEncoder passwordEncoder;
 
@@ -56,9 +58,24 @@ public class UsrServiceImpl implements UsrService {
             throw new IllegalArgumentException(
                     "A user with code '" + requestDTO.getCode() + "' already exists.");
         }
+        if (usrRepository.existsByUserNameIgnoreCase(requestDTO.getUserName())) {
+            throw new IllegalArgumentException(
+                    "A user with username '" + requestDTO.getUserName() + "' already exists.");
+        }
+        if (usrRepository.existsByEmailIgnoreCase(requestDTO.getEmail())) {
+            throw new IllegalArgumentException(
+                    "A user with email '" + requestDTO.getEmail() + "' already exists.");
+        }
         Usr entity = usrMapper.toEntity(requestDTO);
+
         // Hash the password before saving
         entity.setPassword(passwordEncoder.encode(requestDTO.getPassword()));
+
+        // Resolve FK relationships using getReferenceById (no extra DB hit)
+        entity.setRole(userRoleRepository.getReferenceById(requestDTO.getRoleId()));
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+
         return usrMapper.toResponseDTO(usrRepository.save(entity));
     }
 
@@ -66,8 +83,18 @@ public class UsrServiceImpl implements UsrService {
     public UsrResponseDTO updateUser(Long id, UsrRequestDTO requestDTO) {
         Usr existing = usrRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", id));
+
         // password is ignored in updateEntityFromDTO — use updatePassword() separately
         usrMapper.updateEntityFromDTO(requestDTO, existing);
+
+        // Update FK relationships
+        if (requestDTO.getRoleId() != null) {
+            existing.setRole(userRoleRepository.getReferenceById(requestDTO.getRoleId()));
+        }
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
+
         return usrMapper.toResponseDTO(usrRepository.save(existing));
     }
 

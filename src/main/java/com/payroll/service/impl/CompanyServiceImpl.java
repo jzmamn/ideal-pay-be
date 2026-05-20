@@ -3,9 +3,11 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.CompanyRequestDTO;
 import com.payroll.dto.response.CompanyResponseDTO;
 import com.payroll.entity.Company;
+import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.CompanyMapper;
 import com.payroll.repository.CompanyRepository;
+import com.payroll.repository.UsrRepository;
 import com.payroll.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -20,6 +22,7 @@ import java.util.List;
 public class CompanyServiceImpl implements CompanyService {
 
     private final CompanyRepository companyRepository;
+    private final UsrRepository usrRepository;
     private final CompanyMapper companyMapper;
 
     @Override
@@ -54,6 +57,8 @@ public class CompanyServiceImpl implements CompanyService {
                     "A company with code '" + requestDTO.getCode() + "' already exists.");
         }
         Company entity = companyMapper.toEntity(requestDTO);
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return companyMapper.toResponseDTO(companyRepository.save(entity));
     }
 
@@ -62,6 +67,9 @@ public class CompanyServiceImpl implements CompanyService {
         Company existing = companyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Company", "id", id));
         companyMapper.updateEntityFromDTO(requestDTO, existing);
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
         return companyMapper.toResponseDTO(companyRepository.save(existing));
     }
 

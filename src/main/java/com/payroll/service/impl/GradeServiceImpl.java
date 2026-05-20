@@ -3,9 +3,11 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.GradeRequestDTO;
 import com.payroll.dto.response.GradeResponseDTO;
 import com.payroll.entity.Grade;
+import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.GradeMapper;
 import com.payroll.repository.GradeRepository;
+import com.payroll.repository.UsrRepository;
 import com.payroll.service.GradeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -20,6 +22,7 @@ import java.util.List;
 public class GradeServiceImpl implements GradeService {
 
     private final GradeRepository gradeRepository;
+    private final UsrRepository usrRepository;
     private final GradeMapper gradeMapper;
 
     @Override
@@ -54,6 +57,8 @@ public class GradeServiceImpl implements GradeService {
                     "A grade with code '" + requestDTO.getCode() + "' already exists.");
         }
         Grade entity = gradeMapper.toEntity(requestDTO);
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return gradeMapper.toResponseDTO(gradeRepository.save(entity));
     }
 
@@ -62,6 +67,9 @@ public class GradeServiceImpl implements GradeService {
         Grade existing = gradeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Grade", "id", id));
         gradeMapper.updateEntityFromDTO(requestDTO, existing);
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
         return gradeMapper.toResponseDTO(gradeRepository.save(existing));
     }
 

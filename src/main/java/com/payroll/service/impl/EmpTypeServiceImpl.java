@@ -3,9 +3,11 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.EmpTypeRequestDTO;
 import com.payroll.dto.response.EmpTypeResponseDTO;
 import com.payroll.entity.EmpType;
+import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.EmpTypeMapper;
 import com.payroll.repository.EmpTypeRepository;
+import com.payroll.repository.UsrRepository;
 import com.payroll.service.EmpTypeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -20,6 +22,7 @@ import java.util.List;
 public class EmpTypeServiceImpl implements EmpTypeService {
 
     private final EmpTypeRepository empTypeRepository;
+    private final UsrRepository usrRepository;
     private final EmpTypeMapper empTypeMapper;
 
     @Override
@@ -54,6 +57,8 @@ public class EmpTypeServiceImpl implements EmpTypeService {
                     "An employee type with code '" + requestDTO.getCode() + "' already exists.");
         }
         EmpType entity = empTypeMapper.toEntity(requestDTO);
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return empTypeMapper.toResponseDTO(empTypeRepository.save(entity));
     }
 
@@ -62,6 +67,9 @@ public class EmpTypeServiceImpl implements EmpTypeService {
         EmpType existing = empTypeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("EmpType", "id", id));
         empTypeMapper.updateEntityFromDTO(requestDTO, existing);
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
         return empTypeMapper.toResponseDTO(empTypeRepository.save(existing));
     }
 

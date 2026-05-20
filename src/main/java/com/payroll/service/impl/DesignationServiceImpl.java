@@ -3,9 +3,11 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.DesignationRequestDTO;
 import com.payroll.dto.response.DesignationResponseDTO;
 import com.payroll.entity.Designation;
+import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.DesignationMapper;
 import com.payroll.repository.DesignationRepository;
+import com.payroll.repository.UsrRepository;
 import com.payroll.service.DesignationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -20,6 +22,7 @@ import java.util.List;
 public class DesignationServiceImpl implements DesignationService {
 
     private final DesignationRepository designationRepository;
+    private final UsrRepository usrRepository;
     private final DesignationMapper designationMapper;
 
     @Override
@@ -54,6 +57,8 @@ public class DesignationServiceImpl implements DesignationService {
                     "A designation with code '" + requestDTO.getCode() + "' already exists.");
         }
         Designation entity = designationMapper.toEntity(requestDTO);
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return designationMapper.toResponseDTO(designationRepository.save(entity));
     }
 
@@ -62,6 +67,9 @@ public class DesignationServiceImpl implements DesignationService {
         Designation existing = designationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Designation", "id", id));
         designationMapper.updateEntityFromDTO(requestDTO, existing);
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
         return designationMapper.toResponseDTO(designationRepository.save(existing));
     }
 

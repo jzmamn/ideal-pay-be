@@ -1,8 +1,11 @@
 package com.payroll.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.payroll.converter.BooleanToYNConverter;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -25,26 +28,40 @@ public class Usr {
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
+    @Column(name = "user_name", nullable = false, unique = true, length = 50)
+    private String userName;
+
+    @Column(name = "email", nullable = false, unique = true, length = 100)
+    private String email;
+
     @Column(name = "password", nullable = false, length = 255)
     private String password;
 
-    @Column(name = "role_id", nullable = false)
-    private Long roleId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    private UserRole role;
 
     @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "is_active", nullable = false, length = 1)
+    @Column(name = "is_active", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
     private Boolean isActive;
 
-    @Column(name = "created_by", nullable = false)
-    private Long createdBy;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by", nullable = false)
+    @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
+    private Usr createdBy;
 
+    @CreationTimestamp
     @Column(name = "created_date", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdDate;
 
-    @Column(name = "modified_by", nullable = false)
-    private Long modifiedBy;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "modified_by", nullable = false)
+    @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
+    private Usr modifiedBy;
 
+    @UpdateTimestamp
     @Column(name = "modified_date", nullable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime modifiedDate;

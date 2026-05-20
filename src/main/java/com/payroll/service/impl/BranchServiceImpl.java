@@ -3,9 +3,11 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.BranchRequestDTO;
 import com.payroll.dto.response.BranchResponseDTO;
 import com.payroll.entity.Branch;
+import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.BranchMapper;
 import com.payroll.repository.BranchRepository;
+import com.payroll.repository.UsrRepository;
 import com.payroll.service.BranchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -20,6 +22,7 @@ import java.util.List;
 public class BranchServiceImpl implements BranchService {
 
     private final BranchRepository branchRepository;
+    private final UsrRepository usrRepository;
     private final BranchMapper branchMapper;
 
     @Override
@@ -54,6 +57,8 @@ public class BranchServiceImpl implements BranchService {
                     "A branch with code '" + requestDTO.getCode() + "' already exists.");
         }
         Branch entity = branchMapper.toEntity(requestDTO);
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return branchMapper.toResponseDTO(branchRepository.save(entity));
     }
 
@@ -62,6 +67,9 @@ public class BranchServiceImpl implements BranchService {
         Branch existing = branchRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Branch", "id", id));
         branchMapper.updateEntityFromDTO(requestDTO, existing);
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
         return branchMapper.toResponseDTO(branchRepository.save(existing));
     }
 

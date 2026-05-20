@@ -13,8 +13,16 @@ public interface DesignationMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "modifiedBy", ignore = true)
     Designation toEntity(DesignationRequestDTO requestDTO);
 
+    @Mapping(target = "createdById",       source = "createdBy.id")
+    @Mapping(target = "createdByCode",     source = "createdBy.code")
+    @Mapping(target = "createdByUserName", source = "createdBy.userName")
+    @Mapping(target = "modifiedById",      source = "modifiedBy.id")
+    @Mapping(target = "modifiedByCode",    source = "modifiedBy.code")
+    @Mapping(target = "modifiedByUserName",source = "modifiedBy.userName")
     DesignationResponseDTO toResponseDTO(Designation entity);
 
     List<DesignationResponseDTO> toResponseDTOList(List<Designation> entities);
@@ -23,5 +31,6 @@ public interface DesignationMapper {
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "modifiedBy", ignore = true)
     void updateEntityFromDTO(DesignationRequestDTO requestDTO, @MappingTarget Designation entity);
 }

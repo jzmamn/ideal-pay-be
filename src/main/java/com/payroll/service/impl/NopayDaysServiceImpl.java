@@ -3,9 +3,11 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.NopayDaysRequestDTO;
 import com.payroll.dto.response.NopayDaysResponseDTO;
 import com.payroll.entity.NopayDays;
+import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.NopayDaysMapper;
 import com.payroll.repository.NopayDaysRepository;
+import com.payroll.repository.UsrRepository;
 import com.payroll.service.NopayDaysService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -20,6 +22,7 @@ import java.util.List;
 public class NopayDaysServiceImpl implements NopayDaysService {
 
     private final NopayDaysRepository nopayDaysRepository;
+    private final UsrRepository usrRepository;
     private final NopayDaysMapper nopayDaysMapper;
 
     @Override
@@ -54,6 +57,8 @@ public class NopayDaysServiceImpl implements NopayDaysService {
                     "A nopay days entry with code '" + requestDTO.getCode() + "' already exists.");
         }
         NopayDays entity = nopayDaysMapper.toEntity(requestDTO);
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return nopayDaysMapper.toResponseDTO(nopayDaysRepository.save(entity));
     }
 
@@ -62,6 +67,9 @@ public class NopayDaysServiceImpl implements NopayDaysService {
         NopayDays existing = nopayDaysRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("NopayDays", "id", id));
         nopayDaysMapper.updateEntityFromDTO(requestDTO, existing);
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
         return nopayDaysMapper.toResponseDTO(nopayDaysRepository.save(existing));
     }
 

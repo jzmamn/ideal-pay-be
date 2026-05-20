@@ -16,8 +16,12 @@ public class DepartmentResponseDTO {
     private String name;
     private String description;
     private Boolean isActive;
-    private Long createdBy;
+    private Long createdById;
+    private String createdByCode;
+    private String createdByUserName;
     private LocalDateTime createdDate;
-    private Long modifiedBy;
+    private Long modifiedById;
+    private String modifiedByCode;
+    private String modifiedByUserName;
     private LocalDateTime modifiedDate;
 }

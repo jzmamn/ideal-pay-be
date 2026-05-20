@@ -14,9 +14,17 @@ public interface FixedAllowanceMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "modifiedBy", ignore = true)
     FixedAllowance toEntity(FixedAllowanceRequestDTO requestDTO);
 
     // Entity → ResponseDTO
+    @Mapping(target = "createdById",       source = "createdBy.id")
+    @Mapping(target = "createdByCode",     source = "createdBy.code")
+    @Mapping(target = "createdByUserName", source = "createdBy.userName")
+    @Mapping(target = "modifiedById",      source = "modifiedBy.id")
+    @Mapping(target = "modifiedByCode",    source = "modifiedBy.code")
+    @Mapping(target = "modifiedByUserName",source = "modifiedBy.userName")
     FixedAllowanceResponseDTO toResponseDTO(FixedAllowance entity);
 
     // List of entities → List of ResponseDTOs
@@ -27,5 +35,6 @@ public interface FixedAllowanceMapper {
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "modifiedBy", ignore = true)
     void updateEntityFromDTO(FixedAllowanceRequestDTO requestDTO, @MappingTarget FixedAllowance entity);
 }

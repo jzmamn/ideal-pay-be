@@ -3,9 +3,11 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.UserRoleRequestDTO;
 import com.payroll.dto.response.UserRoleResponseDTO;
 import com.payroll.entity.UserRole;
+import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.UserRoleMapper;
 import com.payroll.repository.UserRoleRepository;
+import com.payroll.repository.UsrRepository;
 import com.payroll.service.UserRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.util.List;
 public class UserRoleServiceImpl implements UserRoleService {
 
     private final UserRoleRepository userRoleRepository;
+    private final UsrRepository usrRepository;
     private final UserRoleMapper userRoleMapper;
 
     @Override
@@ -55,6 +58,8 @@ public class UserRoleServiceImpl implements UserRoleService {
                     "A user role with code '" + requestDTO.getCode() + "' already exists.");
         }
         UserRole entity = userRoleMapper.toEntity(requestDTO);
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return userRoleMapper.toResponseDTO(userRoleRepository.save(entity));
     }
 
@@ -63,6 +68,9 @@ public class UserRoleServiceImpl implements UserRoleService {
         UserRole existing = userRoleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("UserRole", "id", id));
         userRoleMapper.updateEntityFromDTO(requestDTO, existing);
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
         return userRoleMapper.toResponseDTO(userRoleRepository.save(existing));
     }
 

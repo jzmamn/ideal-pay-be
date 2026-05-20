@@ -13,8 +13,16 @@ public interface FixedDeductionMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "modifiedBy", ignore = true)
     FixedDeduction toEntity(FixedDeductionRequestDTO requestDTO);
 
+    @Mapping(target = "createdById",       source = "createdBy.id")
+    @Mapping(target = "createdByCode",     source = "createdBy.code")
+    @Mapping(target = "createdByUserName", source = "createdBy.userName")
+    @Mapping(target = "modifiedById",      source = "modifiedBy.id")
+    @Mapping(target = "modifiedByCode",    source = "modifiedBy.code")
+    @Mapping(target = "modifiedByUserName",source = "modifiedBy.userName")
     FixedDeductionResponseDTO toResponseDTO(FixedDeduction entity);
 
     List<FixedDeductionResponseDTO> toResponseDTOList(List<FixedDeduction> entities);
@@ -23,5 +31,6 @@ public interface FixedDeductionMapper {
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "modifiedBy", ignore = true)
     void updateEntityFromDTO(FixedDeductionRequestDTO requestDTO, @MappingTarget FixedDeduction entity);
 }

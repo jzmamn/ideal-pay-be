@@ -3,9 +3,11 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.OvertimeRequestDTO;
 import com.payroll.dto.response.OvertimeResponseDTO;
 import com.payroll.entity.Overtime;
+import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.OvertimeMapper;
 import com.payroll.repository.OvertimeRepository;
+import com.payroll.repository.UsrRepository;
 import com.payroll.service.OvertimeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -20,6 +22,7 @@ import java.util.List;
 public class OvertimeServiceImpl implements OvertimeService {
 
     private final OvertimeRepository overtimeRepository;
+    private final UsrRepository usrRepository;
     private final OvertimeMapper overtimeMapper;
 
     @Override
@@ -54,6 +57,8 @@ public class OvertimeServiceImpl implements OvertimeService {
                     "An overtime entry with code '" + requestDTO.getCode() + "' already exists.");
         }
         Overtime entity = overtimeMapper.toEntity(requestDTO);
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return overtimeMapper.toResponseDTO(overtimeRepository.save(entity));
     }
 
@@ -62,6 +67,9 @@ public class OvertimeServiceImpl implements OvertimeService {
         Overtime existing = overtimeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Overtime", "id", id));
         overtimeMapper.updateEntityFromDTO(requestDTO, existing);
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
         return overtimeMapper.toResponseDTO(overtimeRepository.save(existing));
     }
 

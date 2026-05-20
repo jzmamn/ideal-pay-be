@@ -13,8 +13,16 @@ public interface GradeMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "modifiedBy", ignore = true)
     Grade toEntity(GradeRequestDTO requestDTO);
 
+    @Mapping(target = "createdById",       source = "createdBy.id")
+    @Mapping(target = "createdByCode",     source = "createdBy.code")
+    @Mapping(target = "createdByUserName", source = "createdBy.userName")
+    @Mapping(target = "modifiedById",      source = "modifiedBy.id")
+    @Mapping(target = "modifiedByCode",    source = "modifiedBy.code")
+    @Mapping(target = "modifiedByUserName",source = "modifiedBy.userName")
     GradeResponseDTO toResponseDTO(Grade entity);
 
     List<GradeResponseDTO> toResponseDTOList(List<Grade> entities);
@@ -23,5 +31,6 @@ public interface GradeMapper {
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "modifiedBy", ignore = true)
     void updateEntityFromDTO(GradeRequestDTO requestDTO, @MappingTarget Grade entity);
 }
