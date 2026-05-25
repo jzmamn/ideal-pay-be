@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -19,15 +18,15 @@ public class FixedDeductionController {
 
     private final FixedDeductionService fixedDeductionService;
 
-    // GET /payroll/fixed-deduction
     @GetMapping
-    public ResponseEntity<ApiResponseDTO<List<FixedDeductionResponseDTO>>> getAllFixedDeductions(@RequestParam(value = "showDefaultRow", defaultValue = "false") boolean showDefaultRow, @RequestParam(value = "isActive", defaultValue = "all") String isActive) {
+    public ResponseEntity<ApiResponseDTO<List<FixedDeductionResponseDTO>>> getAllFixedDeductions(
+            @RequestParam(value = "showDefaultRow", defaultValue = "false") boolean showDefaultRow,
+            @RequestParam(value = "isActive", defaultValue = "all") String isActive) {
         return ResponseEntity.ok(ApiResponseDTO.success(
                 "Fixed deductions fetched successfully",
                 fixedDeductionService.getAllFixedDeductions(showDefaultRow, isActive)));
     }
 
-    // GET /payroll/fixed-deduction/{id}
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponseDTO<FixedDeductionResponseDTO>> getFixedDeductionById(
             @PathVariable Long id) {
@@ -36,7 +35,6 @@ public class FixedDeductionController {
                 fixedDeductionService.getFixedDeductionById(id)));
     }
 
-    // POST /payroll/fixed-deduction
     @PostMapping
     public ResponseEntity<ApiResponseDTO<FixedDeductionResponseDTO>> createFixedDeduction(
             @Valid @RequestBody FixedDeductionRequestDTO requestDTO) {
@@ -46,7 +44,6 @@ public class FixedDeductionController {
                         fixedDeductionService.createFixedDeduction(requestDTO)));
     }
 
-    // PUT /payroll/fixed-deduction/{id}
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponseDTO<FixedDeductionResponseDTO>> updateFixedDeduction(
             @PathVariable Long id,
@@ -56,7 +53,6 @@ public class FixedDeductionController {
                 fixedDeductionService.updateFixedDeduction(id, requestDTO)));
     }
 
-    // DELETE /payroll/fixed-deduction/{id}
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponseDTO<Void>> deleteFixedDeduction(@PathVariable Long id) {
         fixedDeductionService.deleteFixedDeduction(id);

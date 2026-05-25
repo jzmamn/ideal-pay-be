@@ -2,7 +2,6 @@ package com.payroll.service;
 
 import com.payroll.dto.request.FixedDeductionRequestDTO;
 import com.payroll.dto.response.FixedDeductionResponseDTO;
-
 import java.util.List;
 
 public interface FixedDeductionService {

@@ -52,14 +52,13 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     public DepartmentResponseDTO createDepartment(DepartmentRequestDTO requestDTO) {
-        if (departmentRepository.existsByCodeIgnoreCase(requestDTO.getCode())) {
-            throw new IllegalArgumentException(
-                    "A department with code '" + requestDTO.getCode() + "' already exists.");
-        }
         Department entity = departmentMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        return departmentMapper.toResponseDTO(departmentRepository.save(entity));
+        // Auto-generate code as DEP_<id>
+        Department saved = departmentRepository.save(entity);
+        saved.setCode("DEP_" + saved.getId());
+        return departmentMapper.toResponseDTO(departmentRepository.save(saved));
     }
 
     @Override

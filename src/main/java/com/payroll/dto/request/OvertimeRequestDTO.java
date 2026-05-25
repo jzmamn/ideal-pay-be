@@ -15,9 +15,6 @@ import java.math.BigDecimal;
 @Builder
 public class OvertimeRequestDTO {
 
-    @NotBlank(message = "Code is required")
-    @Size(max = 10, message = "Code must not exceed 10 characters")
-    private String code;
 
     @NotBlank(message = "Name is required")
     @Size(max = 150, message = "Name must not exceed 150 characters")
@@ -32,6 +29,16 @@ public class OvertimeRequestDTO {
     private BigDecimal amount;
 
     private Boolean isActive = true;
+
+    /**
+     * Optional MVEL formula expression for this overtime type.
+     * When formulaEnabled is true, the formula result is used as the computed amount at payroll run time.
+     * The fixed {@code amount} field acts as a fallback when formulaEnabled is false or formula is blank.
+     */
+    private String formula;
+
+    /** When true, the formula is evaluated at payroll run time instead of using the fixed amount. */
+    private Boolean formulaEnabled = false;
 
     @NotNull(message = "Created by is required")
     private Long createdBy;

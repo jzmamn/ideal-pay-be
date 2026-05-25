@@ -2,7 +2,6 @@ package com.payroll.service;
 
 import com.payroll.dto.request.FixedAllowanceRequestDTO;
 import com.payroll.dto.response.FixedAllowanceResponseDTO;
-
 import java.util.List;
 
 public interface FixedAllowanceService {

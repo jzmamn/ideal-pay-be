@@ -3,18 +3,15 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.FixedAllowanceRequestDTO;
 import com.payroll.dto.response.FixedAllowanceResponseDTO;
 import com.payroll.entity.FixedAllowance;
-import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.FixedAllowanceMapper;
 import com.payroll.repository.FixedAllowanceRepository;
 import com.payroll.repository.UsrRepository;
 import com.payroll.service.FixedAllowanceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import org.springframework.data.domain.Sort;
-
 import java.util.List;
 
 @Service
@@ -46,21 +43,19 @@ public class FixedAllowanceServiceImpl implements FixedAllowanceService {
     @Override
     @Transactional(readOnly = true)
     public FixedAllowanceResponseDTO getFixedAllowanceById(Long id) {
-        FixedAllowance fixedAllowance = fixedAllowanceRepository.findById(id)
+        FixedAllowance entity = fixedAllowanceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("FixedAllowance", "id", id));
-        return fixedAllowanceMapper.toResponseDTO(fixedAllowance);
+        return fixedAllowanceMapper.toResponseDTO(entity);
     }
 
     @Override
     public FixedAllowanceResponseDTO createFixedAllowance(FixedAllowanceRequestDTO requestDTO) {
-        if (fixedAllowanceRepository.existsByCodeIgnoreCase(requestDTO.getCode())) {
-            throw new IllegalArgumentException(
-                    "A fixed allowance with code '" + requestDTO.getCode() + "' already exists.");
-        }
         FixedAllowance entity = fixedAllowanceMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        return fixedAllowanceMapper.toResponseDTO(fixedAllowanceRepository.save(entity));
+        FixedAllowance saved = fixedAllowanceRepository.save(entity);
+        saved.setCode("FA_" + saved.getId());
+        return fixedAllowanceMapper.toResponseDTO(fixedAllowanceRepository.save(saved));
     }
 
     @Override
@@ -76,8 +71,8 @@ public class FixedAllowanceServiceImpl implements FixedAllowanceService {
 
     @Override
     public void deleteFixedAllowance(Long id) {
-        FixedAllowance fixedAllowance = fixedAllowanceRepository.findById(id)
+        FixedAllowance entity = fixedAllowanceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("FixedAllowance", "id", id));
-        fixedAllowanceRepository.delete(fixedAllowance);
+        fixedAllowanceRepository.delete(entity);
     }
 }

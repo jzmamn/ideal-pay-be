@@ -3,18 +3,15 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.FixedDeductionRequestDTO;
 import com.payroll.dto.response.FixedDeductionResponseDTO;
 import com.payroll.entity.FixedDeduction;
-import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.FixedDeductionMapper;
 import com.payroll.repository.FixedDeductionRepository;
 import com.payroll.repository.UsrRepository;
 import com.payroll.service.FixedDeductionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import org.springframework.data.domain.Sort;
-
 import java.util.List;
 
 @Service
@@ -46,21 +43,19 @@ public class FixedDeductionServiceImpl implements FixedDeductionService {
     @Override
     @Transactional(readOnly = true)
     public FixedDeductionResponseDTO getFixedDeductionById(Long id) {
-        FixedDeduction fixedDeduction = fixedDeductionRepository.findById(id)
+        FixedDeduction entity = fixedDeductionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("FixedDeduction", "id", id));
-        return fixedDeductionMapper.toResponseDTO(fixedDeduction);
+        return fixedDeductionMapper.toResponseDTO(entity);
     }
 
     @Override
     public FixedDeductionResponseDTO createFixedDeduction(FixedDeductionRequestDTO requestDTO) {
-        if (fixedDeductionRepository.existsByCodeIgnoreCase(requestDTO.getCode())) {
-            throw new IllegalArgumentException(
-                    "A fixed deduction with code '" + requestDTO.getCode() + "' already exists.");
-        }
         FixedDeduction entity = fixedDeductionMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        return fixedDeductionMapper.toResponseDTO(fixedDeductionRepository.save(entity));
+        FixedDeduction saved = fixedDeductionRepository.save(entity);
+        saved.setCode("FD_" + saved.getId());
+        return fixedDeductionMapper.toResponseDTO(fixedDeductionRepository.save(saved));
     }
 
     @Override
@@ -76,8 +71,8 @@ public class FixedDeductionServiceImpl implements FixedDeductionService {
 
     @Override
     public void deleteFixedDeduction(Long id) {
-        FixedDeduction fixedDeduction = fixedDeductionRepository.findById(id)
+        FixedDeduction entity = fixedDeductionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("FixedDeduction", "id", id));
-        fixedDeductionRepository.delete(fixedDeduction);
+        fixedDeductionRepository.delete(entity);
     }
 }

@@ -52,14 +52,13 @@ public class BranchServiceImpl implements BranchService {
 
     @Override
     public BranchResponseDTO createBranch(BranchRequestDTO requestDTO) {
-        if (branchRepository.existsByCodeIgnoreCase(requestDTO.getCode())) {
-            throw new IllegalArgumentException(
-                    "A branch with code '" + requestDTO.getCode() + "' already exists.");
-        }
         Branch entity = branchMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        return branchMapper.toResponseDTO(branchRepository.save(entity));
+        // Auto-generate code as BRN_<id>
+        Branch saved = branchRepository.save(entity);
+        saved.setCode("BRN_" + saved.getId());
+        return branchMapper.toResponseDTO(branchRepository.save(saved));
     }
 
     @Override

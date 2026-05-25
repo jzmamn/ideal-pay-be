@@ -47,7 +47,10 @@ public class CountryServiceImpl implements CountryService {
                     "A country with ISO2 code '" + requestDTO.getIso2() + "' already exists.");
         }
         Country entity = countryMapper.toEntity(requestDTO);
-        return countryMapper.toResponseDTO(countryRepository.save(entity));
+        // Auto-generate code as CNT_<id>
+        Country saved = countryRepository.save(entity);
+        saved.setCode("CNT_" + saved.getId());
+        return countryMapper.toResponseDTO(countryRepository.save(saved));
     }
 
     @Override

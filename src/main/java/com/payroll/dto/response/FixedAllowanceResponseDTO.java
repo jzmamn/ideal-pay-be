@@ -1,7 +1,6 @@
 package com.payroll.dto.response;
 
 import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -31,5 +30,4 @@ public class FixedAllowanceResponseDTO {
     private String modifiedByCode;
     private String modifiedByUserName;
     private LocalDateTime modifiedDate;
-
 }

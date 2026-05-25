@@ -52,14 +52,13 @@ public class JobCategoryServiceImpl implements JobCategoryService {
 
     @Override
     public JobCategoryResponseDTO createJobCategory(JobCategoryRequestDTO requestDTO) {
-        if (jobCategoryRepository.existsByCodeIgnoreCase(requestDTO.getCode())) {
-            throw new IllegalArgumentException(
-                    "A job category with code '" + requestDTO.getCode() + "' already exists.");
-        }
         JobCategory entity = jobCategoryMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        return jobCategoryMapper.toResponseDTO(jobCategoryRepository.save(entity));
+        // Auto-generate code as JBC_<id>
+        JobCategory saved = jobCategoryRepository.save(entity);
+        saved.setCode("JBC_" + saved.getId());
+        return jobCategoryMapper.toResponseDTO(jobCategoryRepository.save(saved));
     }
 
     @Override

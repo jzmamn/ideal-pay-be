@@ -9,10 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class CompanyRequestDTO {
-
-    @NotBlank(message = "Code is required")
-    @Size(max = 10, message = "Code must not exceed 10 characters")
-    private String code;
+    // code is auto-generated as CMP_<id> on create — not accepted from caller
 
     @NotBlank(message = "Name is required")
     @Size(max = 150, message = "Name must not exceed 150 characters")

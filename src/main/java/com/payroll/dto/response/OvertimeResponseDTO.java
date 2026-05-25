@@ -18,6 +18,11 @@ public class OvertimeResponseDTO {
     private String description;
     private BigDecimal amount;
     private Boolean isActive;
+
+    /** MVEL formula expression for this overtime type, if set. */
+    private String formula;
+    private Boolean formulaEnabled;
+
     private Long createdById;
     private String createdByCode;
     private String createdByUserName;

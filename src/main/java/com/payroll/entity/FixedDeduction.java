@@ -2,10 +2,8 @@ package com.payroll.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.payroll.converter.BooleanToYNConverter;
-import com.payroll.entity.Usr;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 

@@ -10,9 +10,6 @@ import lombok.*;
 @Builder
 public class VariableAllowanceRequestDTO {
 
-    @NotBlank(message = "Code is required")
-    @Size(max = 10, message = "Code must not exceed 10 characters")
-    private String code;
 
     @NotBlank(message = "Name is required")
     @Size(max = 50, message = "Name must not exceed 50 characters")
@@ -32,6 +29,13 @@ public class VariableAllowanceRequestDTO {
 
     @NotNull(message = "liableNoPay is required")
     private Boolean liableNoPay;
+
+    /** Optional MVEL formula expression for dynamic calculation (e.g. "basicSalary * 0.1"). */
+    private String formula;
+
+    /** When true, the formula is evaluated at payroll run time instead of accepting a manual amount. */
+    @NotNull(message = "formulaEnabled is required")
+    private Boolean formulaEnabled;
 
     @NotNull(message = "createdBy is required")
     private Long createdBy;

@@ -40,6 +40,18 @@ public class Overtime {
     @Column(name = "is_active", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
     private Boolean isActive;
 
+    /**
+     * Optional MVEL formula for this overtime type.
+     * When set and formulaEnabled is true, the computed amount takes precedence over the fixed {@code amount} field.
+     * Available variables: basicSalary, workingDays, nopayDays, otHours, otRate, + custom vars.
+     */
+    @Column(name = "formula", nullable = true, length = 500)
+    private String formula;
+
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "formula_enabled", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
+    private Boolean formulaEnabled = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})

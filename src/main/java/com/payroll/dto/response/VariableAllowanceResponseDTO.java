@@ -1,7 +1,6 @@
 package com.payroll.dto.response;
 
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Getter
@@ -19,6 +18,8 @@ public class VariableAllowanceResponseDTO {
     private Boolean liableForEtf;
     private Boolean liableForPaye;
     private Boolean liableNoPay;
+    private String formula;
+    private Boolean formulaEnabled;
     private Long createdById;
     private String createdByCode;
     private String createdByUserName;

@@ -52,14 +52,13 @@ public class DesignationServiceImpl implements DesignationService {
 
     @Override
     public DesignationResponseDTO createDesignation(DesignationRequestDTO requestDTO) {
-        if (designationRepository.existsByCodeIgnoreCase(requestDTO.getCode())) {
-            throw new IllegalArgumentException(
-                    "A designation with code '" + requestDTO.getCode() + "' already exists.");
-        }
         Designation entity = designationMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        return designationMapper.toResponseDTO(designationRepository.save(entity));
+        // Auto-generate code as DSG_<id>
+        Designation saved = designationRepository.save(entity);
+        saved.setCode("DSG_" + saved.getId());
+        return designationMapper.toResponseDTO(designationRepository.save(saved));
     }
 
     @Override

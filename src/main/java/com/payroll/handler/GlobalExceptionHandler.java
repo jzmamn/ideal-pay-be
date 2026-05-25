@@ -1,6 +1,7 @@
 package com.payroll.handler;
 
 import com.payroll.dto.response.ApiResponseDTO;
+import com.payroll.exception.FormulaEvaluationException;
 import com.payroll.exception.ResourceNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,12 @@ public class GlobalExceptionHandler {
                         .message("Validation failed")
                         .data(errors)
                         .build());
+    }
+
+    @ExceptionHandler(FormulaEvaluationException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleFormulaEvaluationException(FormulaEvaluationException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiResponseDTO.error(ex.getMessage()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

@@ -2,7 +2,6 @@ package com.payroll.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
-
 import java.math.BigDecimal;
 
 @Getter
@@ -12,9 +11,6 @@ import java.math.BigDecimal;
 @Builder
 public class FixedAllowanceRequestDTO {
 
-    @NotBlank(message = "Code is required")
-    @Size(max = 10, message = "Code must not exceed 10 characters")
-    private String code;
 
     @NotBlank(message = "Name is required")
     @Size(max = 150, message = "Name must not exceed 150 characters")

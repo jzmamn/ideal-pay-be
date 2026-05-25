@@ -2,7 +2,6 @@ package com.payroll.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.payroll.converter.BooleanToYNConverter;
-import com.payroll.entity.Usr;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -74,6 +73,4 @@ public class FixedAllowance {
     @Column(name = "modified_date", nullable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime modifiedDate;
-
-
 }

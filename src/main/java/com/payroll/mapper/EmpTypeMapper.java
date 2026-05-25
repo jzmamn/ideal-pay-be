@@ -10,7 +10,8 @@ import java.util.List;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface EmpTypeMapper {
 
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "id",           ignore = true)
+    @Mapping(target = "code",         ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
@@ -27,7 +28,8 @@ public interface EmpTypeMapper {
 
     List<EmpTypeResponseDTO> toResponseDTOList(List<EmpType> entities);
 
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "id",           ignore = true)
+    @Mapping(target = "code",         ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
     @Mapping(target = "createdBy", ignore = true)

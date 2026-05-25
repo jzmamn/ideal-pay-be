@@ -54,10 +54,6 @@ public class UsrServiceImpl implements UsrService {
 
     @Override
     public UsrResponseDTO createUser(UsrRequestDTO requestDTO) {
-        if (usrRepository.existsByCodeIgnoreCase(requestDTO.getCode())) {
-            throw new IllegalArgumentException(
-                    "A user with code '" + requestDTO.getCode() + "' already exists.");
-        }
         if (usrRepository.existsByUserNameIgnoreCase(requestDTO.getUserName())) {
             throw new IllegalArgumentException(
                     "A user with username '" + requestDTO.getUserName() + "' already exists.");
@@ -76,7 +72,10 @@ public class UsrServiceImpl implements UsrService {
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
 
-        return usrMapper.toResponseDTO(usrRepository.save(entity));
+        // Auto-generate code as USER_<id> (mirrors GRP_<id> / UROL_<id> pattern)
+        Usr saved = usrRepository.save(entity);
+        saved.setCode("USER_" + saved.getId());
+        return usrMapper.toResponseDTO(usrRepository.save(saved));
     }
 
     @Override

@@ -15,9 +15,6 @@ import java.math.BigDecimal;
 @Builder
 public class NopayDaysRequestDTO {
 
-    @NotBlank(message = "Code is required")
-    @Size(max = 10, message = "Code must not exceed 10 characters")
-    private String code;
 
     @NotBlank(message = "Name is required")
     @Size(max = 150, message = "Name must not exceed 150 characters")
@@ -32,6 +29,12 @@ public class NopayDaysRequestDTO {
     private BigDecimal days;
 
     private Boolean isActive = true;
+
+    /** Optional MVEL formula expression for dynamic calculation (e.g. "basicSalary / workingDays * nopayDays"). */
+    private String formula;
+
+    /** When true, the formula is evaluated at payroll run time instead of using the configured days value. */
+    private Boolean formulaEnabled = false;
 
     @NotNull(message = "Created by is required")
     private Long createdBy;

@@ -1,21 +1,27 @@
 package com.payroll.service.impl;
 
 import com.payroll.dto.request.NopayDaysRequestDTO;
+import com.payroll.dto.response.FormulaEvaluateResponseDTO;
 import com.payroll.dto.response.NopayDaysResponseDTO;
 import com.payroll.entity.NopayDays;
-import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.NopayDaysMapper;
 import com.payroll.repository.NopayDaysRepository;
 import com.payroll.repository.UsrRepository;
+import com.payroll.service.FormulaEngineService;
 import com.payroll.service.NopayDaysService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -24,6 +30,7 @@ public class NopayDaysServiceImpl implements NopayDaysService {
     private final NopayDaysRepository nopayDaysRepository;
     private final UsrRepository usrRepository;
     private final NopayDaysMapper nopayDaysMapper;
+    private final FormulaEngineService formulaEngineService;
 
     @Override
     @Transactional(readOnly = true)
@@ -52,14 +59,12 @@ public class NopayDaysServiceImpl implements NopayDaysService {
 
     @Override
     public NopayDaysResponseDTO createNopayDays(NopayDaysRequestDTO requestDTO) {
-        if (nopayDaysRepository.existsByCodeIgnoreCase(requestDTO.getCode())) {
-            throw new IllegalArgumentException(
-                    "A nopay days entry with code '" + requestDTO.getCode() + "' already exists.");
-        }
         NopayDays entity = nopayDaysMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        return nopayDaysMapper.toResponseDTO(nopayDaysRepository.save(entity));
+        NopayDays saved = nopayDaysRepository.save(entity);
+        saved.setCode("NPD_" + saved.getId());
+        return nopayDaysMapper.toResponseDTO(nopayDaysRepository.save(saved));
     }
 
     @Override
@@ -78,5 +83,58 @@ public class NopayDaysServiceImpl implements NopayDaysService {
         NopayDays nopayDays = nopayDaysRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("NopayDays", "id", id));
         nopayDaysRepository.delete(nopayDays);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public FormulaEvaluateResponseDTO calculateAmount(Long nopayDaysId, Map<String, Object> context) {
+        NopayDays nopayDays = nopayDaysRepository.findById(nopayDaysId)
+                .orElseThrow(() -> new ResourceNotFoundException("NopayDays", "id", nopayDaysId));
+
+        Map<String, Object> ctx = new HashMap<>(context);
+        ctx.putIfAbsent("basicSalary", BigDecimal.ZERO);
+        ctx.putIfAbsent("workingDays", 26);
+        ctx.putIfAbsent("nopayDays",   BigDecimal.ZERO);
+
+        if (Boolean.TRUE.equals(nopayDays.getFormulaEnabled())
+                && nopayDays.getFormula() != null
+                && !nopayDays.getFormula().isBlank()) {
+            String expression = nopayDays.getFormula();
+            try {
+                BigDecimal result = formulaEngineService.evaluate(expression, ctx);
+                return FormulaEvaluateResponseDTO.builder()
+                        .expression(expression)
+                        .result(result)
+                        .context(sanitise(ctx))
+                        .build();
+            } catch (Exception ex) {
+                log.warn("Formula evaluation failed for nopay-days [{}]: {}", nopayDays.getCode(), ex.getMessage());
+                return FormulaEvaluateResponseDTO.builder()
+                        .expression(expression)
+                        .context(sanitise(ctx))
+                        .technicalError(ex.getMessage())
+                        .userFriendlyError(formulaEngineService.toUserFriendlyMessage(ex))
+                        .build();
+            }
+        }
+
+        log.debug("NopayDays [{}] formula not enabled — returning configured days {}", nopayDays.getCode(), nopayDays.getDays());
+        return FormulaEvaluateResponseDTO.builder()
+                .expression("configured days")
+                .result(nopayDays.getDays())
+                .context(sanitise(ctx))
+                .build();
+    }
+
+    private Map<String, Object> sanitise(Map<String, Object> ctx) {
+        Map<String, Object> safe = new HashMap<>();
+        ctx.forEach((k, v) -> {
+            if (v instanceof Number || v instanceof String || v instanceof Boolean || v == null) {
+                safe.put(k, v);
+            } else {
+                safe.put(k, v.toString());
+            }
+        });
+        return safe;
     }
 }

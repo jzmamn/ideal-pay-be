@@ -11,10 +11,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class EmpTypeRequestDTO {
-
-    @NotBlank(message = "Code is required")
-    @Size(max = 10, message = "Code must not exceed 10 characters")
-    private String code;
+    // code is auto-generated as EMT_<id> on create — not accepted from caller
 
     @NotBlank(message = "Name is required")
     @Size(max = 150, message = "Name must not exceed 150 characters")
@@ -24,6 +21,7 @@ public class EmpTypeRequestDTO {
     @Size(max = 255, message = "Description must not exceed 255 characters")
     private String description;
 
+    @Builder.Default
     private Boolean isActive = true;
 
     @NotNull(message = "Created by is required")

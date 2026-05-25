@@ -10,7 +10,9 @@ import java.util.List;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface DepartmentMapper {
 
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "id",           ignore = true)
+    @Mapping(target = "code",         ignore = true)
+    @Mapping(target = "isActive",     ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
@@ -27,7 +29,9 @@ public interface DepartmentMapper {
 
     List<DepartmentResponseDTO> toResponseDTOList(List<Department> entities);
 
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "id",           ignore = true)
+    @Mapping(target = "code",         ignore = true)
+    @Mapping(target = "isActive",     ignore = true)
     @Mapping(target = "createdDate", ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
     @Mapping(target = "createdBy", ignore = true)

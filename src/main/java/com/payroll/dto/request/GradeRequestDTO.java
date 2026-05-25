@@ -14,10 +14,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 public class GradeRequestDTO {
-
-    @NotBlank(message = "Code is required")
-    @Size(max = 10, message = "Code must not exceed 10 characters")
-    private String code;
+    // code is auto-generated as GRD_<id> on create — not accepted from caller
 
     @NotBlank(message = "Name is required")
     @Size(max = 150, message = "Name must not exceed 150 characters")
@@ -27,6 +24,7 @@ public class GradeRequestDTO {
     @DecimalMin(value = "0.00", message = "Amount must be zero or greater")
     private BigDecimal amount;
 
+    @Builder.Default
     private Boolean isActive = true;
 
     @NotNull(message = "Created by is required")

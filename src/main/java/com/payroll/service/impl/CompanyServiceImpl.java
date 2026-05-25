@@ -52,14 +52,13 @@ public class CompanyServiceImpl implements CompanyService {
 
     @Override
     public CompanyResponseDTO createCompany(CompanyRequestDTO requestDTO) {
-        if (companyRepository.existsByCodeIgnoreCase(requestDTO.getCode())) {
-            throw new IllegalArgumentException(
-                    "A company with code '" + requestDTO.getCode() + "' already exists.");
-        }
         Company entity = companyMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        return companyMapper.toResponseDTO(companyRepository.save(entity));
+        // Auto-generate code as CMP_<id>
+        Company saved = companyRepository.save(entity);
+        saved.setCode("CMP_" + saved.getId());
+        return companyMapper.toResponseDTO(companyRepository.save(saved));
     }
 
     @Override

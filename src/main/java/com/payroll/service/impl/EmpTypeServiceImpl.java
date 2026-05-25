@@ -52,14 +52,13 @@ public class EmpTypeServiceImpl implements EmpTypeService {
 
     @Override
     public EmpTypeResponseDTO createEmpType(EmpTypeRequestDTO requestDTO) {
-        if (empTypeRepository.existsByCodeIgnoreCase(requestDTO.getCode())) {
-            throw new IllegalArgumentException(
-                    "An employee type with code '" + requestDTO.getCode() + "' already exists.");
-        }
         EmpType entity = empTypeMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        return empTypeMapper.toResponseDTO(empTypeRepository.save(entity));
+        // Auto-generate code as EMT_<id>
+        EmpType saved = empTypeRepository.save(entity);
+        saved.setCode("EMT_" + saved.getId());
+        return empTypeMapper.toResponseDTO(empTypeRepository.save(saved));
     }
 
     @Override

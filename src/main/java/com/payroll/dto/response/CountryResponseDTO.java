@@ -10,6 +10,7 @@ import lombok.*;
 public class CountryResponseDTO {
 
     private Long id;
+    private String code;
     private String name;
     private String iso2;
     private String iso3;

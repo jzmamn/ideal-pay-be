@@ -52,14 +52,13 @@ public class GradeServiceImpl implements GradeService {
 
     @Override
     public GradeResponseDTO createGrade(GradeRequestDTO requestDTO) {
-        if (gradeRepository.existsByCodeIgnoreCase(requestDTO.getCode())) {
-            throw new IllegalArgumentException(
-                    "A grade with code '" + requestDTO.getCode() + "' already exists.");
-        }
         Grade entity = gradeMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        return gradeMapper.toResponseDTO(gradeRepository.save(entity));
+        // Auto-generate code as GRD_<id>
+        Grade saved = gradeRepository.save(entity);
+        saved.setCode("GRD_" + saved.getId());
+        return gradeMapper.toResponseDTO(gradeRepository.save(saved));
     }
 
     @Override

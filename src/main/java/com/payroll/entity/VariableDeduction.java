@@ -1,11 +1,8 @@
 package com.payroll.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.payroll.converter.BooleanToYNConverter;
-import com.payroll.entity.Usr;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Entity
@@ -47,9 +44,20 @@ public class VariableDeduction {
     @Column(name = "liable_no_pay", nullable = false, length = 1)
     private Boolean liableNoPay;
 
+    /**
+     * Optional MVEL formula that computes this deduction amount at payroll run time.
+     * Available variables: basicSalary, workingDays, nopayDays, otHours, otRate, + custom vars.
+     */
+    @Column(name = "formula", nullable = true, length = 500)
+    private String formula;
+
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "formula_enabled", nullable = false, length = 1)
+    private Boolean formulaEnabled = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
-    @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Usr createdBy;
 
     @Column(name = "created_date", nullable = false, updatable = false,
@@ -58,7 +66,7 @@ public class VariableDeduction {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "modified_by", nullable = false)
-    @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
+    @com.fasterxml.jackson.annotation.JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Usr modifiedBy;
 
     @Column(name = "modified_date", nullable = false,

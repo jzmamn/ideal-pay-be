@@ -10,10 +10,7 @@ import lombok.*;
 @Builder
 public class UsrRequestDTO {
 
-    @NotBlank(message = "Code is required")
-    @Size(max = 10, message = "Code must not exceed 10 characters")
-    private String code;
-
+    // code is auto-generated as USER_<id> on create — not accepted from caller
     @NotBlank(message = "Name is required")
     @Size(max = 50, message = "Name must not exceed 50 characters")
     private String name;
