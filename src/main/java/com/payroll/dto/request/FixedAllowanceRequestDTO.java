@@ -42,6 +42,13 @@ public class FixedAllowanceRequestDTO {
     @NotNull(message = "liableNoPay is required")
     private Boolean liableNoPay;
 
+    /** Optional MVEL formula expression (e.g. "basicSalary * 0.1"). */
+    @Size(max = 500, message = "Formula must not exceed 500 characters")
+    private String formula;
+
+    /** When true, the formula is used at payroll run time instead of the fixed amount. Defaults to false. */
+    private Boolean formulaEnabled = false;
+
     @NotNull(message = "createdBy is required")
     private Long createdBy;
 

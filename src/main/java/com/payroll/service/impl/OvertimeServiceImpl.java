@@ -35,7 +35,7 @@ public class OvertimeServiceImpl implements OvertimeService {
     @Override
     @Transactional(readOnly = true)
     public List<OvertimeResponseDTO> getAllOvertimes(boolean showDefaultRow, String isActive) {
-        if (!isActive.equals("true") && !isActive.equals("false") && !isActive.equals("all")) {
+        if (!isActive.equalsIgnoreCase("true") && !isActive.equalsIgnoreCase("false") && !isActive.equalsIgnoreCase("all")) {
             throw new IllegalArgumentException(
                     "Invalid value for isActive. Accepted values: true, false, all");
         }
@@ -59,6 +59,7 @@ public class OvertimeServiceImpl implements OvertimeService {
 
     @Override
     public OvertimeResponseDTO createOvertime(OvertimeRequestDTO requestDTO) {
+        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
         Overtime entity = overtimeMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -71,6 +72,7 @@ public class OvertimeServiceImpl implements OvertimeService {
     public OvertimeResponseDTO updateOvertime(Long id, OvertimeRequestDTO requestDTO) {
         Overtime existing = overtimeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Overtime", "id", id));
+        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
         overtimeMapper.updateEntityFromDTO(requestDTO, existing);
         if (requestDTO.getModifiedBy() != null) {
             existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -118,12 +120,33 @@ public class OvertimeServiceImpl implements OvertimeService {
             }
         }
 
-        log.debug("Overtime [{}] has no formula — returning fixed amount {}", overtime.getCode(), overtime.getAmount());
+        log.debug("Overtime [{}] has no formula configured — returning zero", overtime.getCode());
         return FormulaEvaluateResponseDTO.builder()
-                .expression("fixed amount")
-                .result(overtime.getAmount())
+                .expression("no formula")
+                .result(BigDecimal.ZERO)
                 .context(sanitise(ctx))
                 .build();
+    }
+
+    /**
+     * Validates the MVEL formula when formulaEnabled is true.
+     * Throws {@link IllegalArgumentException} (→ HTTP 400) if:
+     * <ul>
+     *   <li>formulaEnabled is true but formula is blank/null</li>
+     *   <li>formulaEnabled is true and the expression has a syntax error</li>
+     * </ul>
+     * When formulaEnabled is false or null, the formula field is ignored.
+     */
+    private void validateFormula(Boolean formulaEnabled, String formula) {
+        if (!Boolean.TRUE.equals(formulaEnabled)) return;
+        if (formula == null || formula.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Formula expression is required when formulaEnabled is true");
+        }
+        String error = formulaEngineService.validateExpression(formula);
+        if (error != null) {
+            throw new IllegalArgumentException("Invalid formula: " + error);
+        }
     }
 
     private Map<String, Object> sanitise(Map<String, Object> ctx) {

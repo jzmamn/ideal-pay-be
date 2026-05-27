@@ -8,7 +8,6 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -33,21 +32,19 @@ public class Overtime {
     @Column(name = "description", nullable = false, length = 255)
     private String description;
 
-    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
-    private BigDecimal amount;
-
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "is_active", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
     private Boolean isActive;
 
     /**
      * Optional MVEL formula for this overtime type.
-     * When set and formulaEnabled is true, the computed amount takes precedence over the fixed {@code amount} field.
+     * When set and formulaEnabled is true, the formula result is used as the computed amount.
      * Available variables: basicSalary, workingDays, nopayDays, otHours, otRate, + custom vars.
      */
     @Column(name = "formula", nullable = true, length = 500)
     private String formula;
 
+    @Builder.Default
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "formula_enabled", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
     private Boolean formulaEnabled = false;

@@ -14,12 +14,15 @@ public class FixedDeductionResponseDTO {
     private Long id;
     private String code;
     private String name;
+    private String description;
     private BigDecimal amount;
     private Boolean isActive;
     private Boolean liableForEpf;
     private Boolean liableForEtf;
     private Boolean liableForPaye;
     private Boolean liableNoPay;
+    private String formula;
+    private Boolean formulaEnabled;
     private Long createdById;
     private String createdByCode;
     private String createdByUserName;

@@ -1,12 +1,9 @@
 package com.payroll.dto.request;
 
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
-
-import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -24,17 +21,7 @@ public class NopayDaysRequestDTO {
     @Size(max = 255, message = "Description must not exceed 255 characters")
     private String description;
 
-    @NotNull(message = "Days is required")
-    @DecimalMin(value = "0.00", message = "Days must be zero or greater")
-    private BigDecimal days;
-
     private Boolean isActive = true;
-
-    /** Optional MVEL formula expression for dynamic calculation (e.g. "basicSalary / workingDays * nopayDays"). */
-    private String formula;
-
-    /** When true, the formula is evaluated at payroll run time instead of using the configured days value. */
-    private Boolean formulaEnabled = false;
 
     @NotNull(message = "Created by is required")
     private Long createdBy;

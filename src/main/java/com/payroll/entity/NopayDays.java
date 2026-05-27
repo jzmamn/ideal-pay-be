@@ -7,7 +7,6 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,23 +31,9 @@ public class NopayDays {
     @Column(name = "description", nullable = false, length = 255)
     private String description;
 
-    @Column(name = "days", nullable = false, precision = 5, scale = 2)
-    private BigDecimal days;
-
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "is_active", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
     private Boolean isActive;
-
-    /**
-     * Optional MVEL formula that computes the nopay deduction at payroll run time.
-     * Available variables: basicSalary, workingDays, nopayDays, + custom vars.
-     */
-    @Column(name = "formula", nullable = true, length = 500)
-    private String formula;
-
-    @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "formula_enabled", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
-    private Boolean formulaEnabled = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)

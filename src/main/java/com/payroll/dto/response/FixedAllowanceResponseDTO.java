@@ -22,6 +22,8 @@ public class FixedAllowanceResponseDTO {
     private Boolean liableForEtf;
     private Boolean liableForPaye;
     private Boolean liableNoPay;
+    private String formula;
+    private Boolean formulaEnabled;
     private Long createdById;
     private String createdByCode;
     private String createdByUserName;

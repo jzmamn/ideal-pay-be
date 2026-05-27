@@ -33,5 +33,7 @@ public interface OvertimeMapper {
     @Mapping(target = "modifiedDate", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "modifiedBy", ignore = true)
+    // Allow null formula to clear the value (overrides class-level IGNORE for this field)
+    @Mapping(target = "formula", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
     void updateEntityFromDTO(OvertimeRequestDTO requestDTO, @MappingTarget Overtime entity);
 }

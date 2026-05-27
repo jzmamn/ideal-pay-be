@@ -28,7 +28,7 @@ public class JobCategoryServiceImpl implements JobCategoryService {
     @Override
     @Transactional(readOnly = true)
     public List<JobCategoryResponseDTO> getAllJobCategories(boolean showDefaultRow, String isActive) {
-        if (!isActive.equals("true") && !isActive.equals("false") && !isActive.equals("all")) {
+        if (!isActive.equalsIgnoreCase("true") && !isActive.equalsIgnoreCase("false") && !isActive.equalsIgnoreCase("all")) {
             throw new IllegalArgumentException(
                     "Invalid value for isActive. Accepted values: true, false, all");
         }

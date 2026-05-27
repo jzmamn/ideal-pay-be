@@ -2,7 +2,6 @@ package com.payroll.dto.response;
 
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -16,7 +15,6 @@ public class OvertimeResponseDTO {
     private String code;
     private String name;
     private String description;
-    private BigDecimal amount;
     private Boolean isActive;
 
     /** MVEL formula expression for this overtime type, if set. */
