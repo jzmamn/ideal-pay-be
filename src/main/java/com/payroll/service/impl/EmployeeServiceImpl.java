@@ -6,6 +6,7 @@ import com.payroll.entity.Employee;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.EmployeeMapper;
 import com.payroll.repository.*;
+import com.payroll.repository.TypeRepository;
 import com.payroll.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -21,12 +22,13 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;
-    private final EmpTypeRepository empTypeRepository;
+    private final TypeRepository typeRepository;
     private final NopayDaysRepository nopayDaysRepository;
     private final JobCategoryRepository jobCategoryRepository;
     private final DesignationRepository designationRepository;
     private final BranchRepository branchRepository;
     private final GradeRepository gradeRepository;
+    private final StatusRepository statusRepository;
     private final CountryRepository countryRepository;
     private final UsrRepository usrRepository;
 
@@ -85,12 +87,13 @@ public class EmployeeServiceImpl implements EmployeeService {
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private void setRelationships(Employee entity, EmployeeRequestDTO dto) {
-        entity.setEmployeeType(empTypeRepository.getReferenceById(dto.getEmployeeTypeId()));
+        entity.setEmployeeType(typeRepository.getReferenceById(dto.getEmployeeTypeId()));
         entity.setNopayDays(nopayDaysRepository.getReferenceById(dto.getNopayDaysId()));
         entity.setJobCategory(jobCategoryRepository.getReferenceById(dto.getJobCategoryId()));
         entity.setDesignation(designationRepository.getReferenceById(dto.getDesignationId()));
         entity.setBranch(branchRepository.getReferenceById(dto.getBranchId()));
         entity.setGrade(gradeRepository.getReferenceById(dto.getGradeId()));
+        entity.setStatus(statusRepository.getReferenceById(dto.getStatusId()));
         entity.setCountry(countryRepository.getReferenceById(dto.getCountryId()));
         entity.setCreatedBy(usrRepository.getReferenceById(dto.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(dto.getModifiedBy()));
@@ -98,7 +101,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private void updateRelationships(Employee entity, EmployeeRequestDTO dto) {
         if (dto.getEmployeeTypeId() != null)
-            entity.setEmployeeType(empTypeRepository.getReferenceById(dto.getEmployeeTypeId()));
+            entity.setEmployeeType(typeRepository.getReferenceById(dto.getEmployeeTypeId()));
         if (dto.getNopayDaysId() != null)
             entity.setNopayDays(nopayDaysRepository.getReferenceById(dto.getNopayDaysId()));
         if (dto.getJobCategoryId() != null)
@@ -109,6 +112,8 @@ public class EmployeeServiceImpl implements EmployeeService {
             entity.setBranch(branchRepository.getReferenceById(dto.getBranchId()));
         if (dto.getGradeId() != null)
             entity.setGrade(gradeRepository.getReferenceById(dto.getGradeId()));
+        if (dto.getStatusId() != null)
+            entity.setStatus(statusRepository.getReferenceById(dto.getStatusId()));
         if (dto.getCountryId() != null)
             entity.setCountry(countryRepository.getReferenceById(dto.getCountryId()));
         if (dto.getModifiedBy() != null)

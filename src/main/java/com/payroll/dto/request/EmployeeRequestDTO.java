@@ -54,6 +54,10 @@ public class EmployeeRequestDTO {
     @NotNull(message = "Employee type is required")
     private Long employeeTypeId;
 
+    private LocalDate contractFrom;
+
+    private LocalDate contractTo;
+
     @NotNull(message = "Nopay days is required")
     private Long nopayDaysId;
 
@@ -68,6 +72,15 @@ public class EmployeeRequestDTO {
 
     @NotNull(message = "Grade is required")
     private Long gradeId;
+
+    @NotNull(message = "Status is required")
+    private Long statusId;
+
+    private LocalDate statDate;
+
+    private LocalDate statFrom;
+
+    private LocalDate statTo;
 
     @Size(max = 20, message = "Phone must not exceed 20 characters")
     private String phone;

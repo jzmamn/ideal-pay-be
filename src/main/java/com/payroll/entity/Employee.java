@@ -64,7 +64,13 @@ public class Employee {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_type_id", nullable = false)
     @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
-    private EmpType employeeType;
+    private Type employeeType;
+
+    @Column(name = "cotract_from")
+    private LocalDate contractFrom;
+
+    @Column(name = "contract_to")
+    private LocalDate contractTo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nopay_days_id", nullable = false)
@@ -90,6 +96,20 @@ public class Employee {
     @JoinColumn(name = "grade_id", nullable = false)
     @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Grade grade;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "status_id", nullable = false)
+    @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
+    private Status status;
+
+    @Column(name = "stat_date")
+    private LocalDate statDate;
+
+    @Column(name = "stat_from")
+    private LocalDate statFrom;
+
+    @Column(name = "stat_to")
+    private LocalDate statTo;
 
     @Column(name = "phone", length = 20)
     private String phone;

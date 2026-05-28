@@ -31,6 +31,9 @@ public class EmployeeResponseDTO {
     private String employeeTypeCode;
     private String employeeTypeName;
 
+    private LocalDate contractFrom;
+    private LocalDate contractTo;
+
     private Long nopayDaysId;
     private String nopayDaysCode;
     private String nopayDaysName;
@@ -50,6 +53,14 @@ public class EmployeeResponseDTO {
     private Long gradeId;
     private String gradeCode;
     private String gradeName;
+
+    private Long statusId;
+    private String statusCode;
+    private String statusName;
+
+    private LocalDate statDate;
+    private LocalDate statFrom;
+    private LocalDate statTo;
 
     private String phone;
     private String email;

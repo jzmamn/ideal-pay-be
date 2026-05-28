@@ -1,7 +1,6 @@
 package com.payroll.dto.response;
 
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Getter
@@ -9,13 +8,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EmpTypeResponseDTO {
+public class TypeResponseDTO {
 
     private Long id;
     private String code;
     private String name;
     private String description;
     private Boolean isActive;
+    private Boolean isDateRange;
     private Long createdById;
     private String createdByCode;
     private String createdByUserName;

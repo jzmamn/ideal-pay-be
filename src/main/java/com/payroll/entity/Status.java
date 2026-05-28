@@ -2,22 +2,20 @@ package com.payroll.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.payroll.converter.BooleanToYNConverter;
-import com.payroll.entity.Usr;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "emp_type")
+@Table(name = "status")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EmpType {
+public class Status {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,7 +31,11 @@ public class EmpType {
     private String description;
 
     @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "is_active", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
+    @Column(name = "date_only", length = 1, columnDefinition = "CHAR(1) DEFAULT 'N'")
+    private Boolean dateOnly = false;
+
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "is_active", nullable = false, length = 1)
     private Boolean isActive;
 
     @ManyToOne(fetch = FetchType.LAZY)
