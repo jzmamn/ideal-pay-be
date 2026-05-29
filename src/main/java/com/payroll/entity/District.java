@@ -10,13 +10,13 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "country")
+@Table(name = "district")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Country {
+public class District {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,15 +31,6 @@ public class Country {
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "is_active", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
     private Boolean isActive;
-
-    @Column(name = "iso2", nullable = false, unique = true, length = 2)
-    private String iso2;
-
-    @Column(name = "iso3", nullable = false, length = 3)
-    private String iso3;
-
-    @Column(name = "phone_code", nullable = false)
-    private Long phoneCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)

@@ -12,9 +12,8 @@ public class CountryResponseDTO {
     private Long id;
     private String code;
     private String name;
+    private Boolean isActive;
     private String iso2;
     private String iso3;
     private Long phoneCode;
-    private Boolean postcodeRequired;
-    private Boolean isEu;
 }

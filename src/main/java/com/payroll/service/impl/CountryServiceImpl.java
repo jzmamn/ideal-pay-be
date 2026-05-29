@@ -6,6 +6,7 @@ import com.payroll.entity.Country;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.CountryMapper;
 import com.payroll.repository.CountryRepository;
+import com.payroll.repository.UsrRepository;
 import com.payroll.service.CountryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -21,12 +22,20 @@ public class CountryServiceImpl implements CountryService {
 
     private final CountryRepository countryRepository;
     private final CountryMapper countryMapper;
+    private final UsrRepository usrRepository;
 
     @Override
     @Transactional(readOnly = true)
-    public List<CountryResponseDTO> getAllCountries(boolean showDefaultRow) {
-        return countryRepository.findAll(Sort.by("name").ascending())
-                .stream()
+    public List<CountryResponseDTO> getAllCountries(boolean showDefaultRow, String isActive) {
+        if (!isActive.equalsIgnoreCase("true") && !isActive.equalsIgnoreCase("false") && !isActive.equalsIgnoreCase("all")) {
+            throw new IllegalArgumentException(
+                    "Invalid value for isActive. Accepted values: true, false, all");
+        }
+        Sort sort = Sort.by("name").ascending();
+        List<Country> records = "all".equals(isActive)
+                ? countryRepository.findAll(sort)
+                : countryRepository.findAllByIsActive(Boolean.parseBoolean(isActive), sort);
+        return records.stream()
                 .filter(e -> showDefaultRow || e.getId() != -1L)
                 .map(countryMapper::toResponseDTO)
                 .toList();
@@ -47,6 +56,8 @@ public class CountryServiceImpl implements CountryService {
                     "A country with ISO2 code '" + requestDTO.getIso2() + "' already exists.");
         }
         Country entity = countryMapper.toEntity(requestDTO);
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         // Auto-generate code as CNT_<id>
         Country saved = countryRepository.save(entity);
         saved.setCode("CNT_" + saved.getId());
@@ -58,6 +69,9 @@ public class CountryServiceImpl implements CountryService {
         Country existing = countryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Country", "id", id));
         countryMapper.updateEntityFromDTO(requestDTO, existing);
+        if (requestDTO.getModifiedBy() != null) {
+            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        }
         return countryMapper.toResponseDTO(countryRepository.save(existing));
     }
 

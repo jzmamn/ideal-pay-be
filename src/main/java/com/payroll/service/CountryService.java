@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface CountryService {
 
-    List<CountryResponseDTO> getAllCountries(boolean showDefaultRow);
+    List<CountryResponseDTO> getAllCountries(boolean showDefaultRow, String isActive);
 
     CountryResponseDTO getCountryById(Long id);
 

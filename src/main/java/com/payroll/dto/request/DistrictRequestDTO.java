@@ -10,25 +10,14 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class CountryRequestDTO {
+public class DistrictRequestDTO {
 
     @NotBlank(message = "Name is required")
     @Size(max = 70, message = "Name must not exceed 70 characters")
     private String name;
 
-    @NotNull(message = "isActive is required")
-    private Boolean isActive;
-
-    @NotBlank(message = "ISO2 code is required")
-    @Size(min = 2, max = 2, message = "ISO2 must be exactly 2 characters")
-    private String iso2;
-
-    @NotBlank(message = "ISO3 code is required")
-    @Size(min = 3, max = 3, message = "ISO3 must be exactly 3 characters")
-    private String iso3;
-
-    @NotNull(message = "Phone code is required")
-    private Long phoneCode;
+    @Builder.Default
+    private Boolean isActive = true;
 
     @NotNull(message = "createdBy is required")
     private Long createdBy;

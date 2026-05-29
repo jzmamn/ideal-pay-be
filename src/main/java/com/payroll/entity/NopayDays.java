@@ -7,6 +7,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,6 +28,9 @@ public class NopayDays {
 
     @Column(name = "name", nullable = false, length = 150)
     private String name;
+
+    @Column(name = "days", precision = 5, scale = 2, columnDefinition = "DECIMAL(5,2) DEFAULT '0.00'")
+    private BigDecimal days;
 
     @Column(name = "description", nullable = false, length = 255)
     private String description;

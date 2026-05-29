@@ -10,15 +10,23 @@ import java.util.List;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface CountryMapper {
 
-    @Mapping(target = "id",   ignore = true)
-    @Mapping(target = "code", ignore = true)
+    @Mapping(target = "id",          ignore = true)
+    @Mapping(target = "code",        ignore = true)
+    @Mapping(target = "createdBy",   ignore = true)
+    @Mapping(target = "modifiedBy",  ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "modifiedDate",ignore = true)
     Country toEntity(CountryRequestDTO requestDTO);
 
     CountryResponseDTO toResponseDTO(Country entity);
 
     List<CountryResponseDTO> toResponseDTOList(List<Country> entities);
 
-    @Mapping(target = "id",   ignore = true)
-    @Mapping(target = "code", ignore = true)
+    @Mapping(target = "id",          ignore = true)
+    @Mapping(target = "code",        ignore = true)
+    @Mapping(target = "createdBy",   ignore = true)
+    @Mapping(target = "modifiedBy",  ignore = true)
+    @Mapping(target = "createdDate", ignore = true)
+    @Mapping(target = "modifiedDate",ignore = true)
     void updateEntityFromDTO(CountryRequestDTO requestDTO, @MappingTarget Country entity);
 }

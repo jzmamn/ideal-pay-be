@@ -1,6 +1,6 @@
 package com.payroll.repository;
 
-import com.payroll.entity.Country;
+import com.payroll.entity.District;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -8,9 +8,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CountryRepository extends JpaRepository<Country, Long> {
+public interface DistrictRepository extends JpaRepository<District, Long> {
 
-    boolean existsByIso2IgnoreCase(String iso2);
+    boolean existsByNameIgnoreCase(String name);
 
-    List<Country> findAllByIsActive(Boolean isActive, Sort sort);
+    List<District> findAllByIsActive(Boolean isActive, Sort sort);
 }

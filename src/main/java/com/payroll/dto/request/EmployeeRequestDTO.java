@@ -70,7 +70,6 @@ public class EmployeeRequestDTO {
     @NotNull(message = "Branch is required")
     private Long branchId;
 
-    @NotNull(message = "Grade is required")
     private Long gradeId;
 
     @NotNull(message = "Status is required")

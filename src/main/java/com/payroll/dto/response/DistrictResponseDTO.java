@@ -2,7 +2,6 @@ package com.payroll.dto.response;
 
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -10,15 +9,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class NopayDaysResponseDTO {
+public class DistrictResponseDTO {
 
     private Long id;
     private String code;
     private String name;
-    private BigDecimal days;
-    private String description;
     private Boolean isActive;
-
     private Long createdById;
     private String createdByCode;
     private String createdByUserName;

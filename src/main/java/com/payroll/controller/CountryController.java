@@ -22,10 +22,11 @@ public class CountryController {
     // GET /payroll/country
     @GetMapping
     public ResponseEntity<ApiResponseDTO<List<CountryResponseDTO>>> getAllCountries(
-            @RequestParam(value = "showDefaultRow", defaultValue = "false") boolean showDefaultRow) {
+            @RequestParam(value = "showDefaultRow", defaultValue = "false") boolean showDefaultRow,
+            @RequestParam(value = "isActive", defaultValue = "true") String isActive) {
         return ResponseEntity.ok(ApiResponseDTO.success(
                 "Countries fetched successfully",
-                countryService.getAllCountries(showDefaultRow)));
+                countryService.getAllCountries(showDefaultRow, isActive)));
     }
 
     // GET /payroll/country/{id}
