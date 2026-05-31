@@ -13,4 +13,6 @@ public interface EmployeeFixedDeductionRepository extends JpaRepository<Employee
     List<EmployeeFixedDeduction> findAllByEmployeeId(Long empId, Sort sort);
 
     List<EmployeeFixedDeduction> findAllByFixedDeductionId(Long fdId, Sort sort);
+
+    List<EmployeeFixedDeduction> findAllByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
 }

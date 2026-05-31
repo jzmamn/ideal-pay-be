@@ -16,4 +16,6 @@ public interface EmployeeOvertimeService {
     EmployeeOvertimeResponseDTO updateEmployeeOvertime(Long id, EmployeeOvertimeRequestDTO requestDTO);
 
     void deleteEmployeeOvertime(Long id);
+
+    List<EmployeeOvertimeResponseDTO> getByEmployeeId(Long empId);
 }

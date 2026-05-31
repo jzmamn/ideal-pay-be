@@ -13,4 +13,6 @@ public interface EmployeeVariableDeductionRepository extends JpaRepository<Emplo
     List<EmployeeVariableDeduction> findAllByEmployeeId(Long empId, Sort sort);
 
     List<EmployeeVariableDeduction> findAllByVariableDeductionId(Long vdId, Sort sort);
+
+    List<EmployeeVariableDeduction> findAllByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
 }

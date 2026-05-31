@@ -1,5 +1,6 @@
 package com.payroll.dto.response;
 
+import com.payroll.enums.ComponentType;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -10,30 +11,20 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EmployeeNopayResponseDTO {
+public class PayrollRunDetailResponseDTO {
 
     private Long id;
-    private Boolean isAssigned;
-    private BigDecimal days;
+    private ComponentType componentType;
+    private Long componentId;
+    private String componentCode;
+    private String componentName;
     private BigDecimal amount;
-    private String payrollMonth;
-    private Boolean isProcessed;
-    private LocalDateTime processedDate;
-
-    private Long empId;
-    private String empCode;
-    private String empName;
-
-    private Long nopayId;
-    private String nopayCode;
-    private String nopayName;
-
+    private BigDecimal hours;
+    private BigDecimal days;
     private Long createdById;
-    private String createdByCode;
     private String createdByUserName;
     private LocalDateTime createdDate;
     private Long modifiedById;
-    private String modifiedByCode;
     private String modifiedByUserName;
     private LocalDateTime modifiedDate;
 }

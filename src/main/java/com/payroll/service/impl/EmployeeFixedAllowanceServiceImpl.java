@@ -69,6 +69,15 @@ public class EmployeeFixedAllowanceServiceImpl implements EmployeeFixedAllowance
         employeeFixedAllowanceRepository.delete(entity);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<EmployeeFixedAllowanceResponseDTO> getByEmployeeId(Long empId) {
+        Sort sort = Sort.by("id").ascending();
+        return employeeFixedAllowanceRepository.findAllByEmployeeId(empId, sort).stream()
+                .map(employeeFixedAllowanceMapper::toResponseDTO)
+                .toList();
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void setRelationships(EmployeeFixedAllowance entity, EmployeeFixedAllowanceRequestDTO dto) {

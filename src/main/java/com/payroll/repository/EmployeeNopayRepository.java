@@ -13,4 +13,6 @@ public interface EmployeeNopayRepository extends JpaRepository<EmployeeNopay, Lo
     List<EmployeeNopay> findAllByEmployeeId(Long empId, Sort sort);
 
     List<EmployeeNopay> findAllByNopayDaysId(Long nopayId, Sort sort);
+
+    List<EmployeeNopay> findAllByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
 }

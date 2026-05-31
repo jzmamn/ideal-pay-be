@@ -69,6 +69,15 @@ public class EmployeeVariableAllowanceServiceImpl implements EmployeeVariableAll
         employeeVariableAllowanceRepository.delete(entity);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<EmployeeVariableAllowanceResponseDTO> getByEmployeeId(Long empId) {
+        Sort sort = Sort.by("id").ascending();
+        return employeeVariableAllowanceRepository.findAllByEmployeeId(empId, sort).stream()
+                .map(employeeVariableAllowanceMapper::toResponseDTO)
+                .toList();
+    }
+
     private void setRelationships(EmployeeVariableAllowance entity, EmployeeVariableAllowanceRequestDTO dto) {
         entity.setEmployee(employeeRepository.getReferenceById(dto.getEmpId()));
         entity.setVariableAllowance(variableAllowanceRepository.getReferenceById(dto.getVaId()));

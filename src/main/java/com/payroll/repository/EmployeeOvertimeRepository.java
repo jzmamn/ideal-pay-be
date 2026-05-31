@@ -13,4 +13,6 @@ public interface EmployeeOvertimeRepository extends JpaRepository<EmployeeOverti
     List<EmployeeOvertime> findAllByEmployeeId(Long empId, Sort sort);
 
     List<EmployeeOvertime> findAllByOvertimeId(Long overtimeId, Sort sort);
+
+    List<EmployeeOvertime> findAllByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
 }

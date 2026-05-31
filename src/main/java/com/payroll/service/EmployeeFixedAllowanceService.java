@@ -16,4 +16,6 @@ public interface EmployeeFixedAllowanceService {
     EmployeeFixedAllowanceResponseDTO updateEmployeeFixedAllowance(Long id, EmployeeFixedAllowanceRequestDTO requestDTO);
 
     void deleteEmployeeFixedAllowance(Long id);
+
+    List<EmployeeFixedAllowanceResponseDTO> getByEmployeeId(Long empId);
 }

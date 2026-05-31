@@ -13,4 +13,6 @@ public interface EmployeeVariableAllowanceRepository extends JpaRepository<Emplo
     List<EmployeeVariableAllowance> findAllByEmployeeId(Long empId, Sort sort);
 
     List<EmployeeVariableAllowance> findAllByVariableAllowanceId(Long vaId, Sort sort);
+
+    List<EmployeeVariableAllowance> findAllByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
 }

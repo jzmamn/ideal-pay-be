@@ -16,4 +16,6 @@ public interface EmployeeVariableDeductionService {
     EmployeeVariableDeductionResponseDTO updateEmployeeVariableDeduction(Long id, EmployeeVariableDeductionRequestDTO requestDTO);
 
     void deleteEmployeeVariableDeduction(Long id);
+
+    List<EmployeeVariableDeductionResponseDTO> getByEmployeeId(Long empId);
 }

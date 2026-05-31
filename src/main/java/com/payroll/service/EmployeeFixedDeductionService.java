@@ -16,4 +16,6 @@ public interface EmployeeFixedDeductionService {
     EmployeeFixedDeductionResponseDTO updateEmployeeFixedDeduction(Long id, EmployeeFixedDeductionRequestDTO requestDTO);
 
     void deleteEmployeeFixedDeduction(Long id);
+
+    List<EmployeeFixedDeductionResponseDTO> getByEmployeeId(Long empId);
 }

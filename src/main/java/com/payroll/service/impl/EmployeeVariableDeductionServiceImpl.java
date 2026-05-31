@@ -69,6 +69,15 @@ public class EmployeeVariableDeductionServiceImpl implements EmployeeVariableDed
         employeeVariableDeductionRepository.delete(entity);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<EmployeeVariableDeductionResponseDTO> getByEmployeeId(Long empId) {
+        Sort sort = Sort.by("id").ascending();
+        return employeeVariableDeductionRepository.findAllByEmployeeId(empId, sort).stream()
+                .map(employeeVariableDeductionMapper::toResponseDTO)
+                .toList();
+    }
+
     private void setRelationships(EmployeeVariableDeduction entity, EmployeeVariableDeductionRequestDTO dto) {
         entity.setEmployee(employeeRepository.getReferenceById(dto.getEmpId()));
         entity.setVariableDeduction(variableDeductionRepository.getReferenceById(dto.getVdId()));

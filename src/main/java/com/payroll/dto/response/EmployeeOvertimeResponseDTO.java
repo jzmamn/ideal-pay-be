@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class EmployeeOvertimeResponseDTO {
 
     private Long id;
+    private Boolean isAssigned;
     private BigDecimal hours;
     private BigDecimal amount;
     private String payrollMonth;

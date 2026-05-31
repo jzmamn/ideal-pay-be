@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class EmployeeVariableAllowanceResponseDTO {
 
     private Long id;
+    private Boolean isAssigned;
     private BigDecimal amount;
     private String payrollMonth;
     private Boolean isProcessed;

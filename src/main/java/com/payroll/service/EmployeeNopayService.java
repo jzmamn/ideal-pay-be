@@ -16,4 +16,6 @@ public interface EmployeeNopayService {
     EmployeeNopayResponseDTO updateEmployeeNopay(Long id, EmployeeNopayRequestDTO requestDTO);
 
     void deleteEmployeeNopay(Long id);
+
+    List<EmployeeNopayResponseDTO> getByEmployeeId(Long empId);
 }

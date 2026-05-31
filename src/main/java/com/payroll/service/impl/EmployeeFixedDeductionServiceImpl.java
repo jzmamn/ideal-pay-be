@@ -69,6 +69,15 @@ public class EmployeeFixedDeductionServiceImpl implements EmployeeFixedDeduction
         employeeFixedDeductionRepository.delete(entity);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<EmployeeFixedDeductionResponseDTO> getByEmployeeId(Long empId) {
+        Sort sort = Sort.by("id").ascending();
+        return employeeFixedDeductionRepository.findAllByEmployeeId(empId, sort).stream()
+                .map(employeeFixedDeductionMapper::toResponseDTO)
+                .toList();
+    }
+
     private void setRelationships(EmployeeFixedDeduction entity, EmployeeFixedDeductionRequestDTO dto) {
         entity.setEmployee(employeeRepository.getReferenceById(dto.getEmpId()));
         entity.setFixedDeduction(fixedDeductionRepository.getReferenceById(dto.getFdId()));

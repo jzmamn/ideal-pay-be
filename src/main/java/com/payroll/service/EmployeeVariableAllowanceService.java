@@ -16,4 +16,6 @@ public interface EmployeeVariableAllowanceService {
     EmployeeVariableAllowanceResponseDTO updateEmployeeVariableAllowance(Long id, EmployeeVariableAllowanceRequestDTO requestDTO);
 
     void deleteEmployeeVariableAllowance(Long id);
+
+    List<EmployeeVariableAllowanceResponseDTO> getByEmployeeId(Long empId);
 }
