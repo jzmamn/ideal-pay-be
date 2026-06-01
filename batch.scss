@@ -1,0 +1,256 @@
+:host { display: block; }
+
+.page-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: #f8fafc;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 20px 0 24px;
+  height: 56px;
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.page-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.page-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  flex-shrink: 0;
+
+  mat-icon { font-size: 20px; width: 20px; height: 20px; }
+}
+
+.page-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.period-month {
+  width: 160px;
+  --mdc-outlined-text-field-container-height: 36px;
+  font-size: 13px;
+}
+
+.period-year {
+  width: 104px;
+  --mdc-outlined-text-field-container-height: 36px;
+  font-size: 13px;
+}
+
+// ── Loading bar ───────────────────────────────────────────────────────────
+.loading-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 20px;
+  background: #eff6ff;
+  border-bottom: 1px solid #bfdbfe;
+  font-size: 12px;
+  color: #1d4ed8;
+  flex-shrink: 0;
+}
+
+.grand-total-chip {
+  font-size: 13px;
+  color: #475569;
+  white-space: nowrap;
+  margin-right: auto;
+
+  strong { font-size: 15px; font-weight: 700; color: #1d4ed8; }
+}
+
+// ── Category tabs ─────────────────────────────────────────────────────────
+.category-tabs {
+  flex-shrink: 0;
+  background: #fff;
+
+  ::ng-deep {
+    .mat-mdc-tab-header {
+      position: sticky;
+      top: 56px; // below page header
+      z-index: 9;
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .mat-mdc-tab-body-content { padding: 0; overflow: visible; }
+    .mat-mdc-tab-label-container { padding: 0 12px; }
+    .mdc-tab { height: 44px; min-width: 120px; }
+    .mdc-tab__text-label { font-size: 12px; font-weight: 500; letter-spacing: 0.01em; }
+    .mdc-tab--active .mdc-tab__text-label { font-weight: 600; color: #1d4ed8; }
+    .mdc-tab-indicator__content--underline { border-color: #1d4ed8; }
+  }
+}
+
+// ── NoPay flat table ──────────────────────────────────────────────────────
+.nopay-table-wrap {
+  padding: 16px 20px;
+  overflow-x: auto;
+}
+
+.nopay-empty {
+  padding: 32px 0;
+  text-align: center;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.nopay-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  color: #0f172a;
+
+  thead tr {
+    background: #f1f5f9;
+  }
+
+  th {
+    padding: 9px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    color: #475569;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 7px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+  }
+
+  tbody tr:hover td {
+    background: #f8fafc;
+  }
+
+  .col-employee   { min-width: 160px; }
+  .col-rule       { min-width: 140px; color: #475569; }
+  .col-rule-days  { min-width: 140px; color: #475569; }
+  .col-days       { width: 100px; }
+  .col-amount     { width: 130px; }
+}
+
+// ── NoPay editable input ──────────────────────────────────────────────────
+.np-input {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #0f172a;
+  background: #fff;
+  outline: none;
+  text-align: right;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px #bfdbfe;
+  }
+
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button { opacity: 1; }
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────
+.page-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 12px 20px;
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+// ── Status banners ────────────────────────────────────────────────────────
+.status-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
+
+  &--success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #15803d;
+    mat-icon { color: #16a34a; }
+  }
+
+  &--error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    mat-icon { color: #dc2626; }
+  }
+}
+
+.btn-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────
+@media (max-width: 640px) {
+  .page-header      { height: auto; flex-wrap: wrap; padding: 10px 16px; gap: 8px; }
+  .page-header-right { flex-wrap: wrap; }
+  .period-month     { flex: 1; }
+  .period-year      { width: 90px; }
+  .pivot-toolbar    { flex-wrap: wrap; top: auto; padding: 8px 16px; }
+  .emp-filter-field { width: 100%; }
+  .nopay-table-wrap { padding: 12px; }
+}

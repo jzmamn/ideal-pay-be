@@ -20,4 +20,6 @@ public interface PayrollPivotService {
     List<Map<String, Object>> getPayrollMonthlySummary(String month);
 
     List<Map<String, Object>> getPayrollMonthlyDetail(String month);
+
+    List<Map<String, Object>> getEmployeeSalaryAdvancePivot(String month);
 }

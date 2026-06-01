@@ -80,4 +80,12 @@ public class PayrollPivotController {
                 payrollPivotService.getPayrollMonthlyDetail(month)));
     }
 
+    @GetMapping("/emp-sal-adv-pivot")
+    public ResponseEntity<ApiResponseDTO<List<Map<String, Object>>>> getEmployeeSalaryAdvancePivot(
+            @RequestParam String month) {
+        return ResponseEntity.ok(ApiResponseDTO.success(
+                "Employee salary advance pivot fetched successfully",
+                payrollPivotService.getEmployeeSalaryAdvancePivot(month)));
+    }
+
 }

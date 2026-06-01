@@ -1,0 +1,146 @@
+<div class="page-shell" [formGroup]="periodForm">
+
+  <header class="page-header">
+    <div class="page-header-left">
+      <div class="page-header-icon" aria-hidden="true">
+        <mat-icon>receipt_long</mat-icon>
+      </div>
+      <h1 class="page-title">Batch Payroll</h1>
+    </div>
+
+    <div class="page-header-right">
+      <mat-form-field appearance="outline" class="period-month" subscriptSizing="dynamic">
+        <mat-label>Month</mat-label>
+        <mat-select formControlName="month" (selectionChange)="onPeriodChange()">
+          @for (m of months; track m.value) {
+            <mat-option [value]="m.value">{{ m.label }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="period-year" subscriptSizing="dynamic">
+        <mat-label>Year</mat-label>
+        <mat-select formControlName="year" (selectionChange)="onPeriodChange()">
+          @for (y of years; track y) {
+            <mat-option [value]="y">{{ y }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </header>
+
+  @if (loading()) {
+    <div class="loading-bar" aria-live="polite">
+      <mat-spinner diameter="16" />
+      <span>Loading…</span>
+    </div>
+  }
+
+  <mat-tab-group class="category-tabs"
+                 [selectedIndex]="selectedSubStep()"
+                 (selectedIndexChange)="selectedSubStep.set($event)"
+                 animationDuration="0">
+    @for (step of SUB_STEPS; track step.uiKey) {
+      <mat-tab [label]="step.label">
+
+        @if (step.uiKey === 'nopay') {
+
+          <!-- ── NoPay flat table ─────────────────────────────────── -->
+          <div class="nopay-table-wrap">
+            <table class="nopay-table">
+              <thead>
+                <tr>
+                  <th class="col-employee">Employee</th>
+                  <th class="col-rule">Nopay Rule</th>
+                  <th class="col-rule-days">Nopay Rule Days</th>
+                  <th class="col-days">Days</th>
+                  <th class="col-amount">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                @if (nopayRows().length === 0) {
+                  <tr>
+                    <td colspan="5" class="nopay-empty">No NoPay entries for this period.</td>
+                  </tr>
+                } @else {
+                  @for (row of nopayRows(); track $index) {
+                    <tr>
+                      <td class="col-employee">{{ row.payrollName }}</td>
+                      <td class="col-rule">{{ row.nopayRule ?? '—' }}</td>
+                      <td class="col-rule-days">{{ row.nopayRuleDays ?? '—' }}</td>
+                      <td class="col-days">
+                        <input
+                          class="np-input"
+                          type="number"
+                          min="0"
+                          [value]="row.days"
+                          (change)="onNopayChange($index, 'days', +$any($event.target).value)"
+                          aria-label="Days for {{ row.payrollName }}" />
+                      </td>
+                      <td class="col-amount">
+                        <input
+                          class="np-input"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          [value]="row.amount"
+                          (change)="onNopayChange($index, 'amount', +$any($event.target).value)"
+                          aria-label="Amount for {{ row.payrollName }}" />
+                      </td>
+                    </tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+
+        } @else {
+
+          <!-- ── Pivot table (all other tabs) ───────────────────── -->
+          <app-pivot
+            [codes]="namesFor(step.uiKey)"
+            [rows]="pivotRows()"
+            [amounts]="matrices()[step.uiKey]"
+            [label]="step.label"
+            (amountChange)="onAmountChange(step.uiKey, $event)">
+          </app-pivot>
+
+        }
+
+      </mat-tab>
+    }
+  </mat-tab-group>
+
+  <footer class="page-footer">
+    <span class="grand-total-chip">
+      Grand Total: <strong>{{ grandTotal() | number:'1.2-2' }}</strong>
+    </span>
+    @if (saveSuccess()) {
+      <div class="status-banner status-banner--success" role="status" aria-live="polite">
+        <mat-icon>check_circle</mat-icon>
+        <span>Batch saved for {{ periodLabel }}</span>
+      </div>
+    }
+    @if (saveError()) {
+      <div class="status-banner status-banner--error" role="alert">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ saveError() }}</span>
+      </div>
+    }
+    <button mat-flat-button
+            [disabled]="saving() || periodForm.invalid"
+            (click)="save()"
+            aria-label="Save batch allowances">
+      <span class="btn-content">
+        @if (saving()) {
+          <mat-spinner diameter="18" />
+          <span>Saving…</span>
+        } @else {
+          <mat-icon>save</mat-icon>
+          <span>Save Batch</span>
+        }
+      </span>
+    </button>
+  </footer>
+
+</div>

@@ -3,6 +3,15 @@ package com.payroll.service.impl;
 import com.payroll.dto.request.BatchSaveEntryDTO;
 import com.payroll.dto.request.BatchSaveRequestDTO;
 import com.payroll.entity.*;
+import com.payroll.entity.EmployeeSalaryAdvance;
+import com.payroll.entity.EmployeeBonus;
+import com.payroll.entity.EmployeeLoan;
+import com.payroll.entity.EmployeeSalaryIncrement;
+import com.payroll.repository.EmployeeSalaryAdvanceRepository;
+import com.payroll.repository.EmployeeBonusRepository;
+import com.payroll.repository.EmployeeLoanRepository;
+import com.payroll.repository.EmployeeSalaryIncrementRepository;
+import com.payroll.repository.LoanRepository;
 import com.payroll.enums.PayrollRunStatus;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.repository.*;
@@ -31,6 +40,7 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
     private final VariableDeductionRepository vdRepository;
     private final OvertimeRepository          otRepository;
     private final NopayDaysRepository         npRepository;
+    private final LoanRepository              loanRepository;
 
     // Employee component repositories — upsert targets
     private final EmployeeFixedAllowanceRepository    empFaRepository;
@@ -39,6 +49,10 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
     private final EmployeeVariableDeductionRepository empVdRepository;
     private final EmployeeOvertimeRepository          empOtRepository;
     private final EmployeeNopayRepository             empNpRepository;
+    private final EmployeeSalaryAdvanceRepository     empSalAdvRepository;
+    private final EmployeeBonusRepository             empBonusRepository;
+    private final EmployeeLoanRepository              empLoanRepository;
+    private final EmployeeSalaryIncrementRepository   empSalIncrRepository;
 
     private final EmployeeRepository      employeeRepository;
     private final UsrRepository           usrRepository;
@@ -57,7 +71,11 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
         result.put("variableAllowances", callSp("sp_emp_va_pivot", payrollMonth));
         result.put("variableDeductions", callSp("sp_emp_vd_pivot", payrollMonth));
         result.put("overtimes",          callSp("sp_emp_ot_pivot", payrollMonth));
-        result.put("nopays",             callSp("sp_emp_np_pivot", payrollMonth));
+        result.put("nopays",             callSp("sp_emp_np_pivot",      payrollMonth));
+        result.put("salaryAdvances",     callSp("sp_emp_sal_adv_pivot", payrollMonth));
+        result.put("bonuses",            callSp("sp_emp_bonus_pivot",   payrollMonth));
+        result.put("loans",              callSp("sp_emp_loan_pivot",    payrollMonth));
+        result.put("salaryIncrements",   callSp("sp_emp_sal_incr_pivot",payrollMonth));
         return result;
     }
 
@@ -111,8 +129,12 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
                 case "VA"    -> { if (isDelete) deleteVa(employee, entry, payrollMonth); else upsertVa(employee, entry, payrollMonth, user); }
                 case "VD"    -> upsertVd(employee, entry, payrollMonth, user);
                 case "OT"    -> { if (isDelete) deleteOt(employee, entry, payrollMonth); else upsertOt(employee, entry, payrollMonth, user); }
-                case "NOPAY" -> { if (isDelete) deleteNp(employee, entry, payrollMonth); else upsertNp(employee, entry, payrollMonth, user); }
-                default      -> log.warn("Skipping unknown componentType '{}' for employee {}",
+                case "NOPAY"   -> { if (isDelete) deleteNp(employee, entry, payrollMonth); else upsertNp(employee, entry, payrollMonth, user); }
+                case "SAL_ADV"  -> { if (isDelete) deleteSalAdv(employee, payrollMonth);               else upsertSalAdv(employee, entry, payrollMonth, user); }
+                case "BONUS"    -> { if (isDelete) deleteBonus(employee, payrollMonth);                else upsertBonus(employee, entry, payrollMonth, user); }
+                case "LOAN"     -> { if (isDelete) deleteLoan(employee, entry, payrollMonth);          else upsertLoan(employee, entry, payrollMonth, user); }
+                case "SAL_INCR" -> { if (isDelete) deleteSalIncr(employee, payrollMonth);              else upsertSalIncr(employee, entry, payrollMonth, user); }
+                default         -> log.warn("Skipping unknown componentType '{}' for employee {}",
                         entry.getComponentType(), entry.getEmployeeId());
             }
         }
@@ -353,6 +375,91 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
                                 .modifiedBy(user)
                                 .build())
                 );
+    }
+
+    // ── Upsert — Bonus ────────────────────────────────────────────────────────
+
+    private void upsertBonus(Employee emp, BatchSaveEntryDTO entry, String payrollMonth, Usr user) {
+        empBonusRepository.findByEmployeeIdAndPayrollMonth(emp.getId(), payrollMonth)
+                .ifPresentOrElse(
+                        existing -> { existing.setAmount(entry.getAmount()); existing.setModifiedBy(user); empBonusRepository.save(existing); },
+                        () -> empBonusRepository.save(EmployeeBonus.builder()
+                                .employee(emp).amount(entry.getAmount()).payrollMonth(payrollMonth)
+                                .isProcessed(false).createdBy(user).modifiedBy(user).build())
+                );
+    }
+
+    private void deleteBonus(Employee emp, String payrollMonth) {
+        empBonusRepository.findByEmployeeIdAndPayrollMonth(emp.getId(), payrollMonth)
+                .ifPresent(empBonusRepository::delete);
+    }
+
+    // ── Upsert — Loan ─────────────────────────────────────────────────────────
+
+    private void upsertLoan(Employee emp, BatchSaveEntryDTO entry, String payrollMonth, Usr user) {
+        Loan loan = loanRepository.findByCodeIgnoreCase(entry.getComponentCode())
+                .orElseThrow(() -> new ResourceNotFoundException("Loan", "code", entry.getComponentCode()));
+
+        empLoanRepository.findAllByEmployeeIdAndPayrollMonth(emp.getId(), payrollMonth).stream()
+                .filter(r -> r.getLoan().getId().equals(loan.getId()))
+                .findFirst()
+                .ifPresentOrElse(
+                        existing -> { existing.setAmount(entry.getAmount()); existing.setModifiedBy(user); empLoanRepository.save(existing); },
+                        () -> empLoanRepository.save(EmployeeLoan.builder()
+                                .employee(emp).loan(loan).amount(entry.getAmount()).payrollMonth(payrollMonth)
+                                .isProcessed(false).createdBy(user).modifiedBy(user).build())
+                );
+    }
+
+    private void deleteLoan(Employee emp, BatchSaveEntryDTO entry, String payrollMonth) {
+        loanRepository.findByCodeIgnoreCase(entry.getComponentCode()).ifPresent(loan ->
+                empLoanRepository.findAllByEmployeeIdAndPayrollMonth(emp.getId(), payrollMonth).stream()
+                        .filter(r -> r.getLoan().getId().equals(loan.getId()))
+                        .findFirst()
+                        .ifPresent(empLoanRepository::delete));
+    }
+
+    // ── Upsert — Salary Increment ─────────────────────────────────────────────
+
+    private void upsertSalIncr(Employee emp, BatchSaveEntryDTO entry, String payrollMonth, Usr user) {
+        empSalIncrRepository.findByEmployeeIdAndPayrollMonth(emp.getId(), payrollMonth)
+                .ifPresentOrElse(
+                        existing -> { existing.setAmount(entry.getAmount()); existing.setModifiedBy(user); empSalIncrRepository.save(existing); },
+                        () -> empSalIncrRepository.save(EmployeeSalaryIncrement.builder()
+                                .employee(emp).amount(entry.getAmount()).payrollMonth(payrollMonth)
+                                .isProcessed(false).createdBy(user).modifiedBy(user).build())
+                );
+    }
+
+    private void deleteSalIncr(Employee emp, String payrollMonth) {
+        empSalIncrRepository.findByEmployeeIdAndPayrollMonth(emp.getId(), payrollMonth)
+                .ifPresent(empSalIncrRepository::delete);
+    }
+
+    // ── Upsert — Salary Advance ───────────────────────────────────────────────
+
+    private void upsertSalAdv(Employee emp, BatchSaveEntryDTO entry, String payrollMonth, Usr user) {
+        empSalAdvRepository.findByEmployeeIdAndPayrollMonth(emp.getId(), payrollMonth)
+                .ifPresentOrElse(
+                        existing -> {
+                            existing.setAmount(entry.getAmount());
+                            existing.setModifiedBy(user);
+                            empSalAdvRepository.save(existing);
+                        },
+                        () -> empSalAdvRepository.save(EmployeeSalaryAdvance.builder()
+                                .employee(emp)
+                                .amount(entry.getAmount())
+                                .payrollMonth(payrollMonth)
+                                .isProcessed(false)
+                                .createdBy(user)
+                                .modifiedBy(user)
+                                .build())
+                );
+    }
+
+    private void deleteSalAdv(Employee emp, String payrollMonth) {
+        empSalAdvRepository.findByEmployeeIdAndPayrollMonth(emp.getId(), payrollMonth)
+                .ifPresent(empSalAdvRepository::delete);
     }
 
     // ── Utility ───────────────────────────────────────────────────────────────
