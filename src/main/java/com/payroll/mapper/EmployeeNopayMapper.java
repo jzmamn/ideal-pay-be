@@ -25,6 +25,7 @@ public interface EmployeeNopayMapper {
     @Mapping(target = "nopayId",            source = "nopayDays.id")
     @Mapping(target = "nopayCode",          source = "nopayDays.code")
     @Mapping(target = "nopayName",          source = "nopayDays.name")
+    @Mapping(target = "nopayMasterDays",    source = "nopayDays.days")
     @Mapping(target = "createdById",        source = "createdBy.id")
     @Mapping(target = "createdByCode",      source = "createdBy.code")
     @Mapping(target = "createdByUserName",  source = "createdBy.userName")

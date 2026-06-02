@@ -27,6 +27,7 @@ public class EmployeeNopayResponseDTO {
     private Long nopayId;
     private String nopayCode;
     private String nopayName;
+    private BigDecimal nopayMasterDays;
 
     private Long createdById;
     private String createdByCode;
