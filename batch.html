@@ -130,14 +130,14 @@
     <button mat-flat-button
             [disabled]="saving() || periodForm.invalid"
             (click)="save()"
-            aria-label="Save batch allowances">
+            aria-label="Process batch payroll">
       <span class="btn-content">
         @if (saving()) {
           <mat-spinner diameter="18" />
-          <span>Saving…</span>
+          <span>Processing…</span>
         } @else {
-          <mat-icon>save</mat-icon>
-          <span>Save Batch</span>
+          <mat-icon>play_arrow</mat-icon>
+          <span>Process</span>
         }
       </span>
     </button>

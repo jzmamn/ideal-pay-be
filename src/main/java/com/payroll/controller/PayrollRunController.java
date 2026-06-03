@@ -1,5 +1,6 @@
 package com.payroll.controller;
 
+import com.payroll.dto.request.CorrectionDetailUpdateDTO;
 import com.payroll.dto.response.ApiResponseDTO;
 import com.payroll.dto.response.PayrollRunResponseDTO;
 import com.payroll.dto.response.PayrollRunSummaryDTO;
@@ -8,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 import java.util.List;
 
@@ -74,5 +77,57 @@ public class PayrollRunController {
         return ResponseEntity.ok(ApiResponseDTO.success(
                 "Payroll runs for month fetched successfully",
                 payrollRunService.getPayrollRunsByMonth(payrollMonth)));
+    }
+
+    // ── Correction endpoints ─────────────────────────────────────────────────
+
+    /**
+     * Create a CORRECTION_DRAFT run seeded from the original LOCKED run.
+     * Use this when you need to amend a closed payroll period.
+     */
+    @PostMapping("/{runId}/correct")
+    public ResponseEntity<ApiResponseDTO<PayrollRunResponseDTO>> createCorrectionRun(
+            @PathVariable Long runId,
+            @RequestParam Long userId) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseDTO.success(
+                "Correction run created",
+                payrollRunService.createCorrectionRun(runId, userId)));
+    }
+
+    /**
+     * Update the detail lines of a CORRECTION_DRAFT run.
+     * Replaces all existing lines and recalculates totals.
+     */
+    @PutMapping("/{runId}/correction-details")
+    public ResponseEntity<ApiResponseDTO<PayrollRunResponseDTO>> updateCorrectionDetails(
+            @PathVariable Long runId,
+            @RequestBody List<CorrectionDetailUpdateDTO> details,
+            @RequestParam Long userId) {
+        return ResponseEntity.ok(ApiResponseDTO.success(
+                "Correction details updated",
+                payrollRunService.updateCorrectionDetails(runId, details, userId)));
+    }
+
+    /**
+     * Lock a CORRECTION_DRAFT run → CORRECTION_LOCKED (finalised).
+     */
+    @PostMapping("/{runId}/lock-correction")
+    public ResponseEntity<ApiResponseDTO<PayrollRunResponseDTO>> lockCorrectionRun(
+            @PathVariable Long runId,
+            @RequestParam Long userId) {
+        return ResponseEntity.ok(ApiResponseDTO.success(
+                "Correction run locked",
+                payrollRunService.lockCorrectionRun(runId, userId)));
+    }
+
+    /**
+     * List all correction runs for a given original run.
+     */
+    @GetMapping("/{runId}/corrections")
+    public ResponseEntity<ApiResponseDTO<List<PayrollRunSummaryDTO>>> getCorrectionsByOriginalRun(
+            @PathVariable Long runId) {
+        return ResponseEntity.ok(ApiResponseDTO.success(
+                "Correction runs fetched",
+                payrollRunService.getCorrectionsByOriginalRun(runId)));
     }
 }

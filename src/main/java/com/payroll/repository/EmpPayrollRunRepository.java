@@ -21,4 +21,6 @@ public interface EmpPayrollRunRepository extends JpaRepository<EmpPayrollRun, Lo
     List<EmpPayrollRun> findAllByPayrollMonth(String payrollMonth, Sort sort);
 
     List<EmpPayrollRun> findAllByPayrollMonthAndStatus(String payrollMonth, PayrollRunStatus status, Sort sort);
+
+    List<EmpPayrollRun> findAllByParentRunId(Long parentRunId, Sort sort);
 }

@@ -48,8 +48,21 @@ public class EmployeeVariableDeductionServiceImpl implements EmployeeVariableDed
 
     @Override
     public EmployeeVariableDeductionResponseDTO createEmployeeVariableDeduction(EmployeeVariableDeductionRequestDTO requestDTO) {
-        EmployeeVariableDeduction entity = employeeVariableDeductionMapper.toEntity(requestDTO);
-        setRelationships(entity, requestDTO);
+        EmployeeVariableDeduction entity = employeeVariableDeductionRepository
+                .findByEmployee_IdAndVariableDeduction_IdAndPayrollMonth(
+                        requestDTO.getEmpId(), requestDTO.getVdId(), requestDTO.getPayrollMonth())
+                .orElse(null);
+
+        if (entity != null) {
+            entity.setAmount(requestDTO.getAmount());
+            entity.setIsProcessed(requestDTO.getIsProcessed() != null ? requestDTO.getIsProcessed() : Boolean.FALSE);
+            entity.setProcessedDate(requestDTO.getProcessedDate());
+            entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        } else {
+            entity = employeeVariableDeductionMapper.toEntity(requestDTO);
+            setRelationships(entity, requestDTO);
+        }
+
         return employeeVariableDeductionMapper.toResponseDTO(employeeVariableDeductionRepository.save(entity));
     }
 

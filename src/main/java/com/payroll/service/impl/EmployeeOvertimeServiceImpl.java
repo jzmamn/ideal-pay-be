@@ -48,8 +48,22 @@ public class EmployeeOvertimeServiceImpl implements EmployeeOvertimeService {
 
     @Override
     public EmployeeOvertimeResponseDTO createEmployeeOvertime(EmployeeOvertimeRequestDTO requestDTO) {
-        EmployeeOvertime entity = employeeOvertimeMapper.toEntity(requestDTO);
-        setRelationships(entity, requestDTO);
+        EmployeeOvertime entity = employeeOvertimeRepository
+                .findByEmployee_IdAndOvertime_IdAndPayrollMonth(
+                        requestDTO.getEmpId(), requestDTO.getOvertimeId(), requestDTO.getPayrollMonth())
+                .orElse(null);
+
+        if (entity != null) {
+            entity.setHours(requestDTO.getHours());
+            entity.setAmount(requestDTO.getAmount());
+            entity.setIsProcessed(requestDTO.getIsProcessed() != null ? requestDTO.getIsProcessed() : Boolean.FALSE);
+            entity.setProcessedDate(requestDTO.getProcessedDate());
+            entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        } else {
+            entity = employeeOvertimeMapper.toEntity(requestDTO);
+            setRelationships(entity, requestDTO);
+        }
+
         return employeeOvertimeMapper.toResponseDTO(employeeOvertimeRepository.save(entity));
     }
 

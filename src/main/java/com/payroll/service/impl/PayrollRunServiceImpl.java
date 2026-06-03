@@ -1,11 +1,14 @@
 package com.payroll.service.impl;
 
+import com.payroll.dto.request.CorrectionDetailUpdateDTO;
 import com.payroll.dto.response.PayrollRunDetailResponseDTO;
 import com.payroll.dto.response.PayrollRunResponseDTO;
 import com.payroll.dto.response.PayrollRunSummaryDTO;
 import com.payroll.entity.*;
+import com.payroll.entity.EmployeeSalaryAdvance;
 import com.payroll.enums.ComponentType;
 import com.payroll.enums.PayrollRunStatus;
+import com.payroll.enums.RunType;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.repository.*;
 import com.payroll.service.PayrollRunService;
@@ -27,133 +30,30 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class PayrollRunServiceImpl implements PayrollRunService {
 
-    private final EmpPayrollRunRepository payrollRunRepository;
-    private final EmpPayrollRunDetailRepository payrollRunDetailRepository;
-    private final EmployeeRepository employeeRepository;
-    private final UsrRepository usrRepository;
+    private final EmpPayrollRunRepository          payrollRunRepository;
+    private final EmpPayrollRunDetailRepository    payrollRunDetailRepository;
+    private final EmployeeRepository               employeeRepository;
+    private final UsrRepository                    usrRepository;
+    private final PayrollPeriodRepository          payrollPeriodRepository;
+    private final PayrollEmployeeProcessorImpl     employeeProcessor;
 
     // Component repositories
-    private final EmployeeFixedAllowanceRepository empFaRepository;
-    private final EmployeeFixedDeductionRepository empFdRepository;
+    private final EmployeeFixedAllowanceRepository    empFaRepository;
+    private final EmployeeFixedDeductionRepository    empFdRepository;
     private final EmployeeVariableAllowanceRepository empVaRepository;
     private final EmployeeVariableDeductionRepository empVdRepository;
-    private final EmployeeOvertimeRepository empOtRepository;
-    private final EmployeeNopayRepository empNpRepository;
+    private final EmployeeOvertimeRepository          empOtRepository;
+    private final EmployeeNopayRepository             empNpRepository;
+    private final EmployeeSalaryAdvanceRepository     empSaRepository;
 
     private static final Sort ID_ASC = Sort.by("id").ascending();
 
     // ── Process ──────────────────────────────────────────────────────────────
 
     @Override
-    @Transactional
     public PayrollRunResponseDTO processPayroll(Long empId, String payrollMonth, Long processedBy) {
-        // Reject if already LOCKED
-        if (payrollRunRepository.existsByEmployee_IdAndPayrollMonthAndStatus(
-                empId, payrollMonth, PayrollRunStatus.LOCKED)) {
-            throw new IllegalStateException(
-                    "Payroll is already locked for employee " + empId + " for month " + payrollMonth);
-        }
-
-        Employee employee = employeeRepository.findById(empId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", empId));
-
-        Usr processedByUser = usrRepository.findById(processedBy)
-                .orElseThrow(() -> new ResourceNotFoundException("User", "id", processedBy));
-
-        // Delete existing DRAFT run for this month if any (re-process)
-        payrollRunRepository.findByEmployee_IdAndPayrollMonth(empId, payrollMonth)
-                .filter(r -> r.getStatus() == PayrollRunStatus.DRAFT)
-                .ifPresent(payrollRunRepository::delete);
-
-        // Collect component lines
-        List<EmpPayrollRunDetail> details = new ArrayList<>();
-        BigDecimal totalAllowances = BigDecimal.ZERO;
-        BigDecimal totalDeductions = BigDecimal.ZERO;
-
-        // Fixed Allowances
-        for (EmployeeFixedAllowance fa : empFaRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth)) {
-            totalAllowances = totalAllowances.add(fa.getAmount());
-            details.add(buildDetail(ComponentType.FA,
-                    fa.getFixedAllowance().getId(),
-                    fa.getFixedAllowance().getCode(),
-                    fa.getFixedAllowance().getName(),
-                    fa.getAmount(), null, null, processedByUser));
-        }
-
-        // Variable Allowances
-        for (EmployeeVariableAllowance va : empVaRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth)) {
-            totalAllowances = totalAllowances.add(va.getAmount());
-            details.add(buildDetail(ComponentType.VA,
-                    va.getVariableAllowance().getId(),
-                    va.getVariableAllowance().getCode(),
-                    va.getVariableAllowance().getName(),
-                    va.getAmount(), null, null, processedByUser));
-        }
-
-        // Overtime
-        for (EmployeeOvertime ot : empOtRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth)) {
-            totalAllowances = totalAllowances.add(ot.getAmount());
-            details.add(buildDetail(ComponentType.OT,
-                    ot.getOvertime().getId(),
-                    ot.getOvertime().getCode(),
-                    ot.getOvertime().getName(),
-                    ot.getAmount(), ot.getHours(), null, processedByUser));
-        }
-
-        // Fixed Deductions
-        for (EmployeeFixedDeduction fd : empFdRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth)) {
-            totalDeductions = totalDeductions.add(fd.getAmount());
-            details.add(buildDetail(ComponentType.FD,
-                    fd.getFixedDeduction().getId(),
-                    fd.getFixedDeduction().getCode(),
-                    fd.getFixedDeduction().getName(),
-                    fd.getAmount(), null, null, processedByUser));
-        }
-
-        // Variable Deductions
-        for (EmployeeVariableDeduction vd : empVdRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth)) {
-            totalDeductions = totalDeductions.add(vd.getAmount());
-            details.add(buildDetail(ComponentType.VD,
-                    vd.getVariableDeduction().getId(),
-                    vd.getVariableDeduction().getCode(),
-                    vd.getVariableDeduction().getName(),
-                    vd.getAmount(), null, null, processedByUser));
-        }
-
-        // No Pay
-        for (EmployeeNopay np : empNpRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth)) {
-            totalDeductions = totalDeductions.add(np.getAmount());
-            details.add(buildDetail(ComponentType.NOPAY,
-                    np.getNopayDays().getId(),
-                    np.getNopayDays().getCode(),
-                    np.getNopayDays().getName(),
-                    np.getAmount(), null, np.getDays(), processedByUser));
-        }
-
-        BigDecimal basicSalary = employee.getBasicSalary() != null ? employee.getBasicSalary() : BigDecimal.ZERO;
-        BigDecimal grossPay = basicSalary.add(totalAllowances);
-        BigDecimal netPay = grossPay.subtract(totalDeductions);
-
-        EmpPayrollRun run = EmpPayrollRun.builder()
-                .employee(employee)
-                .payrollMonth(payrollMonth)
-                .basicSalary(basicSalary)
-                .totalAllowances(totalAllowances)
-                .totalDeductions(totalDeductions)
-                .grossPay(grossPay)
-                .netPay(netPay)
-                .status(PayrollRunStatus.DRAFT)
-                .createdBy(processedByUser)
-                .modifiedBy(processedByUser)
-                .build();
-
-        details.forEach(d -> d.setPayrollRun(run));
-        run.setDetails(details);
-
-        EmpPayrollRun saved = payrollRunRepository.save(run);
-        log.info("Payroll run created for empId={} month={} runId={}", empId, payrollMonth, saved.getId());
-
-        return toResponseDTO(saved);
+        // Delegate to the processor — runs in its own REQUIRES_NEW transaction
+        return employeeProcessor.processOne(empId, payrollMonth, processedBy);
     }
 
     // ── Lock ─────────────────────────────────────────────────────────────────
@@ -176,7 +76,7 @@ public class PayrollRunServiceImpl implements PayrollRunService {
         run.setProcessedBy(lockedByUser);
         run.setModifiedBy(lockedByUser);
 
-        // Mark component records as processed
+        // Mark all component records as processed
         LocalDateTime now = LocalDateTime.now();
         Long empId = run.getEmployee().getId();
         String payrollMonth = run.getPayrollMonth();
@@ -205,8 +105,13 @@ public class PayrollRunServiceImpl implements PayrollRunService {
         nps.forEach(np -> { np.setIsProcessed(true); np.setProcessedDate(now); });
         empNpRepository.saveAll(nps);
 
+        // Mark salary advances as processed (locked with payroll run)
+        List<EmployeeSalaryAdvance> sas = empSaRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
+        sas.forEach(sa -> { sa.setIsProcessed(true); sa.setProcessedDate(now); });
+        empSaRepository.saveAll(sas);
+
         EmpPayrollRun locked = payrollRunRepository.save(run);
-        log.info("Payroll run locked runId={} empId={} month={}", runId, empId, payrollMonth);
+        log.info("Payroll run locked — runId={} empId={} month={}", runId, empId, payrollMonth);
 
         return toResponseDTO(locked);
     }
@@ -214,24 +119,185 @@ public class PayrollRunServiceImpl implements PayrollRunService {
     // ── Batch ────────────────────────────────────────────────────────────────
 
     @Override
-    @Transactional
+    // No @Transactional here — each employee runs in its own REQUIRES_NEW transaction
+    // via employeeProcessor.processOne(). A failure for one employee never corrupts
+    // the Hibernate session for the next one.
     public List<PayrollRunSummaryDTO> processPayrollForMonth(String payrollMonth, Long processedBy) {
         List<Employee> activeEmployees = employeeRepository.findAllByIsActive(true, ID_ASC);
         List<PayrollRunSummaryDTO> results = new ArrayList<>();
 
+        log.info("Batch payroll start — month={} employees={}", payrollMonth, activeEmployees.size());
+
         for (Employee emp : activeEmployees) {
+            if (emp.getId() == null || emp.getId() <= 0) {
+                log.debug("Skipping invalid empId={}", emp.getId());
+                continue;
+            }
             try {
-                PayrollRunResponseDTO run = processPayroll(emp.getId(), payrollMonth, processedBy);
+                PayrollRunResponseDTO run = employeeProcessor.processOne(emp.getId(), payrollMonth, processedBy);
                 results.add(toSummaryDTO(run));
             } catch (Exception ex) {
                 log.warn("Skipped payroll for empId={} month={}: {}", emp.getId(), payrollMonth, ex.getMessage());
             }
         }
 
+        log.info("Batch payroll done — month={} processed={}/{}", payrollMonth, results.size(), activeEmployees.size());
         return results;
     }
 
+    // ── Correction ────────────────────────────────────────────────────────────
+
+    @Override
+    @Transactional
+    public PayrollRunResponseDTO createCorrectionRun(Long originalRunId, Long userId) {
+        EmpPayrollRun original = payrollRunRepository.findById(originalRunId)
+                .orElseThrow(() -> new ResourceNotFoundException("PayrollRun", "id", originalRunId));
+
+        if (original.getStatus() != PayrollRunStatus.LOCKED) {
+            throw new IllegalStateException("Only LOCKED runs can be corrected. Run " + originalRunId
+                    + " has status " + original.getStatus());
+        }
+        if (original.getRunType() == RunType.CORRECTION) {
+            throw new IllegalStateException("Cannot create a correction of a correction run.");
+        }
+
+        Usr user = usrRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        List<EmpPayrollRunDetail> correctedDetails = original.getDetails().stream()
+                .map(d -> EmpPayrollRunDetail.builder()
+                        .componentType(d.getComponentType())
+                        .componentId(d.getComponentId())
+                        .componentCode(d.getComponentCode())
+                        .componentName(d.getComponentName())
+                        .amount(d.getAmount())
+                        .hours(d.getHours())
+                        .days(d.getDays())
+                        .createdBy(user)
+                        .modifiedBy(user)
+                        .build())
+                .collect(Collectors.toList());
+
+        EmpPayrollRun correction = EmpPayrollRun.builder()
+                .employee(original.getEmployee())
+                .payrollMonth(original.getPayrollMonth())
+                .basicSalary(original.getBasicSalary())
+                .totalAllowances(original.getTotalAllowances())
+                .totalDeductions(original.getTotalDeductions())
+                .grossPay(original.getGrossPay())
+                .netPay(original.getNetPay())
+                .epfLiableBase(original.getEpfLiableBase())
+                .employeeEpf(original.getEmployeeEpf())
+                .employerEpf(original.getEmployerEpf())
+                .etf(original.getEtf())
+                .payeTax(original.getPayeTax())
+                .workingDays(original.getWorkingDays())
+                .status(PayrollRunStatus.CORRECTION_DRAFT)
+                .runType(RunType.CORRECTION)
+                .parentRunId(originalRunId)
+                .createdBy(user)
+                .modifiedBy(user)
+                .build();
+
+        correctedDetails.forEach(d -> d.setPayrollRun(correction));
+        correction.setDetails(correctedDetails);
+
+        EmpPayrollRun saved = payrollRunRepository.save(correction);
+        log.info("Correction run created — runId={} parentRunId={} empId={} month={}",
+                saved.getId(), originalRunId, original.getEmployee().getId(), original.getPayrollMonth());
+        return toResponseDTO(saved);
+    }
+
+    @Override
+    @Transactional
+    public PayrollRunResponseDTO updateCorrectionDetails(Long correctionRunId,
+                                                         List<CorrectionDetailUpdateDTO> updates,
+                                                         Long userId) {
+        EmpPayrollRun run = payrollRunRepository.findById(correctionRunId)
+                .orElseThrow(() -> new ResourceNotFoundException("PayrollRun", "id", correctionRunId));
+
+        if (run.getStatus() != PayrollRunStatus.CORRECTION_DRAFT) {
+            throw new IllegalStateException("Only CORRECTION_DRAFT runs can be edited.");
+        }
+
+        Usr user = usrRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        run.getDetails().clear();
+        payrollRunRepository.save(run);
+
+        BigDecimal totalAllowances = BigDecimal.ZERO;
+        BigDecimal totalDeductions = BigDecimal.ZERO;
+
+        for (CorrectionDetailUpdateDTO u : updates) {
+            EmpPayrollRunDetail detail = EmpPayrollRunDetail.builder()
+                    .payrollRun(run)
+                    .componentType(u.getComponentType())
+                    .componentId(u.getComponentId())
+                    .componentCode(u.getComponentCode())
+                    .componentName(u.getComponentName())
+                    .amount(u.getAmount() != null ? u.getAmount() : BigDecimal.ZERO)
+                    .hours(u.getHours())
+                    .days(u.getDays())
+                    .createdBy(user)
+                    .modifiedBy(user)
+                    .build();
+            run.getDetails().add(detail);
+
+            if (u.getComponentType() == ComponentType.FA
+                    || u.getComponentType() == ComponentType.VA
+                    || u.getComponentType() == ComponentType.OT) {
+                totalAllowances = totalAllowances.add(detail.getAmount());
+            }
+            if (u.getComponentType() == ComponentType.FD
+                    || u.getComponentType() == ComponentType.VD
+                    || u.getComponentType() == ComponentType.NOPAY
+                    || u.getComponentType() == ComponentType.EPF_EE
+                    || u.getComponentType() == ComponentType.PAYE) {
+                totalDeductions = totalDeductions.add(detail.getAmount());
+            }
+        }
+
+        BigDecimal grossPay = run.getBasicSalary().add(totalAllowances);
+        run.setTotalAllowances(totalAllowances);
+        run.setTotalDeductions(totalDeductions);
+        run.setGrossPay(grossPay);
+        run.setNetPay(grossPay.subtract(totalDeductions));
+        run.setModifiedBy(user);
+
+        return toResponseDTO(payrollRunRepository.save(run));
+    }
+
+    @Override
+    @Transactional
+    public PayrollRunResponseDTO lockCorrectionRun(Long correctionRunId, Long userId) {
+        EmpPayrollRun run = payrollRunRepository.findById(correctionRunId)
+                .orElseThrow(() -> new ResourceNotFoundException("PayrollRun", "id", correctionRunId));
+
+        if (run.getStatus() != PayrollRunStatus.CORRECTION_DRAFT) {
+            throw new IllegalStateException("Only CORRECTION_DRAFT runs can be locked.");
+        }
+
+        Usr user = usrRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
+
+        run.setStatus(PayrollRunStatus.CORRECTION_LOCKED);
+        run.setProcessedDate(LocalDateTime.now());
+        run.setProcessedBy(user);
+        run.setModifiedBy(user);
+
+        EmpPayrollRun locked = payrollRunRepository.save(run);
+        log.info("Correction run locked — correctionRunId={} parentRunId={}", correctionRunId, run.getParentRunId());
+        return toResponseDTO(locked);
+    }
+
     // ── Queries ──────────────────────────────────────────────────────────────
+
+    @Override
+    public List<PayrollRunSummaryDTO> getCorrectionsByOriginalRun(Long originalRunId) {
+        return payrollRunRepository.findAllByParentRunId(originalRunId, ID_ASC)
+                .stream().map(this::toSummaryFromEntity).collect(Collectors.toList());
+    }
 
     @Override
     public PayrollRunResponseDTO getPayrollRunById(Long runId) {
@@ -252,22 +318,7 @@ public class PayrollRunServiceImpl implements PayrollRunService {
                 .stream().map(this::toSummaryFromEntity).collect(Collectors.toList());
     }
 
-    // ── Mapping helpers ──────────────────────────────────────────────────────
-
-    private EmpPayrollRunDetail buildDetail(ComponentType type, Long componentId, String code, String name,
-                                            BigDecimal amount, BigDecimal hours, BigDecimal days, Usr user) {
-        return EmpPayrollRunDetail.builder()
-                .componentType(type)
-                .componentId(componentId)
-                .componentCode(code)
-                .componentName(name)
-                .amount(amount)
-                .hours(hours)
-                .days(days)
-                .createdBy(user)
-                .modifiedBy(user)
-                .build();
-    }
+    // ── Mapping helpers ───────────────────────────────────────────────────────
 
     private PayrollRunResponseDTO toResponseDTO(EmpPayrollRun run) {
         List<PayrollRunDetailResponseDTO> detailDTOs = run.getDetails().stream()
@@ -293,6 +344,8 @@ public class PayrollRunServiceImpl implements PayrollRunService {
                 .id(run.getId())
                 .payrollMonth(run.getPayrollMonth())
                 .status(run.getStatus())
+                .runType(run.getRunType())
+                .parentRunId(run.getParentRunId())
                 .empId(run.getEmployee().getId())
                 .empCode(run.getEmployee().getEmployeeNo())
                 .empName(run.getEmployee().getPayrollName())
@@ -301,6 +354,12 @@ public class PayrollRunServiceImpl implements PayrollRunService {
                 .totalDeductions(run.getTotalDeductions())
                 .grossPay(run.getGrossPay())
                 .netPay(run.getNetPay())
+                .epfLiableBase(run.getEpfLiableBase())
+                .employeeEpf(run.getEmployeeEpf())
+                .employerEpf(run.getEmployerEpf())
+                .etf(run.getEtf())
+                .payeTax(run.getPayeTax())
+                .workingDays(run.getWorkingDays())
                 .processedDate(run.getProcessedDate())
                 .processedById(run.getProcessedBy() != null ? run.getProcessedBy().getId() : null)
                 .processedByUserName(run.getProcessedBy() != null ? run.getProcessedBy().getUserName() : null)
@@ -314,11 +373,20 @@ public class PayrollRunServiceImpl implements PayrollRunService {
                 .build();
     }
 
+    private java.math.BigDecimal sumSaDetails(EmpPayrollRun run) {
+        return run.getDetails().stream()
+                .filter(d -> d.getComponentType() == ComponentType.SA)
+                .map(d -> d.getAmount() != null ? d.getAmount() : java.math.BigDecimal.ZERO)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+    }
+
     private PayrollRunSummaryDTO toSummaryFromEntity(EmpPayrollRun run) {
         return PayrollRunSummaryDTO.builder()
                 .id(run.getId())
                 .payrollMonth(run.getPayrollMonth())
                 .status(run.getStatus())
+                .runType(run.getRunType())
+                .parentRunId(run.getParentRunId())
                 .empId(run.getEmployee().getId())
                 .empCode(run.getEmployee().getEmployeeNo())
                 .empName(run.getEmployee().getPayrollName())
@@ -327,6 +395,13 @@ public class PayrollRunServiceImpl implements PayrollRunService {
                 .totalDeductions(run.getTotalDeductions())
                 .grossPay(run.getGrossPay())
                 .netPay(run.getNetPay())
+                .epfLiableBase(run.getEpfLiableBase())
+                .employeeEpf(run.getEmployeeEpf())
+                .employerEpf(run.getEmployerEpf())
+                .etf(run.getEtf())
+                .payeTax(run.getPayeTax())
+                .workingDays(run.getWorkingDays())
+                .salaryAdvanceAmount(sumSaDetails(run))
                 .processedDate(run.getProcessedDate())
                 .processedByUserName(run.getProcessedBy() != null ? run.getProcessedBy().getUserName() : null)
                 .build();
@@ -337,6 +412,8 @@ public class PayrollRunServiceImpl implements PayrollRunService {
                 .id(dto.getId())
                 .payrollMonth(dto.getPayrollMonth())
                 .status(dto.getStatus())
+                .runType(dto.getRunType())
+                .parentRunId(dto.getParentRunId())
                 .empId(dto.getEmpId())
                 .empCode(dto.getEmpCode())
                 .empName(dto.getEmpName())
@@ -345,6 +422,20 @@ public class PayrollRunServiceImpl implements PayrollRunService {
                 .totalDeductions(dto.getTotalDeductions())
                 .grossPay(dto.getGrossPay())
                 .netPay(dto.getNetPay())
+                .epfLiableBase(dto.getEpfLiableBase())
+                .employeeEpf(dto.getEmployeeEpf())
+                .employerEpf(dto.getEmployerEpf())
+                .etf(dto.getEtf())
+                .payeTax(dto.getPayeTax())
+                .workingDays(dto.getWorkingDays())
+                .salaryAdvanceAmount(
+                    dto.getDetails() != null
+                        ? dto.getDetails().stream()
+                            .filter(d -> com.payroll.enums.ComponentType.SA.name().equals(
+                                d.getComponentType() != null ? d.getComponentType().name() : ""))
+                            .map(d -> d.getAmount() != null ? d.getAmount() : java.math.BigDecimal.ZERO)
+                            .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add)
+                        : java.math.BigDecimal.ZERO)
                 .processedDate(dto.getProcessedDate())
                 .processedByUserName(dto.getProcessedByUserName())
                 .build();

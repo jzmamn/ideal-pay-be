@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface EmployeeOvertimeRepository extends JpaRepository<EmployeeOvertime, Long> {
@@ -15,4 +16,7 @@ public interface EmployeeOvertimeRepository extends JpaRepository<EmployeeOverti
     List<EmployeeOvertime> findAllByOvertimeId(Long overtimeId, Sort sort);
 
     List<EmployeeOvertime> findAllByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
+
+    Optional<EmployeeOvertime> findByEmployee_IdAndOvertime_IdAndPayrollMonth(
+            Long employeeId, Long overtimeId, String payrollMonth);
 }

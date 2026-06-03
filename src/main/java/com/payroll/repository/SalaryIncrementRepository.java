@@ -21,4 +21,6 @@ public interface SalaryIncrementRepository extends JpaRepository<SalaryIncrement
     List<SalaryIncrement> findAllByEffectiveMonth(String effectiveMonth, Sort sort);
 
     List<SalaryIncrement> findAll(Sort sort);
+
+    long countByEffectiveMonth(String effectiveMonth);
 }

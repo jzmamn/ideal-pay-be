@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.payroll.service.PayrollPeriodService;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class EmployeeProfileServiceImpl implements EmployeeProfileService {
 
+    private final PayrollPeriodService payrollPeriodService;
     private final EmployeeService employeeService;
     private final EmployeeFixedAllowanceService employeeFixedAllowanceService;
     private final EmployeeFixedDeductionService employeeFixedDeductionService;
@@ -54,7 +56,7 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
 
     private List<EmployeeFixedAllowanceResponseDTO> mergeFixedAllowances(Long empId, boolean assignedOnly) {
         Map<Long, EmployeeFixedAllowanceResponseDTO> assigned = employeeFixedAllowanceService.getByEmployeeId(empId)
-                .stream().collect(Collectors.toMap(EmployeeFixedAllowanceResponseDTO::getFaId, dto -> dto));
+                .stream().collect(Collectors.toMap(EmployeeFixedAllowanceResponseDTO::getFaId, dto -> dto, (a, b) -> b));
 
         return fixedAllowanceRepository.findAllByIsActive(true, ID_ASC).stream()
                 .filter(master -> !assignedOnly || assigned.containsKey(master.getId()))
@@ -76,7 +78,7 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
 
     private List<EmployeeFixedDeductionResponseDTO> mergeFixedDeductions(Long empId, boolean assignedOnly) {
         Map<Long, EmployeeFixedDeductionResponseDTO> assigned = employeeFixedDeductionService.getByEmployeeId(empId)
-                .stream().collect(Collectors.toMap(EmployeeFixedDeductionResponseDTO::getFdId, dto -> dto));
+                .stream().collect(Collectors.toMap(EmployeeFixedDeductionResponseDTO::getFdId, dto -> dto, (a, b) -> b));
 
         return fixedDeductionRepository.findAllByIsActive(true, ID_ASC).stream()
                 .filter(master -> !assignedOnly || assigned.containsKey(master.getId()))
@@ -98,7 +100,7 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
 
     private List<EmployeeVariableAllowanceResponseDTO> mergeVariableAllowances(Long empId, boolean assignedOnly) {
         Map<Long, EmployeeVariableAllowanceResponseDTO> assigned = employeeVariableAllowanceService.getByEmployeeId(empId)
-                .stream().collect(Collectors.toMap(EmployeeVariableAllowanceResponseDTO::getVaId, dto -> dto));
+                .stream().collect(Collectors.toMap(EmployeeVariableAllowanceResponseDTO::getVaId, dto -> dto, (a, b) -> b));
 
         return variableAllowanceRepository.findAllByIsActive(true, ID_ASC).stream()
                 .filter(master -> !assignedOnly || assigned.containsKey(master.getId()))
@@ -120,7 +122,7 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
 
     private List<EmployeeVariableDeductionResponseDTO> mergeVariableDeductions(Long empId, boolean assignedOnly) {
         Map<Long, EmployeeVariableDeductionResponseDTO> assigned = employeeVariableDeductionService.getByEmployeeId(empId)
-                .stream().collect(Collectors.toMap(EmployeeVariableDeductionResponseDTO::getVdId, dto -> dto));
+                .stream().collect(Collectors.toMap(EmployeeVariableDeductionResponseDTO::getVdId, dto -> dto, (a, b) -> b));
 
         return variableDeductionRepository.findAllByIsActive(true, ID_ASC).stream()
                 .filter(master -> !assignedOnly || assigned.containsKey(master.getId()))
@@ -142,7 +144,7 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
 
     private List<EmployeeNopayResponseDTO> mergeNopays(Long empId, boolean assignedOnly) {
         Map<Long, EmployeeNopayResponseDTO> assigned = employeeNopayService.getByEmployeeId(empId)
-                .stream().collect(Collectors.toMap(EmployeeNopayResponseDTO::getNopayId, dto -> dto));
+                .stream().collect(Collectors.toMap(EmployeeNopayResponseDTO::getNopayId, dto -> dto, (a, b) -> b));
 
         return nopayDaysRepository.findAllByIsActive(true, ID_ASC).stream()
                 .filter(master -> !assignedOnly || assigned.containsKey(master.getId()))
@@ -164,7 +166,7 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
 
     private List<EmployeeOvertimeResponseDTO> mergeOvertimes(Long empId, boolean assignedOnly) {
         Map<Long, EmployeeOvertimeResponseDTO> assigned = employeeOvertimeService.getByEmployeeId(empId)
-                .stream().collect(Collectors.toMap(EmployeeOvertimeResponseDTO::getOvertimeId, dto -> dto));
+                .stream().collect(Collectors.toMap(EmployeeOvertimeResponseDTO::getOvertimeId, dto -> dto, (a, b) -> b));
 
         return overtimeRepository.findAllByIsActive(true, ID_ASC).stream()
                 .filter(master -> !assignedOnly || assigned.containsKey(master.getId()))
@@ -203,12 +205,18 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
         if (requestDTO.getOvertimes() != null)
             requestDTO.getOvertimes().forEach(ot -> { if (ot.getPayrollMonth() != null) months.add(ot.getPayrollMonth()); });
 
-        // Reject if any of those months already have a LOCKED run for this employee
+        // Guard: reject edits for closed periods or months with a LOCKED run
         for (String month : months) {
+            if (!payrollPeriodService.isPeriodOpen(month)) {
+                throw new IllegalStateException(
+                        "Cannot modify payroll components — payroll period " + month
+                        + " is closed. Use a correction run instead.");
+            }
             if (empPayrollRunRepository.existsByEmployee_IdAndPayrollMonthAndStatus(
                     empId, month, PayrollRunStatus.LOCKED)) {
                 throw new IllegalStateException(
-                        "Cannot modify payroll components — payroll is already locked for month: " + month);
+                        "Cannot modify payroll components — payroll is already locked for month: " + month
+                        + ". Use a correction run instead.");
             }
         }
 

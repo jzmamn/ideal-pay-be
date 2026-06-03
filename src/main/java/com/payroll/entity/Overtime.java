@@ -49,6 +49,21 @@ public class Overtime {
     @Column(name = "formula_enabled", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
     private Boolean formulaEnabled = false;
 
+    @Builder.Default
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "liable_for_epf", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
+    private Boolean liableForEpf = true;
+
+    @Builder.Default
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "liable_for_etf", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
+    private Boolean liableForEtf = true;
+
+    @Builder.Default
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "liable_for_paye", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
+    private Boolean liableForPaye = true;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})

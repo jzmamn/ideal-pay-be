@@ -33,6 +33,12 @@ public interface SalaryIncrementService {
     /** APPROVED → CANCELLED */
     SalaryIncrementResponse cancel(Long id);
 
+    /** EXPORTED → POSTED (finalises; no further edits allowed) */
+    SalaryIncrementResponse post(Long id);
+
+    /** Generate next available code for a given effective month */
+    String nextCode(String effectiveMonth);
+
     /**
      * Export: apply increment to payroll.
      * Updates employee.basicSalary and emp_fa amounts for the effective month.

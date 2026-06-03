@@ -48,8 +48,21 @@ public class EmployeeVariableAllowanceServiceImpl implements EmployeeVariableAll
 
     @Override
     public EmployeeVariableAllowanceResponseDTO createEmployeeVariableAllowance(EmployeeVariableAllowanceRequestDTO requestDTO) {
-        EmployeeVariableAllowance entity = employeeVariableAllowanceMapper.toEntity(requestDTO);
-        setRelationships(entity, requestDTO);
+        EmployeeVariableAllowance entity = employeeVariableAllowanceRepository
+                .findByEmployee_IdAndVariableAllowance_IdAndPayrollMonth(
+                        requestDTO.getEmpId(), requestDTO.getVaId(), requestDTO.getPayrollMonth())
+                .orElse(null);
+
+        if (entity != null) {
+            entity.setAmount(requestDTO.getAmount());
+            entity.setIsProcessed(requestDTO.getIsProcessed() != null ? requestDTO.getIsProcessed() : Boolean.FALSE);
+            entity.setProcessedDate(requestDTO.getProcessedDate());
+            entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        } else {
+            entity = employeeVariableAllowanceMapper.toEntity(requestDTO);
+            setRelationships(entity, requestDTO);
+        }
+
         return employeeVariableAllowanceMapper.toResponseDTO(employeeVariableAllowanceRepository.save(entity));
     }
 

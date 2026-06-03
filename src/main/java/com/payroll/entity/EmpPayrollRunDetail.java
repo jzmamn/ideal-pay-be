@@ -12,8 +12,9 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(
-    name = "emp_payroll_run_detail",
-    uniqueConstraints = @UniqueConstraint(name = "uk_run_detail", columnNames = {"run_id", "component_type", "component_id"})
+    name = "emp_payroll_run_detail"
+    // Uniqueness is enforced at the service layer; component_id is nullable for
+    // system lines (EPF_EE, EPF_ER, ETF, PAYE) so a DB unique index cannot be used.
 )
 @Getter
 @Setter
@@ -35,7 +36,8 @@ public class EmpPayrollRunDetail {
     @Column(name = "component_type", nullable = false, length = 10)
     private ComponentType componentType;
 
-    @Column(name = "component_id", nullable = false)
+    /** Null for system-generated lines (EPF_EE, EPF_ER, ETF, PAYE). */
+    @Column(name = "component_id", nullable = true)
     private Long componentId;
 
     @Column(name = "component_code", nullable = false, length = 20)

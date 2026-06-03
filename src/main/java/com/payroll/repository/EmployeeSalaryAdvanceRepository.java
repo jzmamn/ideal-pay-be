@@ -15,5 +15,7 @@ public interface EmployeeSalaryAdvanceRepository extends JpaRepository<EmployeeS
 
     Optional<EmployeeSalaryAdvance> findByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
 
+    List<EmployeeSalaryAdvance> findAllByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
+
     List<EmployeeSalaryAdvance> findAllByPayrollMonth(String payrollMonth, Sort sort);
 }

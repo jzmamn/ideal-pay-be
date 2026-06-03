@@ -75,9 +75,17 @@ public class SalaryIncrementServiceImpl implements SalaryIncrementService {
     // ── Mutations ─────────────────────────────────────────────────────────────
 
     @Override
+    public String nextCode(String effectiveMonth) {
+        long seq = incrementRepo.countByEffectiveMonth(effectiveMonth) + 1;
+        return String.format("SI-%s-%03d", effectiveMonth, seq);
+    }
+
+    @Override
     @Transactional
     public SalaryIncrementResponse create(SalaryIncrementRequest req) {
         SalaryIncrement increment = mapper.toEntity(req);
+        // Auto-generate code from effective month
+        increment.setCode(nextCode(req.getEffectiveMonth()));
         increment.setStatus(IncrementStatus.DRAFT);
         increment.setCreatedBy(usrRepo.getReferenceById(req.getCreatedBy()));
         increment.setModifiedBy(usrRepo.getReferenceById(req.getModifiedBy()));
@@ -100,9 +108,13 @@ public class SalaryIncrementServiceImpl implements SalaryIncrementService {
         increment.setRemarks(req.getRemarks());
         increment.setModifiedBy(usrRepo.getReferenceById(req.getModifiedBy()));
 
-        // Replace details
+        // Replace details — delete children first (FAs), then details, then flush.
+        // JPQL bulk deletes bypass Hibernate cascade, so order matters to satisfy FKs.
+        faRepo.deleteAllByIncrement(increment);
+        faRepo.flush();
+        detailRepo.deleteAllByIncrement(increment);
+        detailRepo.flush();
         increment.getDetails().clear();
-        incrementRepo.save(increment);
         if (req.getDetails() != null) {
             req.getDetails().forEach(d -> saveDetail(increment, d));
         }
@@ -244,9 +256,21 @@ public class SalaryIncrementServiceImpl implements SalaryIncrementService {
                 .orElseThrow(() -> new ResourceNotFoundException("SalaryIncrement", "id", id));
     }
 
+    @Override
+    @Transactional
+    public SalaryIncrementResponse post(Long id) {
+        SalaryIncrement increment = findIncrement(id);
+        if (increment.getStatus() != IncrementStatus.EXPORTED) {
+            throw new IllegalStateException("Only EXPORTED increments can be posted.");
+        }
+        increment.setStatus(IncrementStatus.POSTED);
+        return mapper.toResponse(incrementRepo.save(increment));
+    }
+
     private void assertEditable(SalaryIncrement increment) {
-        if (increment.getStatus() == IncrementStatus.EXPORTED) {
-            throw new IllegalStateException("Exported increments cannot be modified.");
+        if (increment.getStatus() == IncrementStatus.POSTED ||
+            increment.getStatus() == IncrementStatus.CANCELLED) {
+            throw new IllegalStateException("Posted or cancelled increments cannot be modified.");
         }
     }
 

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface EmployeeFixedAllowanceRepository extends JpaRepository<EmployeeFixedAllowance, Long> {
@@ -15,4 +16,7 @@ public interface EmployeeFixedAllowanceRepository extends JpaRepository<Employee
     List<EmployeeFixedAllowance> findAllByFixedAllowanceId(Long faId, Sort sort);
 
     List<EmployeeFixedAllowance> findAllByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
+
+    Optional<EmployeeFixedAllowance> findByEmployee_IdAndFixedAllowance_IdAndPayrollMonth(
+            Long employeeId, Long fixedAllowanceId, String payrollMonth);
 }

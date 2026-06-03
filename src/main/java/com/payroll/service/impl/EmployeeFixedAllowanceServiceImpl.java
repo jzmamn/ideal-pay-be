@@ -48,8 +48,21 @@ public class EmployeeFixedAllowanceServiceImpl implements EmployeeFixedAllowance
 
     @Override
     public EmployeeFixedAllowanceResponseDTO createEmployeeFixedAllowance(EmployeeFixedAllowanceRequestDTO requestDTO) {
-        EmployeeFixedAllowance entity = employeeFixedAllowanceMapper.toEntity(requestDTO);
-        setRelationships(entity, requestDTO);
+        EmployeeFixedAllowance entity = employeeFixedAllowanceRepository
+                .findByEmployee_IdAndFixedAllowance_IdAndPayrollMonth(
+                        requestDTO.getEmpId(), requestDTO.getFaId(), requestDTO.getPayrollMonth())
+                .orElse(null);
+
+        if (entity != null) {
+            entity.setAmount(requestDTO.getAmount());
+            entity.setIsProcessed(requestDTO.getIsProcessed() != null ? requestDTO.getIsProcessed() : Boolean.FALSE);
+            entity.setProcessedDate(requestDTO.getProcessedDate());
+            entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        } else {
+            entity = employeeFixedAllowanceMapper.toEntity(requestDTO);
+            setRelationships(entity, requestDTO);
+        }
+
         return employeeFixedAllowanceMapper.toResponseDTO(employeeFixedAllowanceRepository.save(entity));
     }
 

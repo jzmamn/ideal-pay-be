@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface EmployeeVariableDeductionRepository extends JpaRepository<EmployeeVariableDeduction, Long> {
@@ -15,4 +16,7 @@ public interface EmployeeVariableDeductionRepository extends JpaRepository<Emplo
     List<EmployeeVariableDeduction> findAllByVariableDeductionId(Long vdId, Sort sort);
 
     List<EmployeeVariableDeduction> findAllByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
+
+    Optional<EmployeeVariableDeduction> findByEmployee_IdAndVariableDeduction_IdAndPayrollMonth(
+            Long employeeId, Long variableDeductionId, String payrollMonth);
 }

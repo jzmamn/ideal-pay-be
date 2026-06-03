@@ -82,6 +82,16 @@ public class SalaryIncrementController {
         return ResponseEntity.ok(ApiResponseDTO.success("Increment cancelled", service.cancel(id)));
     }
 
+    @PostMapping("/{id}/post")
+    public ResponseEntity<ApiResponseDTO<SalaryIncrementResponse>> post(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponseDTO.success("Increment posted", service.post(id)));
+    }
+
+    @GetMapping("/next-code")
+    public ResponseEntity<ApiResponseDTO<String>> nextCode(@RequestParam String month) {
+        return ResponseEntity.ok(ApiResponseDTO.success("Next code", service.nextCode(month)));
+    }
+
     @PostMapping("/{id}/export")
     public ResponseEntity<ApiResponseDTO<SalaryIncrementResponse>> export(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponseDTO.success("Increment exported to payroll", service.exportToPayroll(id)));

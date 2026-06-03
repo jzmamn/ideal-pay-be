@@ -48,8 +48,21 @@ public class EmployeeFixedDeductionServiceImpl implements EmployeeFixedDeduction
 
     @Override
     public EmployeeFixedDeductionResponseDTO createEmployeeFixedDeduction(EmployeeFixedDeductionRequestDTO requestDTO) {
-        EmployeeFixedDeduction entity = employeeFixedDeductionMapper.toEntity(requestDTO);
-        setRelationships(entity, requestDTO);
+        EmployeeFixedDeduction entity = employeeFixedDeductionRepository
+                .findByEmployee_IdAndFixedDeduction_IdAndPayrollMonth(
+                        requestDTO.getEmpId(), requestDTO.getFdId(), requestDTO.getPayrollMonth())
+                .orElse(null);
+
+        if (entity != null) {
+            entity.setAmount(requestDTO.getAmount());
+            entity.setIsProcessed(requestDTO.getIsProcessed() != null ? requestDTO.getIsProcessed() : Boolean.FALSE);
+            entity.setProcessedDate(requestDTO.getProcessedDate());
+            entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        } else {
+            entity = employeeFixedDeductionMapper.toEntity(requestDTO);
+            setRelationships(entity, requestDTO);
+        }
+
         return employeeFixedDeductionMapper.toResponseDTO(employeeFixedDeductionRepository.save(entity));
     }
 

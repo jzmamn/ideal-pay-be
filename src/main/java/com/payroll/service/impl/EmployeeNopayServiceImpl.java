@@ -48,8 +48,22 @@ public class EmployeeNopayServiceImpl implements EmployeeNopayService {
 
     @Override
     public EmployeeNopayResponseDTO createEmployeeNopay(EmployeeNopayRequestDTO requestDTO) {
-        EmployeeNopay entity = employeeNopayMapper.toEntity(requestDTO);
-        setRelationships(entity, requestDTO);
+        EmployeeNopay entity = employeeNopayRepository
+                .findByEmployee_IdAndNopayDays_IdAndPayrollMonth(
+                        requestDTO.getEmpId(), requestDTO.getNopayId(), requestDTO.getPayrollMonth())
+                .orElse(null);
+
+        if (entity != null) {
+            entity.setDays(requestDTO.getDays());
+            entity.setAmount(requestDTO.getAmount());
+            entity.setIsProcessed(requestDTO.getIsProcessed() != null ? requestDTO.getIsProcessed() : Boolean.FALSE);
+            entity.setProcessedDate(requestDTO.getProcessedDate());
+            entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        } else {
+            entity = employeeNopayMapper.toEntity(requestDTO);
+            setRelationships(entity, requestDTO);
+        }
+
         return employeeNopayMapper.toResponseDTO(employeeNopayRepository.save(entity));
     }
 
