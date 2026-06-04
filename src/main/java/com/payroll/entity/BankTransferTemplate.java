@@ -1,7 +1,6 @@
 package com.payroll.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.payroll.converter.BooleanToYNConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -10,32 +9,37 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "bank_branch")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class BankBranch {
+@Table(name = "bank_transfer_template")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class BankTransferTemplate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bank_code", referencedColumnName = "code", nullable = false)
+    @JoinColumn(name = "bank_id", nullable = false)
     @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Bank bank;
 
-    @Column(name = "branch_code", nullable = false, length = 20)
-    private String branchCode;
+    @Column(name = "bank_code", nullable = false, length = 20)
+    private String bankCode;
 
-    @Column(name = "branch_name", nullable = false, length = 150)
-    private String branchName;
+    @Column(name = "bank_name", nullable = false, length = 100)
+    private String bankName;
 
-    @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "is_active", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
-    private Boolean isActive;
+    @Column(name = "header_template", columnDefinition = "TEXT")
+    private String headerTemplate;
+
+    @Column(name = "detail_template", nullable = false, columnDefinition = "TEXT")
+    private String detailTemplate;
+
+    @Column(name = "footer_template", columnDefinition = "TEXT")
+    private String footerTemplate;
+
+    @Column(name = "file_extension", nullable = false, length = 10)
+    @Builder.Default
+    private String fileExtension = "txt";
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)

@@ -19,7 +19,6 @@ public interface BankBranchMapper {
     @Mapping(target = "modifiedBy",   ignore = true)
     BankBranch toEntity(BankBranchRequestDTO requestDTO);
 
-    @Mapping(target = "bankId",             source = "bank.id")
     @Mapping(target = "bankCode",           source = "bank.code")
     @Mapping(target = "bankName",           source = "bank.name")
     @Mapping(target = "createdById",        source = "createdBy.id")

@@ -30,14 +30,15 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final GradeRepository gradeRepository;
     private final StatusRepository statusRepository;
     private final CountryRepository countryRepository;
+    private final BankRepository bankRepository;
+    private final BankBranchRepository bankBranchRepository;
     private final UsrRepository usrRepository;
 
     @Override
     @Transactional(readOnly = true)
     public List<EmployeeResponseDTO> getAllEmployees(boolean showDefaultRow, String isActive) {
         if (!isActive.equalsIgnoreCase("true") && !isActive.equalsIgnoreCase("false") && !isActive.equalsIgnoreCase("all")) {
-            throw new IllegalArgumentException(
-                    "Invalid value for isActive. Accepted values: true, false, all");
+            throw new IllegalArgumentException("Invalid value for isActive. Accepted values: true, false, all");
         }
         Sort sort = Sort.by("id").ascending();
         List<Employee> records = "all".equals(isActive)
@@ -60,8 +61,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public EmployeeResponseDTO createEmployee(EmployeeRequestDTO requestDTO) {
         if (employeeRepository.existsByEmployeeNoIgnoreCase(requestDTO.getEmployeeNo())) {
-            throw new IllegalArgumentException(
-                    "An employee with number '" + requestDTO.getEmployeeNo() + "' already exists.");
+            throw new IllegalArgumentException("An employee with number '" + requestDTO.getEmployeeNo() + "' already exists.");
         }
         Employee entity = employeeMapper.toEntity(requestDTO);
         setRelationships(entity, requestDTO);
@@ -84,7 +84,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeRepository.delete(employee);
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void setRelationships(Employee entity, EmployeeRequestDTO dto) {
         entity.setEmployeeType(typeRepository.getReferenceById(dto.getEmployeeTypeId()));
@@ -97,6 +97,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         entity.setCountry(countryRepository.getReferenceById(dto.getCountryId()));
         entity.setCreatedBy(usrRepository.getReferenceById(dto.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(dto.getModifiedBy()));
+        if (dto.getBankId() != null)
+            entity.setBank(bankRepository.getReferenceById(dto.getBankId()));
+        if (dto.getBankBranchId() != null)
+            entity.setBankBranch(bankBranchRepository.getReferenceById(dto.getBankBranchId()));
     }
 
     private void updateRelationships(Employee entity, EmployeeRequestDTO dto) {
@@ -116,6 +120,9 @@ public class EmployeeServiceImpl implements EmployeeService {
             entity.setStatus(statusRepository.getReferenceById(dto.getStatusId()));
         if (dto.getCountryId() != null)
             entity.setCountry(countryRepository.getReferenceById(dto.getCountryId()));
+        // bank is nullable — explicitly clear when not provided
+        entity.setBank(dto.getBankId() != null ? bankRepository.getReferenceById(dto.getBankId()) : null);
+        entity.setBankBranch(dto.getBankBranchId() != null ? bankBranchRepository.getReferenceById(dto.getBankBranchId()) : null);
         if (dto.getModifiedBy() != null)
             entity.setModifiedBy(usrRepository.getReferenceById(dto.getModifiedBy()));
     }

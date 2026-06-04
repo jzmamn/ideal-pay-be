@@ -48,6 +48,12 @@ public class EmployeeRequestDTO {
 
     private BigDecimal basicSalary;
 
+    private Long bankId;
+    private Long bankBranchId;
+
+    @Size(max = 50, message = "Account number must not exceed 50 characters")
+    private String accountNo;
+
     @NotNull(message = "Joined date is required")
     private LocalDate joinedDate;
 

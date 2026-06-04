@@ -58,6 +58,19 @@ public class Employee {
     @Column(name = "basic_salary", precision = 10, scale = 2, columnDefinition = "DECIMAL(10,2) DEFAULT '0.00'")
     private BigDecimal basicSalary;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bank_id")
+    @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
+    private Bank bank;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bank_branch_id")
+    @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
+    private BankBranch bankBranch;
+
+    @Column(name = "account_no", length = 50)
+    private String accountNo;
+
     @Column(name = "joined_date", nullable = false)
     private LocalDate joinedDate;
 

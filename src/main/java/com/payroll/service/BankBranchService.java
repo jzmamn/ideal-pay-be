@@ -9,7 +9,7 @@ public interface BankBranchService {
 
     List<BankBranchResponseDTO> getAllBankBranches(String isActive);
 
-    List<BankBranchResponseDTO> getBankBranchesByBankId(Long bankId);
+    List<BankBranchResponseDTO> getBankBranchesByBankCode(String bankCode);
 
     BankBranchResponseDTO getBankBranchById(Long id);
 

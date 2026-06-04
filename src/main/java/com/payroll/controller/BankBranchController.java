@@ -27,12 +27,12 @@ public class BankBranchController {
                 bankBranchService.getAllBankBranches(isActive)));
     }
 
-    @GetMapping("/by-bank/{bankId}")
-    public ResponseEntity<ApiResponseDTO<List<BankBranchResponseDTO>>> getBankBranchesByBankId(
-            @PathVariable Long bankId) {
+    @GetMapping("/by-bank/{bankCode}")
+    public ResponseEntity<ApiResponseDTO<List<BankBranchResponseDTO>>> getBankBranchesByBankCode(
+            @PathVariable String bankCode) {
         return ResponseEntity.ok(ApiResponseDTO.success(
                 "Bank branches fetched successfully",
-                bankBranchService.getBankBranchesByBankId(bankId)));
+                bankBranchService.getBankBranchesByBankCode(bankCode)));
     }
 
     @GetMapping("/{id}")

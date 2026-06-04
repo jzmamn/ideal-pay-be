@@ -10,9 +10,9 @@ import java.util.List;
 @Repository
 public interface BankBranchRepository extends JpaRepository<BankBranch, Long> {
 
-    List<BankBranch> findAllByBankId(Long bankId, Sort sort);
+    List<BankBranch> findAllByBank_Code(String bankCode, Sort sort);
 
     List<BankBranch> findAllByIsActive(Boolean isActive, Sort sort);
 
-    boolean existsByBankIdAndBranchCodeIgnoreCase(Long bankId, String branchCode);
+    boolean existsByBank_CodeAndBranchCodeIgnoreCase(String bankCode, String branchCode);
 }

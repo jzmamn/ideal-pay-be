@@ -27,6 +27,14 @@ public class EmployeeResponseDTO {
     private BigDecimal basicSalary;
     private LocalDate joinedDate;
 
+    private Long bankId;
+    private String bankCode;
+    private String bankName;
+    private Long bankBranchId;
+    private String bankBranchCode;
+    private String bankBranchName;
+    private String accountNo;
+
     private Long employeeTypeId;
     private String employeeTypeCode;
     private String employeeTypeName;

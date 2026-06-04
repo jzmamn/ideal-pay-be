@@ -12,8 +12,9 @@ import lombok.*;
 @Builder
 public class BankBranchRequestDTO {
 
-    @NotNull(message = "Bank ID is required")
-    private Long bankId;
+    @NotBlank(message = "Bank code is required")
+    @Size(max = 20, message = "Bank code must not exceed 20 characters")
+    private String bankCode;
 
     @NotBlank(message = "Branch code is required")
     @Size(max = 20, message = "Branch code must not exceed 20 characters")

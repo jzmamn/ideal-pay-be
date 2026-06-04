@@ -4,34 +4,42 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.payroll.converter.BooleanToYNConverter;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "bank_branch")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Table(name = "email_config")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 @Builder
-public class BankBranch {
+public class EmailConfig {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bank_code", referencedColumnName = "code", nullable = false)
-    @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
-    private Bank bank;
+    @Column(name = "host", nullable = false, length = 255)
+    private String host;
 
-    @Column(name = "branch_code", nullable = false, length = 20)
-    private String branchCode;
+    @Column(name = "port", nullable = false)
+    private Integer port;
 
-    @Column(name = "branch_name", nullable = false, length = 150)
-    private String branchName;
+    @Column(name = "username", nullable = false, length = 255)
+    private String username;
+
+    /** Stored encrypted/plain — integrate vault or jasypt for production */
+    @Column(name = "password", nullable = false, length = 500)
+    private String password;
+
+    @Column(name = "from_name", nullable = false, length = 150)
+    private String fromName;
+
+    @Column(name = "from_address", nullable = false, length = 255)
+    private String fromAddress;
+
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "use_tls", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
+    private Boolean useTls;
 
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "is_active", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
@@ -42,7 +50,6 @@ public class BankBranch {
     @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Usr createdBy;
 
-    @CreationTimestamp
     @Column(name = "created_date", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdDate;
@@ -52,7 +59,6 @@ public class BankBranch {
     @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Usr modifiedBy;
 
-    @UpdateTimestamp
     @Column(name = "modified_date", nullable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime modifiedDate;

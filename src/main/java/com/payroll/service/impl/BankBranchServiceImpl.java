@@ -41,11 +41,11 @@ public class BankBranchServiceImpl implements BankBranchService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BankBranchResponseDTO> getBankBranchesByBankId(Long bankId) {
-        if (!bankRepository.existsById(bankId)) {
-            throw new ResourceNotFoundException("Bank", "id", bankId);
+    public List<BankBranchResponseDTO> getBankBranchesByBankCode(String bankCode) {
+        if (!bankRepository.existsByCode(bankCode)) {
+            throw new ResourceNotFoundException("Bank", "code", bankCode);
         }
-        return bankBranchRepository.findAllByBankId(bankId, Sort.by("id").ascending())
+        return bankBranchRepository.findAllByBank_Code(bankCode, Sort.by("id").ascending())
                 .stream().map(bankBranchMapper::toResponseDTO).toList();
     }
 
@@ -59,12 +59,13 @@ public class BankBranchServiceImpl implements BankBranchService {
 
     @Override
     public BankBranchResponseDTO createBankBranch(BankBranchRequestDTO requestDTO) {
-        if (bankBranchRepository.existsByBankIdAndBranchCodeIgnoreCase(requestDTO.getBankId(), requestDTO.getBranchCode())) {
+        if (bankBranchRepository.existsByBank_CodeAndBranchCodeIgnoreCase(requestDTO.getBankCode(), requestDTO.getBranchCode())) {
             throw new IllegalArgumentException("Branch code '" + requestDTO.getBranchCode() + "' already exists for this bank");
         }
         BankBranch entity = bankBranchMapper.toEntity(requestDTO);
         entity.setIsActive(true);
-        entity.setBank(bankRepository.getReferenceById(requestDTO.getBankId()));
+        entity.setBank(bankRepository.findByCode(requestDTO.getBankCode())
+                .orElseThrow(() -> new ResourceNotFoundException("Bank", "code", requestDTO.getBankCode())));
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return bankBranchMapper.toResponseDTO(bankBranchRepository.save(entity));
@@ -75,12 +76,13 @@ public class BankBranchServiceImpl implements BankBranchService {
         BankBranch existing = bankBranchRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("BankBranch", "id", id));
         if (!existing.getBranchCode().equalsIgnoreCase(requestDTO.getBranchCode())
-                && bankBranchRepository.existsByBankIdAndBranchCodeIgnoreCase(requestDTO.getBankId(), requestDTO.getBranchCode())) {
+                && bankBranchRepository.existsByBank_CodeAndBranchCodeIgnoreCase(requestDTO.getBankCode(), requestDTO.getBranchCode())) {
             throw new IllegalArgumentException("Branch code '" + requestDTO.getBranchCode() + "' already exists for this bank");
         }
         bankBranchMapper.updateEntityFromDTO(requestDTO, existing);
-        if (requestDTO.getBankId() != null) {
-            existing.setBank(bankRepository.getReferenceById(requestDTO.getBankId()));
+        if (requestDTO.getBankCode() != null) {
+            existing.setBank(bankRepository.findByCode(requestDTO.getBankCode())
+                    .orElseThrow(() -> new ResourceNotFoundException("Bank", "code", requestDTO.getBankCode())));
         }
         if (requestDTO.getModifiedBy() != null) {
             existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));

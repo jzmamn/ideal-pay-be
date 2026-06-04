@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 public class BankBranchResponseDTO {
 
     private Long id;
-    private Long bankId;
     private String bankCode;
     private String bankName;
     private String branchCode;
