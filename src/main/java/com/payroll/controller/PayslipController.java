@@ -6,26 +6,37 @@ import com.payroll.dto.response.PayrollRunSummaryDTO;
 import com.payroll.dto.response.PayslipEmailResultDTO;
 import com.payroll.service.PayrollRunService;
 import com.payroll.service.PayslipEmailService;
+import com.payroll.service.PayslipPdfService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.util.List;
 
 /**
- * Payslip endpoints — read queries + email dispatch.
+ * Payslip endpoints — run queries, PDF generation, and email dispatch.
  * Base path: /payroll/payslip
+ *
+ * PDF endpoints:
+ *   GET  /pdf/{runId}            → single payslip
+ *   POST /pdf/selected           → merged PDF for a list of run IDs
+ *   GET  /pdf/batch/{month}      → merged PDF for all runs in a payroll month
  */
 @RestController
 @RequestMapping("/payroll/payslip")
 @RequiredArgsConstructor
 public class PayslipController {
 
-    private final PayrollRunService  payrollRunService;
+    private final PayrollRunService   payrollRunService;
     private final PayslipEmailService payslipEmailService;
+    private final PayslipPdfService   payslipPdfService;
 
-    // ── Read endpoints ────────────────────────────────────────────────────
+    // ── Run query endpoints ───────────────────────────────────────────────
 
     /** All run summaries for an employee (all months). */
     @GetMapping("/employee/{empId}")
@@ -36,7 +47,7 @@ public class PayslipController {
                 payrollRunService.getPayrollRunsByEmployee(empId)));
     }
 
-    /** All run summaries for a given payroll month e.g. "2026-05". */
+    /** All run summaries for a payroll month e.g. "2026-05". */
     @GetMapping("/month/{payrollMonth}")
     public ResponseEntity<ApiResponseDTO<List<PayrollRunSummaryDTO>>> getByMonth(
             @PathVariable String payrollMonth) {
@@ -45,17 +56,81 @@ public class PayslipController {
                 payrollRunService.getPayrollRunsByMonth(payrollMonth)));
     }
 
-    // ── Email endpoint ────────────────────────────────────────────────────
+    // ── PDF endpoints ─────────────────────────────────────────────────────
 
     /**
-     * Email payslips to employees linked to the given run IDs.
-     * POST /payroll/payslip/email
+     * Single payslip PDF for one payroll run.
+     * GET /payroll/payslip/pdf/{runId}?templateId=1
      */
+    @GetMapping("/pdf/{runId}")
+    public ResponseEntity<StreamingResponseBody> downloadSingle(
+            @PathVariable Long runId,
+            @RequestParam(required = false) Long templateId) {
+        return pdfResponse(
+                payslipPdfService.generatePdf(runId, templateId),
+                "payslip-" + runId + ".pdf");
+    }
+
+    /**
+     * Merged PDF for a selected list of run IDs (one payslip per page).
+     * POST /payroll/payslip/pdf/selected
+     * Body: [1, 2, 3]
+     */
+    @PostMapping("/pdf/selected")
+    public ResponseEntity<StreamingResponseBody> downloadSelected(
+            @RequestBody @NotEmpty(message = "At least one run ID is required") List<Long> runIds,
+            @RequestParam(required = false) Long templateId) {
+        return pdfResponse(
+                payslipPdfService.generatePdfForSelected(runIds, templateId),
+                "payslips-selected.pdf");
+    }
+
+    /**
+     * Merged PDF for all employees in a payroll month.
+     * GET /payroll/payslip/pdf/batch/{payrollMonth}
+     * Example: /payroll/payslip/pdf/batch/2026-05
+     */
+    @GetMapping("/pdf/batch/{payrollMonth}")
+    public ResponseEntity<StreamingResponseBody> downloadBatch(
+            @PathVariable String payrollMonth) {
+        return pdfResponse(
+                payslipPdfService.generatePdfForMonth(payrollMonth),
+                "payslips-" + payrollMonth + ".pdf");
+    }
+
+    /**
+     * A4-landscape PDF with two payslips side by side in portrait orientation.
+     * POST /payroll/payslip/pdf/2up
+     * Body: [runId1, runId2, runId3, ...]   — pairs grouped left→right per page.
+     * Odd number of IDs → last page has one payslip on the left, blank right.
+     */
+    @PostMapping("/pdf/2up")
+    public ResponseEntity<StreamingResponseBody> download2Up(
+            @RequestBody @NotEmpty(message = "At least one run ID is required") List<Long> runIds,
+            @RequestParam(required = false) Long templateId) {
+        return pdfResponse(
+                payslipPdfService.generatePdf2Up(runIds, templateId),
+                "payslips-2up.pdf");
+    }
+
+    // ── Email endpoint ────────────────────────────────────────────────────
+
     @PostMapping("/email")
     public ResponseEntity<ApiResponseDTO<PayslipEmailResultDTO>> emailPayslips(
             @Valid @RequestBody PayslipEmailRequestDTO request) {
         return ResponseEntity.ok(ApiResponseDTO.success(
                 "Payslip email dispatch complete",
                 payslipEmailService.sendPayslips(request)));
+    }
+
+    // ── Helper ────────────────────────────────────────────────────────────
+
+    private static ResponseEntity<StreamingResponseBody> pdfResponse(
+            StreamingResponseBody body, String filename) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + filename + "\"")
+                .body(body);
     }
 }

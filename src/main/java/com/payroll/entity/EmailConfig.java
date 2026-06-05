@@ -18,6 +18,9 @@ public class EmailConfig {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "name", nullable = false, unique = true, length = 100)
+    private String name;
+
     @Column(name = "host", nullable = false, length = 255)
     private String host;
 

@@ -39,6 +39,12 @@ dependencies {
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 
+	// iText 7 — PDF generation (html2pdf transitively brings kernel, layout, io)
+	implementation 'com.itextpdf:html2pdf:4.0.5'
+
+	// HTML sanitisation — strips XSS vectors from rendered payslip HTML
+	implementation 'org.jsoup:jsoup:1.17.2'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jdbc-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -26,30 +27,36 @@ public class EmailConfigServiceImpl implements EmailConfigService {
     private final EmailConfigRepository emailConfigRepo;
     private final UsrRepository         usrRepository;
 
-    // ── Get active config ─────────────────────────────────────────────────
+    // ── Queries ───────────────────────────────────────────────────────────
 
     @Override
     @Transactional(readOnly = true)
-    public EmailConfigResponseDTO get() {
+    public List<EmailConfigResponseDTO> getAll() {
+        return emailConfigRepo.findAllByOrderByIdDesc()
+                .stream().map(this::toDTO).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EmailConfigResponseDTO getById(Long id) {
+        return toDTO(findOrThrow(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EmailConfigResponseDTO getActive() {
         EmailConfig cfg = emailConfigRepo.findTopByIsActiveTrueOrderByIdDesc()
-                .orElseThrow(() -> new ResourceNotFoundException("No email configuration found"));
+                .orElseThrow(() -> new ResourceNotFoundException("No active email configuration found"));
         return toDTO(cfg);
     }
 
-    // ── Save (upsert) config ──────────────────────────────────────────────
+    // ── Commands ──────────────────────────────────────────────────────────
 
     @Override
-    public EmailConfigResponseDTO save(EmailConfigRequestDTO dto, Long userId) {
+    public EmailConfigResponseDTO create(EmailConfigRequestDTO dto, Long userId) {
         Usr usr = usrRepository.getReferenceById(userId);
-
-        // Deactivate existing active configs
-        emailConfigRepo.findTopByIsActiveTrueOrderByIdDesc()
-                .ifPresent(existing -> {
-                    existing.setIsActive(false);
-                    emailConfigRepo.save(existing);
-                });
-
         EmailConfig entity = EmailConfig.builder()
+                .name(dto.getName())
                 .host(dto.getHost())
                 .port(dto.getPort())
                 .username(dto.getUsername())
@@ -57,14 +64,62 @@ public class EmailConfigServiceImpl implements EmailConfigService {
                 .fromName(dto.getFromName())
                 .fromAddress(dto.getFromAddress())
                 .useTls(dto.getUseTls())
-                .isActive(true)
+                .isActive(false)
                 .createdBy(usr)
                 .createdDate(LocalDateTime.now())
                 .modifiedBy(usr)
                 .modifiedDate(LocalDateTime.now())
                 .build();
-
         return toDTO(emailConfigRepo.save(entity));
+    }
+
+    @Override
+    public EmailConfigResponseDTO update(Long id, EmailConfigRequestDTO dto, Long userId) {
+        EmailConfig entity = findOrThrow(id);
+        Usr usr = usrRepository.getReferenceById(userId);
+        entity.setName(dto.getName());
+        entity.setHost(dto.getHost());
+        entity.setPort(dto.getPort());
+        entity.setUsername(dto.getUsername());
+        if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+            entity.setPassword(dto.getPassword());
+        }
+        entity.setFromName(dto.getFromName());
+        entity.setFromAddress(dto.getFromAddress());
+        entity.setUseTls(dto.getUseTls());
+        entity.setModifiedBy(usr);
+        entity.setModifiedDate(LocalDateTime.now());
+        return toDTO(emailConfigRepo.save(entity));
+    }
+
+    @Override
+    public void delete(Long id) {
+        EmailConfig cfg = findOrThrow(id);
+        if (Boolean.TRUE.equals(cfg.getIsActive())) {
+            throw new IllegalStateException("Cannot delete the active email configuration. Activate another first.");
+        }
+        emailConfigRepo.delete(cfg);
+    }
+
+    @Override
+    public EmailConfigResponseDTO activate(Long id, Long userId) {
+        EmailConfig cfg = findOrThrow(id);
+        Usr usr = usrRepository.getReferenceById(userId);
+        emailConfigRepo.deactivateAll();
+        cfg.setIsActive(true);
+        cfg.setModifiedBy(usr);
+        cfg.setModifiedDate(LocalDateTime.now());
+        return toDTO(emailConfigRepo.save(cfg));
+    }
+
+    @Override
+    public EmailConfigResponseDTO deactivate(Long id, Long userId) {
+        EmailConfig cfg = findOrThrow(id);
+        Usr usr = usrRepository.getReferenceById(userId);
+        cfg.setIsActive(false);
+        cfg.setModifiedBy(usr);
+        cfg.setModifiedDate(LocalDateTime.now());
+        return toDTO(emailConfigRepo.save(cfg));
     }
 
     // ── Test connection ───────────────────────────────────────────────────
@@ -72,8 +127,23 @@ public class EmailConfigServiceImpl implements EmailConfigService {
     @Override
     public Map<String, Object> testConnection() {
         EmailConfig cfg = emailConfigRepo.findTopByIsActiveTrueOrderByIdDesc()
-                .orElseThrow(() -> new ResourceNotFoundException("No email configuration found"));
+                .orElseThrow(() -> new ResourceNotFoundException("No active email configuration found"));
+        return runTest(cfg);
+    }
 
+    @Override
+    public Map<String, Object> testConnectionById(Long id) {
+        return runTest(findOrThrow(id));
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────
+
+    private EmailConfig findOrThrow(Long id) {
+        return emailConfigRepo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Email configuration not found: " + id));
+    }
+
+    private Map<String, Object> runTest(EmailConfig cfg) {
         JavaMailSenderImpl sender = buildSender(cfg);
         Map<String, Object> result = new HashMap<>();
         try {
@@ -86,8 +156,6 @@ public class EmailConfigServiceImpl implements EmailConfigService {
         }
         return result;
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────
 
     public static JavaMailSenderImpl buildSender(EmailConfig cfg) {
         JavaMailSenderImpl sender = new JavaMailSenderImpl();
@@ -108,6 +176,7 @@ public class EmailConfigServiceImpl implements EmailConfigService {
     private EmailConfigResponseDTO toDTO(EmailConfig cfg) {
         return EmailConfigResponseDTO.builder()
                 .id(cfg.getId())
+                .name(cfg.getName())
                 .host(cfg.getHost())
                 .port(cfg.getPort())
                 .username(cfg.getUsername())

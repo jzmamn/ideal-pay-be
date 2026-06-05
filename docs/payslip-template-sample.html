@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <style>
+
+    /*
+     * ═══════════════════════════════════════════════════════════════
+     *  PAGE SETUP
+     *  This template is designed to fit inside ONE HALF of an A4
+     *  landscape page (≈ 140 mm wide × 194 mm tall after margins).
+     *
+     *  @page below controls the SINGLE payslip PDF.
+     *  When used in 2-up mode the service overrides the page size
+     *  to A4 landscape and places two of these side by side.
+     * ═══════════════════════════════════════════════════════════════
+     */
+    @page {
+      size: A4 portrait;
+      margin: 12mm 10mm;
+    }
+
+    /* ── Reset ── */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      font-size: 8.5pt;
+      color: #1e293b;
+      background: #fff;
+    }
+
+    /* ── Utility ── */
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .bold { font-weight: bold; }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HEADER BAND
+       Company name + period on left · PAYSLIP label on right
+    ═══════════════════════════════════════════════════════════════ */
+    .header {
+      width: 100%;
+      border-bottom: 2.5pt solid #1e3a8a;
+      padding-bottom: 5pt;
+      margin-bottom: 6pt;
+    }
+
+    .header table {
+      width: 100%;
+      border: none;
+    }
+
+    .header td {
+      border: none;
+      padding: 0;
+      vertical-align: top;
+    }
+
+    .company-logo {
+      width: 32pt;
+      height: 32pt;
+    }
+
+    .company-name {
+      font-size: 11pt;
+      font-weight: bold;
+      color: #1e3a8a;
+    }
+
+    .company-sub {
+      font-size: 7pt;
+      color: #64748b;
+      margin-top: 1pt;
+    }
+
+    .doc-label {
+      font-size: 10pt;
+      font-weight: bold;
+      color: #1e3a8a;
+      text-align: right;
+    }
+
+    .doc-period {
+      font-size: 8pt;
+      color: #475569;
+      text-align: right;
+      margin-top: 2pt;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       EMPLOYEE INFO BAR
+    ═══════════════════════════════════════════════════════════════ */
+    .emp-bar {
+      background: #f1f5f9;
+      border: 0.5pt solid #e2e8f0;
+      padding: 5pt 7pt;
+      margin-bottom: 6pt;
+    }
+
+    .emp-bar table {
+      width: 100%;
+      border: none;
+    }
+
+    .emp-bar td {
+      border: none;
+      padding: 1pt 0;
+      vertical-align: top;
+      font-size: 7.5pt;
+    }
+
+    .emp-key {
+      color: #64748b;
+      width: 62pt;
+    }
+
+    .emp-val {
+      font-weight: bold;
+      color: #0f172a;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       EARNINGS & DEDUCTIONS TABLES
+    ═══════════════════════════════════════════════════════════════ */
+    .section-label {
+      font-size: 7pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #fff;
+      background: #1e3a8a;
+      padding: 3pt 6pt;
+      margin-bottom: 0;
+    }
+
+    .pay-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 6pt;
+    }
+
+    .pay-table td {
+      padding: 2.5pt 6pt;
+      border-bottom: 0.4pt solid #f1f5f9;
+      font-size: 7.5pt;
+    }
+
+    .pay-table td.amount {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .pay-table tr.total td {
+      border-top: 1pt solid #cbd5e1;
+      border-bottom: none;
+      font-weight: bold;
+      font-size: 8pt;
+      padding-top: 4pt;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       NET PAY BANNER
+    ═══════════════════════════════════════════════════════════════ */
+    .net-pay-bar {
+      background: #1e3a8a;
+      color: #fff;
+      padding: 6pt 7pt;
+      margin-bottom: 5pt;
+    }
+
+    .net-pay-bar table {
+      width: 100%;
+      border: none;
+    }
+
+    .net-pay-bar td {
+      border: none;
+      padding: 0;
+      color: #fff;
+    }
+
+    .net-label {
+      font-size: 9pt;
+      font-weight: bold;
+    }
+
+    .net-amount {
+      font-size: 12pt;
+      font-weight: bold;
+      text-align: right;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       EMPLOYER CONTRIBUTIONS  (smaller / muted)
+    ═══════════════════════════════════════════════════════════════ */
+    .employer-label {
+      font-size: 6.5pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #64748b;
+      border-bottom: 0.5pt solid #e2e8f0;
+      padding-bottom: 2pt;
+      margin-bottom: 2pt;
+    }
+
+    .employer-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 5pt;
+    }
+
+    .employer-table td {
+      font-size: 7pt;
+      color: #475569;
+      padding: 1.5pt 0;
+      border: none;
+    }
+
+    .employer-table td.amount {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════════════════════════════ */
+    .footer {
+      border-top: 0.5pt solid #e2e8f0;
+      padding-top: 4pt;
+      font-size: 6.5pt;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ════════════════════════════════
+       HEADER
+  ════════════════════════════════ -->
+  <div class="header">
+    <table>
+      <tr>
+        <td style="width:36pt;">
+          <img src="{{COMPANY_LOGO}}" alt="Logo" width="30" height="30"/>
+        </td>
+        <td>
+          <div class="company-name">{{COMPANY_NAME}}</div>
+          <div class="company-sub">{{COMPANY_ADDRESS}}</div>
+          <div class="company-sub">EPF Reg: {{COMPANY_EPF_NO}}</div>
+        </td>
+        <td>
+          <div class="doc-label">PAY SLIP</div>
+          <div class="doc-period">{{PAYROLL_MONTH}}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════
+       EMPLOYEE INFO
+  ════════════════════════════════ -->
+  <div class="emp-bar">
+    <table>
+      <tr>
+        <td class="emp-key">Employee No.</td>
+        <td class="emp-val">{{EMPLOYEE_NO}}</td>
+        <td class="emp-key">Department</td>
+        <td class="emp-val">{{DEPARTMENT}}</td>
+      </tr>
+      <tr>
+        <td class="emp-key">Name</td>
+        <td class="emp-val" colspan="3">{{EMPLOYEE_NAME}}</td>
+      </tr>
+      <tr>
+        <td class="emp-key">Designation</td>
+        <td class="emp-val">{{DESIGNATION}}</td>
+        <td class="emp-key">Working Days</td>
+        <td class="emp-val">{{WORKING_DAYS}}</td>
+      </tr>
+      <tr>
+        <td class="emp-key">Bank</td>
+        <td class="emp-val">{{BANK_NAME}}</td>
+        <td class="emp-key">Account No.</td>
+        <td class="emp-val">{{ACCOUNT_NO}}</td>
+      </tr>
+      <tr>
+        <td class="emp-key">EPF No.</td>
+        <td class="emp-val" colspan="3">{{EMPLOYEE_EPF_NO}}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════
+       EARNINGS
+       {{EARNINGS_ROWS}} expands to one <tr> per earning component:
+         <tr><td>Basic Salary</td><td class="amount">100,000.00</td></tr>
+         <tr><td>Transport Allowance</td><td class="amount">5,000.00</td></tr>
+         ...
+  ════════════════════════════════ -->
+  <div class="section-label">Earnings</div>
+  <table class="pay-table">
+    <tbody>
+      {{EARNINGS_ROWS}}
+    </tbody>
+    <tr class="total">
+      <td>Gross Pay</td>
+      <td class="amount">{{GROSS_PAY}}</td>
+    </tr>
+  </table>
+
+  <!-- ════════════════════════════════
+       DEDUCTIONS
+       {{DEDUCTIONS_ROWS}} expands similarly
+  ════════════════════════════════ -->
+  <div class="section-label">Deductions</div>
+  <table class="pay-table">
+    <tbody>
+      {{DEDUCTIONS_ROWS}}
+    </tbody>
+    <tr class="total">
+      <td>Total Deductions</td>
+      <td class="amount">{{TOTAL_DEDUCTIONS}}</td>
+    </tr>
+  </table>
+
+  <!-- ════════════════════════════════
+       NET PAY
+  ════════════════════════════════ -->
+  <div class="net-pay-bar">
+    <table>
+      <tr>
+        <td class="net-label">NET PAY</td>
+        <td class="net-amount">LKR &nbsp;{{NET_PAY}}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════
+       EMPLOYER CONTRIBUTIONS
+  ════════════════════════════════ -->
+  <div class="employer-label">Employer Contributions (not deducted from employee)</div>
+  <table class="employer-table">
+    <tbody>
+      {{EMPLOYER_ROWS}}
+    </tbody>
+  </table>
+
+  <!-- ════════════════════════════════
+       FOOTER
+  ════════════════════════════════ -->
+  <div class="footer">
+    This payslip is computer generated. For queries contact HR. &nbsp;|&nbsp; Confidential
+  </div>
+
+</body>
+</html>

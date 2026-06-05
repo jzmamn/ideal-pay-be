@@ -2,63 +2,42 @@ package com.payroll.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.payroll.converter.BooleanToYNConverter;
-import com.payroll.entity.Usr;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "company")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Table(name = "email_template")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
 @Builder
-public class Company {
+public class EmailTemplate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "code", nullable = true, unique = true, length = 10)
-    private String code;
-
-    @Column(name = "name", nullable = false, length = 150)
+    @Column(name = "name", nullable = false, unique = true, length = 150)
     private String name;
 
-    @Column(name = "contact_person", nullable = false, length = 150)
-    private String contactPerson;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "template_type", nullable = false, length = 30)
+    private TemplateType templateType;
 
-    @Column(name = "address_line1", nullable = false, length = 255)
-    private String addressLine1;
+    /** Optional SMTP configuration used when sending this template. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "email_config_id", nullable = true)
+    @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
+    private EmailConfig emailConfig;
 
-    @Column(name = "address_line2", length = 255)
-    private String addressLine2;
+    @Column(name = "subject", nullable = false, length = 500)
+    private String subject;
 
-    @Column(name = "city", nullable = false, length = 100)
-    private String city;
-
-    @Column(name = "address_email", length = 150)
-    private String addressEmail;
-
-    @Column(name = "telephone", nullable = false, length = 20)
-    private String telephone;
-
-    @Column(name = "fax", length = 20)
-    private String fax;
-
-    @Column(name = "email", length = 150)
-    private String email;
-
-    @Column(name = "logo", length = 500)
-    private String logo;
-
-    @Column(name = "epf_no", length = 50)
-    private String epfNo;
-
-    @Column(name = "etf_no", length = 50)
-    private String etfNo;
+    @Column(name = "body", nullable = false, columnDefinition = "LONGTEXT")
+    private String body;
 
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "is_active", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
@@ -69,6 +48,7 @@ public class Company {
     @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Usr createdBy;
 
+    @CreationTimestamp
     @Column(name = "created_date", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdDate;
@@ -78,7 +58,13 @@ public class Company {
     @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Usr modifiedBy;
 
+    @UpdateTimestamp
     @Column(name = "modified_date", nullable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime modifiedDate;
+
+    // ── Inner enum ────────────────────────────────────────────────────────────
+    public enum TemplateType {
+        PAYSLIP, SALARY_ADVANCE, SALARY_INCREMENT, GENERAL
+    }
 }

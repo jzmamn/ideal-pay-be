@@ -7,6 +7,7 @@ import lombok.*;
 @Builder
 public class EmailConfigResponseDTO {
     private Long    id;
+    private String  name;
     private String  host;
     private Integer port;
     private String  username;

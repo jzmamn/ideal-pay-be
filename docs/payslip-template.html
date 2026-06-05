@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <style>
+
+    @page {
+      size: A4 portrait;
+      margin: 12mm 14mm 12mm 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 8.5pt;
+      color: #1e293b;
+      background: #ffffff;
+    }
+
+    /* ── HEADER ─────────────────────────────────────────── */
+
+    .header {
+      width: 100%;
+      border-bottom: 3pt solid #1e3a8a;
+      padding-bottom: 8pt;
+      margin-bottom: 8pt;
+    }
+
+    .header table {
+      width: 100%;
+      border: none;
+    }
+
+    .header td {
+      border: none;
+      padding: 0;
+      vertical-align: middle;
+    }
+
+    .logo {
+      width: 48pt;
+    }
+
+    .logo img {
+      width: 40pt;
+      height: 40pt;
+    }
+
+    .company-name {
+      font-size: 13pt;
+      font-weight: bold;
+      color: #1e3a8a;
+    }
+
+    .company-detail {
+      font-size: 7pt;
+      color: #64748b;
+      margin-top: 2pt;
+      line-height: 1.4;
+    }
+
+    .doc-info {
+      text-align: right;
+    }
+
+    .doc-title {
+      font-size: 14pt;
+      font-weight: bold;
+      color: #1e3a8a;
+      letter-spacing: 0.04em;
+    }
+
+    .doc-period {
+      font-size: 9pt;
+      color: #475569;
+      margin-top: 3pt;
+      font-weight: bold;
+    }
+
+    /* ── EMPLOYEE INFO ───────────────────────────────────── */
+
+    .emp-section {
+      background: #f1f5f9;
+      border-left: 3pt solid #1e3a8a;
+      padding: 7pt 10pt;
+      margin-bottom: 10pt;
+    }
+
+    .emp-section table {
+      width: 100%;
+      border: none;
+      border-collapse: collapse;
+    }
+
+    .emp-section td {
+      border: none;
+      padding: 2pt 6pt 2pt 0;
+      font-size: 7.5pt;
+      vertical-align: top;
+    }
+
+    .emp-key {
+      color: #64748b;
+      width: 68pt;
+      white-space: nowrap;
+    }
+
+    .emp-val {
+      font-weight: bold;
+      color: #0f172a;
+    }
+
+    .emp-divider {
+      width: 1pt;
+      background: #cbd5e1;
+      padding: 0 8pt;
+    }
+
+    /* ── EARNINGS / DEDUCTIONS ───────────────────────────── */
+
+    .columns {
+      width: 100%;
+      border: none;
+      border-collapse: collapse;
+      margin-bottom: 8pt;
+    }
+
+    .columns td {
+      border: none;
+      vertical-align: top;
+      width: 50%;
+      padding: 0;
+    }
+
+    .col-left  { padding-right: 5pt; }
+    .col-right { padding-left: 5pt;  }
+
+    .section-title {
+      font-size: 7pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #ffffff;
+      background: #1e3a8a;
+      padding: 3.5pt 7pt;
+    }
+
+    .pay-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .pay-table td {
+      font-size: 7.5pt;
+      padding: 3pt 7pt;
+      border-bottom: 0.5pt solid #f1f5f9;
+      color: #334155;
+    }
+
+    .pay-table td.amt {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      color: #0f172a;
+    }
+
+    .pay-table tr.subtotal td {
+      font-weight: bold;
+      border-top: 1pt solid #cbd5e1;
+      border-bottom: none;
+      background: #f8fafc;
+      color: #0f172a;
+      font-size: 8pt;
+      padding-top: 4pt;
+      padding-bottom: 4pt;
+    }
+
+    /* ── NET PAY ─────────────────────────────────────────── */
+
+    .net-pay {
+      background: #1e3a8a;
+      color: #ffffff;
+      padding: 8pt 12pt;
+      margin-bottom: 8pt;
+    }
+
+    .net-pay table {
+      width: 100%;
+      border: none;
+    }
+
+    .net-pay td {
+      border: none;
+      color: #ffffff;
+      padding: 0;
+      vertical-align: middle;
+    }
+
+    .net-label {
+      font-size: 10pt;
+      font-weight: bold;
+      letter-spacing: 0.04em;
+    }
+
+    .net-sub {
+      font-size: 7pt;
+      color: #93c5fd;
+      margin-top: 2pt;
+    }
+
+    .net-amount {
+      font-size: 16pt;
+      font-weight: bold;
+      text-align: right;
+    }
+
+    .net-currency {
+      font-size: 9pt;
+      font-weight: normal;
+      color: #93c5fd;
+      margin-right: 3pt;
+    }
+
+    /* ── EMPLOYER CONTRIBUTIONS ──────────────────────────── */
+
+    .employer-section {
+      border: 0.5pt solid #e2e8f0;
+      padding: 5pt 8pt;
+      margin-bottom: 8pt;
+    }
+
+    .employer-heading {
+      font-size: 6.5pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      margin-bottom: 4pt;
+    }
+
+    .employer-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .employer-table td {
+      font-size: 7pt;
+      color: #475569;
+      padding: 2pt 0;
+      border: none;
+    }
+
+    .employer-table td.amt {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: #334155;
+    }
+
+    /* ── BANK & SIGNATURE ────────────────────────────────── */
+
+    .bottom-section table {
+      width: 100%;
+      border: none;
+      border-collapse: collapse;
+    }
+
+    .bottom-section td {
+      border: none;
+      vertical-align: bottom;
+      padding: 0;
+    }
+
+    .bank-box {
+      background: #f8fafc;
+      border: 0.5pt solid #e2e8f0;
+      padding: 5pt 8pt;
+      font-size: 7.5pt;
+    }
+
+    .bank-label {
+      font-size: 6.5pt;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 3pt;
+    }
+
+    .bank-val {
+      font-weight: bold;
+      color: #0f172a;
+    }
+
+    .signature-box {
+      text-align: right;
+      padding-left: 16pt;
+    }
+
+    .sig-line {
+      border-top: 1pt solid #334155;
+      width: 100pt;
+      margin-left: auto;
+      margin-top: 20pt;
+    }
+
+    .sig-label {
+      font-size: 7pt;
+      color: #64748b;
+      margin-top: 3pt;
+      text-align: center;
+      width: 100pt;
+      margin-left: auto;
+    }
+
+    /* ── FOOTER ──────────────────────────────────────────── */
+
+    .footer {
+      border-top: 0.5pt solid #e2e8f0;
+      padding-top: 5pt;
+      margin-top: 6pt;
+      font-size: 6.5pt;
+      color: #94a3b8;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════
+       HEADER — Logo · Company · Pay Slip label
+  ══════════════════════════════════════════ -->
+  <div class="header">
+    <table>
+      <tr>
+        <td class="logo">
+          <img src="{{COMPANY_LOGO}}" alt="Logo"/>
+        </td>
+        <td>
+          <div class="company-name">{{COMPANY_NAME}}</div>
+          <div class="company-detail">{{COMPANY_ADDRESS}}</div>
+          <div class="company-detail">
+            Tel: {{COMPANY_PHONE}} &nbsp;|&nbsp; {{COMPANY_EMAIL}}
+          </div>
+          <div class="company-detail">
+            EPF Reg No: {{COMPANY_EPF_NO}}
+          </div>
+        </td>
+        <td class="doc-info">
+          <div class="doc-title">PAY SLIP</div>
+          <div class="doc-period">{{PAYROLL_MONTH}}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       EMPLOYEE DETAILS
+  ══════════════════════════════════════════ -->
+  <div class="emp-section">
+    <table>
+      <tr>
+        <td class="emp-key">Employee No.</td>
+        <td class="emp-val">{{EMPLOYEE_NO}}</td>
+        <td class="emp-divider"></td>
+        <td class="emp-key">Department</td>
+        <td class="emp-val">{{DEPARTMENT}}</td>
+      </tr>
+      <tr>
+        <td class="emp-key">Name</td>
+        <td class="emp-val">{{EMPLOYEE_NAME}}</td>
+        <td class="emp-divider"></td>
+        <td class="emp-key">Designation</td>
+        <td class="emp-val">{{DESIGNATION}}</td>
+      </tr>
+      <tr>
+        <td class="emp-key">EPF No.</td>
+        <td class="emp-val">{{EMPLOYEE_EPF_NO}}</td>
+        <td class="emp-divider"></td>
+        <td class="emp-key">Working Days</td>
+        <td class="emp-val">{{WORKING_DAYS}}</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       EARNINGS  |  DEDUCTIONS  (two columns)
+  ══════════════════════════════════════════ -->
+  <table class="columns">
+    <tr>
+
+      <!-- LEFT — Earnings -->
+      <td class="col-left">
+        <div class="section-title">Earnings</div>
+        <table class="pay-table">
+          <tbody>
+            {{EARNINGS_ROWS}}
+          </tbody>
+          <tr class="subtotal">
+            <td>Gross Pay</td>
+            <td class="amt">{{GROSS_PAY}}</td>
+          </tr>
+        </table>
+      </td>
+
+      <!-- RIGHT — Deductions -->
+      <td class="col-right">
+        <div class="section-title">Deductions</div>
+        <table class="pay-table">
+          <tbody>
+            {{DEDUCTIONS_ROWS}}
+          </tbody>
+          <tr class="subtotal">
+            <td>Total Deductions</td>
+            <td class="amt">{{TOTAL_DEDUCTIONS}}</td>
+          </tr>
+        </table>
+      </td>
+
+    </tr>
+  </table>
+
+  <!-- ══════════════════════════════════════════
+       NET PAY BANNER
+  ══════════════════════════════════════════ -->
+  <div class="net-pay">
+    <table>
+      <tr>
+        <td>
+          <div class="net-label">NET PAY</div>
+          <div class="net-sub">Amount payable to employee</div>
+        </td>
+        <td>
+          <div class="net-amount">
+            <span class="net-currency">LKR</span>{{NET_PAY}}
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       EMPLOYER CONTRIBUTIONS
+  ══════════════════════════════════════════ -->
+  <div class="employer-section">
+    <div class="employer-heading">Employer Contributions &nbsp;(not deducted from employee)</div>
+    <table class="employer-table">
+      <tbody>
+        {{EMPLOYER_ROWS}}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       BANK DETAILS  +  AUTHORISED SIGNATURE
+  ══════════════════════════════════════════ -->
+  <div class="bottom-section">
+    <table>
+      <tr>
+        <td style="width:55%;">
+          <div class="bank-box">
+            <div class="bank-label">Payment Details</div>
+            <div>
+              <span style="color:#64748b;">Bank &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span>
+              <span class="bank-val"> {{BANK_NAME}}</span>
+            </div>
+            <div>
+              <span style="color:#64748b;">Branch &nbsp;&nbsp;&nbsp;:</span>
+              <span class="bank-val"> {{BANK_BRANCH}}</span>
+            </div>
+            <div>
+              <span style="color:#64748b;">Account :</span>
+              <span class="bank-val"> {{ACCOUNT_NO}}</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="signature-box">
+            <div class="sig-line"></div>
+            <div class="sig-label">Authorised Signature</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       FOOTER
+  ══════════════════════════════════════════ -->
+  <div class="footer">
+    This is a computer-generated payslip and does not require a physical signature.
+    &nbsp;|&nbsp; Confidential — for the named employee only.
+    &nbsp;|&nbsp; For queries contact HR.
+  </div>
+
+</body>
+</html>

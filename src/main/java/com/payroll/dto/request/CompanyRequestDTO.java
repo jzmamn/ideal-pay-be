@@ -48,6 +48,12 @@ public class CompanyRequestDTO {
     @Size(max = 500, message = "Logo must not exceed 500 characters")
     private String logo;
 
+    @Size(max = 50, message = "EPF number must not exceed 50 characters")
+    private String epfNo;
+
+    @Size(max = 50, message = "ETF number must not exceed 50 characters")
+    private String etfNo;
+
     @NotNull(message = "createdBy is required")
     private Long createdBy;
 
