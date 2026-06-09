@@ -11,5 +11,6 @@ public enum ComponentType {
     EPF_ER,   // Employer EPF contribution (12%) — for reporting only
     ETF,      // ETF contribution (3%) — employer only, for reporting
     PAYE,     // PAYE income tax deduction
-    SA        // Salary advance deduction
+    SA,       // Salary advance deduction
+    LATE      // Late (tardiness) deduction
 }

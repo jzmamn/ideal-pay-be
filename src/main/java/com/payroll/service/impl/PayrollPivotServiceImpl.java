@@ -60,4 +60,19 @@ public class PayrollPivotServiceImpl implements PayrollPivotService {
     public List<Map<String, Object>> getEmployeeSalaryAdvancePivot(String month) {
         return jdbcTemplate.queryForList("CALL sp_emp_sal_adv_pivot(?)", month);
     }
+
+    @Override
+    public List<Map<String, Object>> getPayrollSummaryReport(String month) {
+        return jdbcTemplate.queryForList("CALL sp_rpt_payrollSummary(?)", month);
+    }
+
+    @Override
+    public List<Map<String, Object>> getBankTransferReport(String month) {
+        return jdbcTemplate.queryForList("CALL sp_rpt_bankTransfer(?)", month);
+    }
+
+    @Override
+    public List<Map<String, Object>> getNopayReport(String month) {
+        return jdbcTemplate.queryForList("CALL sp_rpt_nopay(?)", month);
+    }
 }

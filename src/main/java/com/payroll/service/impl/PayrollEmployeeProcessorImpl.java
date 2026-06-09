@@ -5,6 +5,7 @@ import com.payroll.entity.*;
 import com.payroll.enums.PayrollRunStatus;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.repository.*;
+import com.payroll.repository.EmployeeLateRepository;
 import com.payroll.repository.EmployeeSalaryAdvanceRepository;
 import com.payroll.service.ComponentLine;
 import com.payroll.service.FormulaEngineService;
@@ -52,6 +53,7 @@ public class PayrollEmployeeProcessorImpl {
     private final EmployeeOvertimeRepository          empOtRepository;
     private final EmployeeNopayRepository             empNpRepository;
     private final EmployeeSalaryAdvanceRepository     empSaRepository;
+    private final EmployeeLateRepository              empLateRepository;
 
     /**
      * Processes payroll for one employee in an independent transaction.
@@ -83,20 +85,21 @@ public class PayrollEmployeeProcessorImpl {
                 });
 
         // Load components
-        List<EmployeeFixedAllowance>    faList = empFaRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
-        List<EmployeeVariableAllowance> vaList = empVaRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
-        List<EmployeeOvertime>          otList = empOtRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
-        List<EmployeeFixedDeduction>    fdList = empFdRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
-        List<EmployeeVariableDeduction> vdList = empVdRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
-        List<EmployeeNopay>             npList = empNpRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
-        List<EmployeeSalaryAdvance>     saList = empSaRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
+        List<EmployeeFixedAllowance>    faList   = empFaRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
+        List<EmployeeVariableAllowance> vaList   = empVaRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
+        List<EmployeeOvertime>          otList   = empOtRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
+        List<EmployeeFixedDeduction>    fdList   = empFdRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
+        List<EmployeeVariableDeduction> vdList   = empVdRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
+        List<EmployeeNopay>             npList   = empNpRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
+        List<EmployeeSalaryAdvance>     saList   = empSaRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
+        List<EmployeeLate>              lateList = empLateRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
 
         int workingDays = payrollPeriodRepository.findByPeriodMonth(payrollMonth)
                 .map(PayrollPeriod::getWorkingDays)
                 .orElse(26);
 
         SalaryCalculationResult result = calculationEngine.calculate(
-                employee, workingDays, faList, vaList, otList, fdList, vdList, npList, saList);
+                employee, workingDays, faList, vaList, otList, fdList, vdList, npList, saList, lateList);
 
         List<EmpPayrollRunDetail> details = result.getLines().stream()
                 .map(line -> buildDetail(line, processedByUser))

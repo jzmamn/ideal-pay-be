@@ -5,6 +5,7 @@ import com.payroll.dto.response.EmployeeBonusResponseDTO;
 import com.payroll.entity.EmployeeBonus;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.EmployeeBonusMapper;
+import com.payroll.repository.BonusRepository;
 import com.payroll.repository.EmployeeBonusRepository;
 import com.payroll.repository.EmployeeRepository;
 import com.payroll.repository.UsrRepository;
@@ -25,6 +26,7 @@ public class EmployeeBonusServiceImpl implements EmployeeBonusService {
     private final EmployeeBonusMapper mapper;
     private final EmployeeRepository employeeRepository;
     private final UsrRepository usrRepository;
+    private final BonusRepository bonusRepository;
 
     @Override @Transactional(readOnly = true)
     public List<EmployeeBonusResponseDTO> getAll(boolean showDefaultRow) {
@@ -77,10 +79,16 @@ public class EmployeeBonusServiceImpl implements EmployeeBonusService {
         e.setEmployee(employeeRepository.getReferenceById(dto.getEmpId()));
         e.setCreatedBy(usrRepository.getReferenceById(dto.getCreatedBy()));
         e.setModifiedBy(usrRepository.getReferenceById(dto.getModifiedBy()));
+        if (dto.getBonusId() != null) {
+            e.setBonus(bonusRepository.getReferenceById(dto.getBonusId()));
+        }
     }
 
     private void updateRelationships(EmployeeBonus e, EmployeeBonusRequestDTO dto) {
-        if (dto.getEmpId()     != null) e.setEmployee(employeeRepository.getReferenceById(dto.getEmpId()));
+        if (dto.getEmpId()      != null) e.setEmployee(employeeRepository.getReferenceById(dto.getEmpId()));
         if (dto.getModifiedBy() != null) e.setModifiedBy(usrRepository.getReferenceById(dto.getModifiedBy()));
+        if (dto.getBonusId()    != null) {
+            e.setBonus(bonusRepository.getReferenceById(dto.getBonusId()));
+        }
     }
 }

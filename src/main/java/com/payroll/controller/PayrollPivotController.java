@@ -88,4 +88,28 @@ public class PayrollPivotController {
                 payrollPivotService.getEmployeeSalaryAdvancePivot(month)));
     }
 
+    @GetMapping("/payroll-summary-report")
+    public ResponseEntity<ApiResponseDTO<List<Map<String, Object>>>> getPayrollSummaryReport(
+            @RequestParam String month) {
+        return ResponseEntity.ok(ApiResponseDTO.success(
+                "Payroll summary report fetched successfully",
+                payrollPivotService.getPayrollSummaryReport(month)));
+    }
+
+    @GetMapping("/bank-transfer-report")
+    public ResponseEntity<ApiResponseDTO<List<Map<String, Object>>>> getBankTransferReport(
+            @RequestParam String month) {
+        return ResponseEntity.ok(ApiResponseDTO.success(
+                "Bank transfer report fetched successfully",
+                payrollPivotService.getBankTransferReport(month)));
+    }
+
+    @GetMapping("/nopay-report")
+    public ResponseEntity<ApiResponseDTO<List<Map<String, Object>>>> getNopayReport(
+            @RequestParam String month) {
+        return ResponseEntity.ok(ApiResponseDTO.success(
+                "No-pay report fetched successfully",
+                payrollPivotService.getNopayReport(month)));
+    }
+
 }

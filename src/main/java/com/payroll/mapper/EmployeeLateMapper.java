@@ -1,46 +1,41 @@
 package com.payroll.mapper;
 
-import com.payroll.dto.request.EmployeeBonusRequestDTO;
-import com.payroll.dto.response.EmployeeBonusResponseDTO;
-import com.payroll.entity.EmployeeBonus;
+import com.payroll.dto.request.EmployeeLateRequestDTO;
+import com.payroll.dto.response.EmployeeLateResponseDTO;
+import com.payroll.entity.EmployeeLate;
 import org.mapstruct.*;
+
 import java.util.List;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface EmployeeBonusMapper {
+public interface EmployeeLateMapper {
 
     @Mapping(target = "id",           ignore = true)
     @Mapping(target = "employee",     ignore = true)
-    @Mapping(target = "bonus",        ignore = true)
     @Mapping(target = "createdBy",    ignore = true)
     @Mapping(target = "modifiedBy",   ignore = true)
     @Mapping(target = "createdDate",  ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
-    EmployeeBonus toEntity(EmployeeBonusRequestDTO requestDTO);
+    EmployeeLate toEntity(EmployeeLateRequestDTO requestDTO);
 
     @Mapping(target = "empId",              source = "employee.id")
     @Mapping(target = "empCode",            source = "employee.employeeNo")
     @Mapping(target = "empName",            source = "employee.payrollName")
-    @Mapping(target = "bonusId",            source = "bonus.id")
-    @Mapping(target = "bonusCode",          source = "bonus.code")
-    @Mapping(target = "bonusName",          source = "bonus.name")
-    @Mapping(target = "bonusAmount",        source = "bonus.amount")
     @Mapping(target = "createdById",        source = "createdBy.id")
     @Mapping(target = "createdByCode",      source = "createdBy.code")
     @Mapping(target = "createdByUserName",  source = "createdBy.userName")
     @Mapping(target = "modifiedById",       source = "modifiedBy.id")
     @Mapping(target = "modifiedByCode",     source = "modifiedBy.code")
     @Mapping(target = "modifiedByUserName", source = "modifiedBy.userName")
-    EmployeeBonusResponseDTO toResponseDTO(EmployeeBonus entity);
+    EmployeeLateResponseDTO toResponseDTO(EmployeeLate entity);
 
-    List<EmployeeBonusResponseDTO> toResponseDTOList(List<EmployeeBonus> entities);
+    List<EmployeeLateResponseDTO> toResponseDTOList(List<EmployeeLate> entities);
 
     @Mapping(target = "id",           ignore = true)
     @Mapping(target = "employee",     ignore = true)
-    @Mapping(target = "bonus",        ignore = true)
     @Mapping(target = "createdBy",    ignore = true)
     @Mapping(target = "modifiedBy",   ignore = true)
     @Mapping(target = "createdDate",  ignore = true)
     @Mapping(target = "modifiedDate", ignore = true)
-    void updateEntityFromDTO(EmployeeBonusRequestDTO requestDTO, @MappingTarget EmployeeBonus entity);
+    void updateEntityFromDTO(EmployeeLateRequestDTO requestDTO, @MappingTarget EmployeeLate entity);
 }

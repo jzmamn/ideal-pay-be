@@ -23,6 +23,7 @@ import java.util.Map;
  *   <li>Variable Allowances — user-entered amount</li>
  *   <li>Overtime — formula (default: basicSalary/workingDays/8 * hours * 1.5) or stored amount</li>
  *   <li>No Pay — formula (default: basicSalary/workingDays * days) or stored amount</li>
+ *   <li>Late Deduction — basicSalary / (workingDays × 8) × lateHours</li>
  *   <li>Fixed Deductions — formula or stored amount</li>
  *   <li>Variable Deductions — user-entered amount</li>
  *   <li>EPF/ETF base → Employee EPF (8%), Employer EPF (12%), ETF (3%)</li>
@@ -63,7 +64,8 @@ public class SalaryCalculationEngineService {
             List<EmployeeFixedDeduction>    fdList,
             List<EmployeeVariableDeduction> vdList,
             List<EmployeeNopay>             npList,
-            List<EmployeeSalaryAdvance>     saList) {
+            List<EmployeeSalaryAdvance>     saList,
+            List<EmployeeLate>              lateList) {
 
         BigDecimal basicSalary = orZero(employee.getBasicSalary());
         List<ComponentLine> lines = new ArrayList<>();
@@ -80,6 +82,7 @@ public class SalaryCalculationEngineService {
                 .variableAllowances(vaList)
                 .overtimeEntries(otList)
                 .nopayEntries(npList)
+                .lateEntries(lateList)
                 .fixedDeductions(fdList)
                 .variableDeductions(vdList)
                 .build();
@@ -152,6 +155,27 @@ public class SalaryCalculationEngineService {
             enp.setAmount(amt);
             totalNopay = totalNopay.add(amt);
             lines.add(new ComponentLine(ComponentType.NOPAY, nd.getId(), nd.getCode(), nd.getName(), amt, null, enp.getDays()));
+        }
+
+        // ── STEP D2: Late Deduction ───────────────────────────────────────────
+        // Formula: basicSalary / (workingDays × 8) × lateHours
+        BigDecimal totalLate = BigDecimal.ZERO;
+        for (EmployeeLate elate : lateList) {
+            BigDecimal lateHours = orZero(elate.getHours());
+            BigDecimal amt;
+            if (workingDays == 0 || lateHours.compareTo(BigDecimal.ZERO) == 0) {
+                amt = BigDecimal.ZERO;
+            } else {
+                amt = basicSalary
+                        .divide(BigDecimal.valueOf(workingDays), 10, RoundingMode.HALF_UP)
+                        .divide(BigDecimal.valueOf(8), 10, RoundingMode.HALF_UP)
+                        .multiply(lateHours)
+                        .setScale(2, RoundingMode.HALF_UP);
+            }
+            elate.setAmount(amt);
+            totalLate = totalLate.add(amt);
+            log.debug("Late deduction hours={} → {}", lateHours, amt);
+            lines.add(new ComponentLine(ComponentType.LATE, null, "LATE", "Late Deduction", amt, lateHours, null));
         }
 
         // ── STEP E: Fixed Deductions ──────────────────────────────────────────
@@ -241,7 +265,7 @@ public class SalaryCalculationEngineService {
 
         // ── STEP I: Final Totals ──────────────────────────────────────────────
         BigDecimal totalAllowances = totalFa.add(totalVa).add(totalOt);
-        BigDecimal totalDeductions = totalNopay.add(totalFd).add(totalVd)
+        BigDecimal totalDeductions = totalNopay.add(totalLate).add(totalFd).add(totalVd)
                 .add(totalSa).add(employeeEpf).add(payeTax);
         BigDecimal grossPay = basicSalary.add(totalAllowances);
         BigDecimal netPay   = grossPay.subtract(totalDeductions);

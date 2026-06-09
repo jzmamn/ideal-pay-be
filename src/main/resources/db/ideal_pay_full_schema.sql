@@ -774,9 +774,36 @@ CREATE TABLE IF NOT EXISTS emp_sal_incr (
     CONSTRAINT fk_sal_incr_modified FOREIGN KEY (modified_by) REFERENCES usr      (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS bonus (
+    id                          BIGINT          NOT NULL AUTO_INCREMENT,
+    code                        VARCHAR(10)     NULL     UNIQUE,
+    name                        VARCHAR(150)    NOT NULL,
+    description                 VARCHAR(255)    NULL,
+    calculation_type            VARCHAR(30)     NOT NULL COMMENT 'FIXED_AMOUNT | PERCENTAGE_OF_BASIC | PERCENTAGE_OF_ANNUAL | PERFORMANCE_RATING | PROFIT_BASED | KPI_BASED | PRO_RATED | ATTENDANCE_BASED',
+    fixed_amount                DECIMAL(15,2)   NULL,
+    percentage_rate             DECIMAL(7,4)    NULL,
+    target_bonus                DECIMAL(15,2)   NULL,
+    rating_multipliers          VARCHAR(1000)   NULL     COMMENT 'JSON array: [{rating,label,multiplierPct}]',
+    profit_allocation_pct       DECIMAL(7,4)    NULL,
+    weightage_pct               DECIMAL(7,4)    NULL,
+    kpi_definitions             VARCHAR(1000)   NULL     COMMENT 'JSON array: [{name,weightPct,achievementPct}]',
+    pro_rate_full_bonus         DECIMAL(15,2)   NULL,
+    attendance_max_bonus        DECIMAL(15,2)   NULL,
+    attendance_penalty_per_day  DECIMAL(15,2)   NULL,
+    is_active                   CHAR(1)         NOT NULL DEFAULT 'Y',
+    created_by                  BIGINT          NOT NULL,
+    created_date                TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    modified_by                 BIGINT          NOT NULL,
+    modified_date               TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_bonus_created  FOREIGN KEY (created_by)  REFERENCES usr (id),
+    CONSTRAINT fk_bonus_modified FOREIGN KEY (modified_by) REFERENCES usr (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS emp_bonus (
     id             BIGINT        NOT NULL AUTO_INCREMENT,
     emp_id         BIGINT        NOT NULL,
+    bonus_id       BIGINT        NULL,
     amount         DECIMAL(15,2) NOT NULL DEFAULT 0.00,
     payroll_month  VARCHAR(20)   NOT NULL,
     is_processed   CHAR(1)       NOT NULL DEFAULT 'N',
@@ -786,9 +813,10 @@ CREATE TABLE IF NOT EXISTS emp_bonus (
     modified_by    BIGINT        NOT NULL,
     modified_date  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    CONSTRAINT fk_bonus_emp      FOREIGN KEY (emp_id)      REFERENCES employee (id),
-    CONSTRAINT fk_bonus_created  FOREIGN KEY (created_by)  REFERENCES usr      (id),
-    CONSTRAINT fk_bonus_modified FOREIGN KEY (modified_by) REFERENCES usr      (id)
+    CONSTRAINT fk_emp_bonus_emp     FOREIGN KEY (emp_id)    REFERENCES employee (id),
+    CONSTRAINT fk_emp_bonus_bonus   FOREIGN KEY (bonus_id)  REFERENCES bonus    (id),
+    CONSTRAINT fk_emp_bonus_created  FOREIGN KEY (created_by)  REFERENCES usr   (id),
+    CONSTRAINT fk_emp_bonus_modified FOREIGN KEY (modified_by) REFERENCES usr   (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================

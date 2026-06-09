@@ -1,12 +1,19 @@
 package com.payroll.dto.response;
 
 import lombok.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class EmployeeBonusResponseDTO {
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class EmployeeLateResponseDTO {
+
     private Long id;
+    private BigDecimal hours;
     private BigDecimal amount;
     private String payrollMonth;
     private Boolean isProcessed;
@@ -15,12 +22,6 @@ public class EmployeeBonusResponseDTO {
     private Long empId;
     private String empCode;
     private String empName;
-
-    /** Master Bonus definition fields (null when no bonus master is linked). */
-    private Long bonusId;
-    private String bonusCode;
-    private String bonusName;
-    private java.math.BigDecimal bonusAmount;
 
     private Long createdById;
     private String createdByCode;

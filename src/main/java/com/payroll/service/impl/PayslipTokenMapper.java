@@ -155,7 +155,8 @@ public class PayslipTokenMapper {
 
     private static boolean isDeduction(ComponentType ct) {
         return ct == ComponentType.FD || ct == ComponentType.VD
-            || ct == ComponentType.SA || ct == ComponentType.NOPAY;
+            || ct == ComponentType.SA || ct == ComponentType.NOPAY
+            || ct == ComponentType.LATE;
     }
 
     // ── Utilities ─────────────────────────────────────────────────────────

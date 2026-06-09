@@ -100,6 +100,12 @@ public class PayrollContextBuilder {
         return this;
     }
 
+    /** Total late hours (used in formula test / calculate endpoints). */
+    public PayrollContextBuilder lateHours(BigDecimal lateHours) {
+        context.put("lateHours", lateHours != null ? lateHours : BigDecimal.ZERO);
+        return this;
+    }
+
     // ── Allowances ────────────────────────────────────────────────────────────
 
     /**
@@ -172,6 +178,21 @@ public class PayrollContextBuilder {
                 context.put(code,                enp.getDays()   != null ? enp.getDays()   : BigDecimal.ZERO);
                 context.put(code + "_amount",    enp.getAmount() != null ? enp.getAmount() : BigDecimal.ZERO);
             });
+        }
+        return this;
+    }
+
+    // ── Late ──────────────────────────────────────────────────────────────────
+
+    /**
+     * Injects total late hours into the context as {@code lateHours}.
+     */
+    public PayrollContextBuilder lateEntries(List<EmployeeLate> list) {
+        if (list != null) {
+            BigDecimal totalLateHours = list.stream()
+                    .map(el -> el.getHours() != null ? el.getHours() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            context.put("lateHours", totalLateHours);
         }
         return this;
     }

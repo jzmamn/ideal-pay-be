@@ -11,19 +11,27 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "emp_bonus")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class EmployeeBonus {
+@Table(name = "emp_late")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class EmployeeLate {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "hours", nullable = false, precision = 5, scale = 2,
+            columnDefinition = "DECIMAL(5,2) DEFAULT 0.00")
+    private BigDecimal hours;
+
     @Column(name = "amount", nullable = false, precision = 15, scale = 2,
             columnDefinition = "DECIMAL(15,2) DEFAULT 0.00")
     private BigDecimal amount;
 
-    @Column(name = "payroll_month", nullable = false, length = 20)
+    @Column(name = "payroll_month", length = 20)
     private String payrollMonth;
 
     @Convert(converter = BooleanToYNConverter.class)
@@ -37,12 +45,6 @@ public class EmployeeBonus {
     @JoinColumn(name = "emp_id", nullable = false)
     @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Employee employee;
-
-    /** Optional link to the master Bonus definition. Nullable for backward compatibility. */
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bonus_id", nullable = true)
-    @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
-    private Bonus bonus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
