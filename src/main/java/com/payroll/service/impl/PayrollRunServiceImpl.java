@@ -122,9 +122,9 @@ public class PayrollRunServiceImpl implements PayrollRunService {
     // ── Batch ────────────────────────────────────────────────────────────────
 
     @Override
-    // No @Transactional here — each employee runs in its own REQUIRES_NEW transaction
-    // via employeeProcessor.processOne(). A failure for one employee never corrupts
-    // the Hibernate session for the next one.
+    @Transactional  // overrides class-level readOnly=true; license audit log needs a writable tx
+    // Each employee still runs in its own REQUIRES_NEW transaction via employeeProcessor.processOne().
+    // A failure for one employee never corrupts the Hibernate session for the next one.
     public List<PayrollRunSummaryDTO> processPayrollForMonth(String payrollMonth, Long processedBy) {
         licenseService.requirePayrollAllowed();
         List<Employee> activeEmployees = employeeRepository.findAllByIsActive(true, ID_ASC);
