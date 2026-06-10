@@ -52,6 +52,7 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
     private final EmployeeLateRepository              empLateRepository;
     private final EmployeeSalaryAdvanceRepository     empSalAdvRepository;
     private final EmployeeBonusRepository             empBonusRepository;
+    private final BonusRepository                     bonusRepository;
     private final EmployeeLoanRepository              empLoanRepository;
     private final EmployeeSalaryIncrementRepository   empSalIncrRepository;
 
@@ -134,7 +135,7 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
                 case "NOPAY"   -> { if (isDelete) deleteNp(employee, entry, payrollMonth);   else upsertNp(employee, entry, payrollMonth, user); }
                 case "LATE"    -> { if (isDelete) deleteLate(employee, payrollMonth);         else upsertLate(employee, entry, payrollMonth, user); }
                 case "SAL_ADV"  -> { if (isDelete) deleteSalAdv(employee, payrollMonth);               else upsertSalAdv(employee, entry, payrollMonth, user); }
-                case "BONUS"    -> { if (isDelete) deleteBonus(employee, payrollMonth);                else upsertBonus(employee, entry, payrollMonth, user); }
+                case "BONUS"    -> { if (isDelete) deleteBonus(employee, entry, payrollMonth);           else upsertBonus(employee, entry, payrollMonth, user); }
                 case "LOAN"     -> { if (isDelete) deleteLoan(employee, entry, payrollMonth);          else upsertLoan(employee, entry, payrollMonth, user); }
                 case "SAL_INCR" -> { if (isDelete) deleteSalIncr(employee, payrollMonth);              else upsertSalIncr(employee, entry, payrollMonth, user); }
                 default         -> log.warn("Skipping unknown componentType '{}' for employee {}",
@@ -413,18 +414,23 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
     // ── Upsert — Bonus ────────────────────────────────────────────────────────
 
     private void upsertBonus(Employee emp, BatchSaveEntryDTO entry, String payrollMonth, Usr user) {
-        empBonusRepository.findByEmployeeIdAndPayrollMonth(emp.getId(), payrollMonth)
+        Bonus bonus = bonusRepository.findByCodeIgnoreCase(entry.getComponentCode())
+                .orElseThrow(() -> new ResourceNotFoundException("Bonus", "code", entry.getComponentCode()));
+
+        empBonusRepository.findByEmployeeIdAndPayrollMonthAndBonusId(emp.getId(), payrollMonth, bonus.getId())
                 .ifPresentOrElse(
                         existing -> { existing.setAmount(entry.getAmount()); existing.setModifiedBy(user); empBonusRepository.save(existing); },
                         () -> empBonusRepository.save(EmployeeBonus.builder()
-                                .employee(emp).amount(entry.getAmount()).payrollMonth(payrollMonth)
+                                .employee(emp).bonus(bonus).amount(entry.getAmount()).payrollMonth(payrollMonth)
                                 .isProcessed(false).createdBy(user).modifiedBy(user).build())
                 );
     }
 
-    private void deleteBonus(Employee emp, String payrollMonth) {
-        empBonusRepository.findByEmployeeIdAndPayrollMonth(emp.getId(), payrollMonth)
-                .ifPresent(empBonusRepository::delete);
+    private void deleteBonus(Employee emp, BatchSaveEntryDTO entry, String payrollMonth) {
+        bonusRepository.findByCodeIgnoreCase(entry.getComponentCode()).ifPresent(bonus ->
+            empBonusRepository.findByEmployeeIdAndPayrollMonthAndBonusId(emp.getId(), payrollMonth, bonus.getId())
+                    .ifPresent(empBonusRepository::delete)
+        );
     }
 
     // ── Upsert — Loan ─────────────────────────────────────────────────────────

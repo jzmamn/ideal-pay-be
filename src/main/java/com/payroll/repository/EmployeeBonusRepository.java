@@ -13,4 +13,6 @@ public interface EmployeeBonusRepository extends JpaRepository<EmployeeBonus, Lo
     List<EmployeeBonus> findAllByEmployeeId(Long empId, Sort sort);
     List<EmployeeBonus> findAllByPayrollMonth(String payrollMonth, Sort sort);
     Optional<EmployeeBonus> findByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
+    List<EmployeeBonus> findAllByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
+    Optional<EmployeeBonus> findByEmployeeIdAndPayrollMonthAndBonusId(Long empId, String payrollMonth, Long bonusId);
 }
