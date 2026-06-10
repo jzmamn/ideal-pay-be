@@ -3,6 +3,7 @@ package com.payroll.handler;
 import com.payroll.dto.response.ApiResponseDTO;
 import com.payroll.exception.FormulaEvaluationException;
 import com.payroll.exception.ResourceNotFoundException;
+import com.payroll.license.LicenseException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +44,12 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
+    @ExceptionHandler(LicenseException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleLicenseException(LicenseException ex) {
+        log.warn("License validation failed [{}]: {}", ex.getStatus(), ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponseDTO.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(FormulaEvaluationException.class)
     public ResponseEntity<ApiResponseDTO<Object>> handleFormulaEvaluationException(FormulaEvaluationException ex) {
         log.error("Formula evaluation error: {}", ex.getMessage(), ex);
@@ -71,3 +78,4 @@ public class GlobalExceptionHandler {
                 .body(ApiResponseDTO.error("An unexpected error occurred: " + ex.getMessage()));
     }
 }
+

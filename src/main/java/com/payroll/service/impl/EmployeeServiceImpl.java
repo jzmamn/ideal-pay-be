@@ -8,6 +8,7 @@ import com.payroll.mapper.EmployeeMapper;
 import com.payroll.repository.*;
 import com.payroll.repository.TypeRepository;
 import com.payroll.service.EmployeeService;
+import com.payroll.license.LicenseService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final BankRepository bankRepository;
     private final BankBranchRepository bankBranchRepository;
     private final UsrRepository usrRepository;
+    private final LicenseService licenseService;
 
     @Override
     @Transactional(readOnly = true)
@@ -60,6 +62,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public EmployeeResponseDTO createEmployee(EmployeeRequestDTO requestDTO) {
+        if (Boolean.TRUE.equals(requestDTO.getIsActive())) licenseService.requireEmployeeSlot();
         if (employeeRepository.existsByEmployeeNoIgnoreCase(requestDTO.getEmployeeNo())) {
             throw new IllegalArgumentException("An employee with number '" + requestDTO.getEmployeeNo() + "' already exists.");
         }
@@ -72,6 +75,9 @@ public class EmployeeServiceImpl implements EmployeeService {
     public EmployeeResponseDTO updateEmployee(Long id, EmployeeRequestDTO requestDTO) {
         Employee existing = employeeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee", "id", id));
+        if (!Boolean.TRUE.equals(existing.getIsActive()) && Boolean.TRUE.equals(requestDTO.getIsActive())) {
+            licenseService.requireEmployeeSlot();
+        }
         employeeMapper.updateEntityFromDTO(requestDTO, existing);
         updateRelationships(existing, requestDTO);
         return employeeMapper.toResponseDTO(employeeRepository.save(existing));
@@ -127,3 +133,4 @@ public class EmployeeServiceImpl implements EmployeeService {
             entity.setModifiedBy(usrRepository.getReferenceById(dto.getModifiedBy()));
     }
 }
+

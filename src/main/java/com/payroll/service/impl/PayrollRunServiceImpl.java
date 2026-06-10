@@ -12,6 +12,7 @@ import com.payroll.enums.RunType;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.repository.*;
 import com.payroll.service.PayrollRunService;
+import com.payroll.license.LicenseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -36,6 +37,7 @@ public class PayrollRunServiceImpl implements PayrollRunService {
     private final UsrRepository                    usrRepository;
     private final PayrollPeriodRepository          payrollPeriodRepository;
     private final PayrollEmployeeProcessorImpl     employeeProcessor;
+    private final LicenseService                    licenseService;
 
     // Component repositories
     private final EmployeeFixedAllowanceRepository    empFaRepository;
@@ -52,6 +54,7 @@ public class PayrollRunServiceImpl implements PayrollRunService {
 
     @Override
     public PayrollRunResponseDTO processPayroll(Long empId, String payrollMonth, Long processedBy) {
+        licenseService.requirePayrollAllowed();
         // Delegate to the processor — runs in its own REQUIRES_NEW transaction
         return employeeProcessor.processOne(empId, payrollMonth, processedBy);
     }
@@ -123,6 +126,7 @@ public class PayrollRunServiceImpl implements PayrollRunService {
     // via employeeProcessor.processOne(). A failure for one employee never corrupts
     // the Hibernate session for the next one.
     public List<PayrollRunSummaryDTO> processPayrollForMonth(String payrollMonth, Long processedBy) {
+        licenseService.requirePayrollAllowed();
         List<Employee> activeEmployees = employeeRepository.findAllByIsActive(true, ID_ASC);
         List<PayrollRunSummaryDTO> results = new ArrayList<>();
 
@@ -441,3 +445,4 @@ public class PayrollRunServiceImpl implements PayrollRunService {
                 .build();
     }
 }
+
