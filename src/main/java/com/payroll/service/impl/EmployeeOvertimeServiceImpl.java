@@ -92,6 +92,14 @@ public class EmployeeOvertimeServiceImpl implements EmployeeOvertimeService {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<EmployeeOvertimeResponseDTO> getByEmployeeId(Long empId, String payrollMonth) {
+        return employeeOvertimeRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth).stream()
+                .map(employeeOvertimeMapper::toResponseDTO)
+                .toList();
+    }
+
     private void setRelationships(EmployeeOvertime entity, EmployeeOvertimeRequestDTO dto) {
         entity.setEmployee(employeeRepository.getReferenceById(dto.getEmpId()));
         entity.setOvertime(overtimeRepository.getReferenceById(dto.getOvertimeId()));

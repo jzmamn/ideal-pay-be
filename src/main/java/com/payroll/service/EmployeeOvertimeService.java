@@ -18,4 +18,5 @@ public interface EmployeeOvertimeService {
     void deleteEmployeeOvertime(Long id);
 
     List<EmployeeOvertimeResponseDTO> getByEmployeeId(Long empId);
+    List<EmployeeOvertimeResponseDTO> getByEmployeeId(Long empId, String payrollMonth);
 }

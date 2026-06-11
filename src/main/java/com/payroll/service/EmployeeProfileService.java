@@ -6,6 +6,7 @@ import com.payroll.dto.response.EmployeePayrollComponentsResponseDTO;
 public interface EmployeeProfileService {
 
     EmployeePayrollComponentsResponseDTO getEmployeeProfile(Long empId, boolean assignedOnly);
+    EmployeePayrollComponentsResponseDTO getEmployeeProfile(Long empId, boolean assignedOnly, String payrollMonth);
 
     EmployeePayrollComponentsResponseDTO saveEmployeeProfile(Long empId, EmployeeProfileSaveRequestDTO requestDTO);
 }

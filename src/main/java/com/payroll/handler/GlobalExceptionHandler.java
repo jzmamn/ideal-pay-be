@@ -2,6 +2,8 @@ package com.payroll.handler;
 
 import com.payroll.dto.response.ApiResponseDTO;
 import com.payroll.exception.FormulaEvaluationException;
+import com.payroll.exception.ImportException;
+import com.payroll.exception.ImportLockedException;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.license.LicenseException;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +56,20 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponseDTO<Object>> handleFormulaEvaluationException(FormulaEvaluationException ex) {
         log.error("Formula evaluation error: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(ApiResponseDTO.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ImportException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleImportException(ImportException ex) {
+        log.warn("Import error: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponseDTO.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ImportLockedException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleImportLockedException(ImportLockedException ex) {
+        log.warn("Import rollback blocked: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponseDTO.error(ex.getMessage()));
     }
 

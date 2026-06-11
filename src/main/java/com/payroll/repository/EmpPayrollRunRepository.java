@@ -20,6 +20,9 @@ public interface EmpPayrollRunRepository extends JpaRepository<EmpPayrollRun, Lo
 
     List<EmpPayrollRun> findAllByPayrollMonth(String payrollMonth, Sort sort);
 
+    /** True when any payroll transaction exists for the given YYYY-MM period. */
+    boolean existsByPayrollMonth(String payrollMonth);
+
     List<EmpPayrollRun> findAllByPayrollMonthAndStatus(String payrollMonth, PayrollRunStatus status, Sort sort);
 
     List<EmpPayrollRun> findAllByParentRunId(Long parentRunId, Sort sort);

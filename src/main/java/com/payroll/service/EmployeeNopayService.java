@@ -18,4 +18,5 @@ public interface EmployeeNopayService {
     void deleteEmployeeNopay(Long id);
 
     List<EmployeeNopayResponseDTO> getByEmployeeId(Long empId);
+    List<EmployeeNopayResponseDTO> getByEmployeeId(Long empId, String payrollMonth);
 }

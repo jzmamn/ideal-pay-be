@@ -72,4 +72,8 @@ public class EmpGratuity {
     @UpdateTimestamp
     @Column(name = "modified_date", nullable = false)
     private LocalDateTime modifiedDate;
+
+    /** Set when the row was created via file import; enables import rollback. */
+    @Column(name = "import_log_id")
+    private Long importLogId;
 }

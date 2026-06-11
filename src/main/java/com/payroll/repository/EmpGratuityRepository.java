@@ -4,6 +4,8 @@ import com.payroll.entity.EmpGratuity;
 import com.payroll.enums.GratuityStatus;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,4 +20,15 @@ public interface EmpGratuityRepository extends JpaRepository<EmpGratuity, Long> 
     List<EmpGratuity> findAllByEmployeeId(Long empId, Sort sort);
 
     long countByCode(String code);
+
+    // ── Import / export support ──────────────────────────────────────────
+
+    long countByImportLogIdAndStatusNot(Long importLogId, GratuityStatus status);
+
+    long countByImportLogId(Long importLogId);
+
+    void deleteAllByImportLogId(Long importLogId);
+
+    @Query("select g from EmpGratuity g join fetch g.employee order by g.id")
+    java.util.stream.Stream<EmpGratuity> streamAllForExport();
 }

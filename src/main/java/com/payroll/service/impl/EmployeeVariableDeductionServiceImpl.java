@@ -91,6 +91,14 @@ public class EmployeeVariableDeductionServiceImpl implements EmployeeVariableDed
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<EmployeeVariableDeductionResponseDTO> getByEmployeeId(Long empId, String payrollMonth) {
+        return employeeVariableDeductionRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth).stream()
+                .map(employeeVariableDeductionMapper::toResponseDTO)
+                .toList();
+    }
+
     private void setRelationships(EmployeeVariableDeduction entity, EmployeeVariableDeductionRequestDTO dto) {
         entity.setEmployee(employeeRepository.getReferenceById(dto.getEmpId()));
         entity.setVariableDeduction(variableDeductionRepository.getReferenceById(dto.getVdId()));

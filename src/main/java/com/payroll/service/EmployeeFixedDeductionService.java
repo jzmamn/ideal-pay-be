@@ -18,4 +18,5 @@ public interface EmployeeFixedDeductionService {
     void deleteEmployeeFixedDeduction(Long id);
 
     List<EmployeeFixedDeductionResponseDTO> getByEmployeeId(Long empId);
+    List<EmployeeFixedDeductionResponseDTO> getByEmployeeId(Long empId, String payrollMonth);
 }

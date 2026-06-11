@@ -18,4 +18,5 @@ public interface EmployeeFixedAllowanceService {
     void deleteEmployeeFixedAllowance(Long id);
 
     List<EmployeeFixedAllowanceResponseDTO> getByEmployeeId(Long empId);
+    List<EmployeeFixedAllowanceResponseDTO> getByEmployeeId(Long empId, String payrollMonth);
 }

@@ -20,10 +20,11 @@ public class EmployeeProfileController {
     @GetMapping("/{empId}")
     public ResponseEntity<ApiResponseDTO<EmployeePayrollComponentsResponseDTO>> getEmployeeProfile(
             @PathVariable Long empId,
-            @RequestParam(value = "assignedOnly", defaultValue = "false") boolean assignedOnly) {
+            @RequestParam(value = "assignedOnly", defaultValue = "false") boolean assignedOnly,
+            @RequestParam(value = "payrollMonth", required = false) String payrollMonth) {
         return ResponseEntity.ok(ApiResponseDTO.success(
                 "Employee profile fetched successfully",
-                employeeProfileService.getEmployeeProfile(empId, assignedOnly)));
+                employeeProfileService.getEmployeeProfile(empId, assignedOnly, payrollMonth)));
     }
 
     @PostMapping("/{empId}")

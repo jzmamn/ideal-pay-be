@@ -18,4 +18,5 @@ public interface EmployeeVariableAllowanceService {
     void deleteEmployeeVariableAllowance(Long id);
 
     List<EmployeeVariableAllowanceResponseDTO> getByEmployeeId(Long empId);
+    List<EmployeeVariableAllowanceResponseDTO> getByEmployeeId(Long empId, String payrollMonth);
 }

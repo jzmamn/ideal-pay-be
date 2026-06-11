@@ -12,6 +12,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     boolean existsByEmployeeNoIgnoreCase(String employeeNo);
 
+    java.util.Optional<Employee> findByEmployeeNoIgnoreCase(String employeeNo);
+
     List<Employee> findAllByIsActive(Boolean isActive, Sort sort);
 
     long countByIsActive(Boolean isActive);

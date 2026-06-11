@@ -61,4 +61,8 @@ public class EmployeeSalaryAdvance {
     @Column(name = "modified_date", nullable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime modifiedDate;
+
+    /** Set when the row was created via file import; enables import rollback. */
+    @Column(name = "import_log_id")
+    private Long importLogId;
 }

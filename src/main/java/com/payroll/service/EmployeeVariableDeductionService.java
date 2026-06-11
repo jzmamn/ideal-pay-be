@@ -18,4 +18,5 @@ public interface EmployeeVariableDeductionService {
     void deleteEmployeeVariableDeduction(Long id);
 
     List<EmployeeVariableDeductionResponseDTO> getByEmployeeId(Long empId);
+    List<EmployeeVariableDeductionResponseDTO> getByEmployeeId(Long empId, String payrollMonth);
 }

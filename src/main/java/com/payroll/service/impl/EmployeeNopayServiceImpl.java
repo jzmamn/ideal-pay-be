@@ -92,6 +92,14 @@ public class EmployeeNopayServiceImpl implements EmployeeNopayService {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<EmployeeNopayResponseDTO> getByEmployeeId(Long empId, String payrollMonth) {
+        return employeeNopayRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth).stream()
+                .map(employeeNopayMapper::toResponseDTO)
+                .toList();
+    }
+
     private void setRelationships(EmployeeNopay entity, EmployeeNopayRequestDTO dto) {
         entity.setEmployee(employeeRepository.getReferenceById(dto.getEmpId()));
         entity.setNopayDays(nopayDaysRepository.getReferenceById(dto.getNopayId()));

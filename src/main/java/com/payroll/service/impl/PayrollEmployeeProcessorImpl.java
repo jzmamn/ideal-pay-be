@@ -94,7 +94,8 @@ public class PayrollEmployeeProcessorImpl {
         List<EmployeeSalaryAdvance>     saList   = empSaRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
         List<EmployeeLate>              lateList = empLateRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
 
-        int workingDays = payrollPeriodRepository.findByPeriodMonth(payrollMonth)
+        int workingDays = payrollPeriodRepository.findAllByPeriodCode(payrollMonth)
+                .stream().findFirst()
                 .map(PayrollPeriod::getWorkingDays)
                 .orElse(26);
 

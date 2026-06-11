@@ -91,6 +91,14 @@ public class EmployeeVariableAllowanceServiceImpl implements EmployeeVariableAll
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<EmployeeVariableAllowanceResponseDTO> getByEmployeeId(Long empId, String payrollMonth) {
+        return employeeVariableAllowanceRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth).stream()
+                .map(employeeVariableAllowanceMapper::toResponseDTO)
+                .toList();
+    }
+
     private void setRelationships(EmployeeVariableAllowance entity, EmployeeVariableAllowanceRequestDTO dto) {
         entity.setEmployee(employeeRepository.getReferenceById(dto.getEmpId()));
         entity.setVariableAllowance(variableAllowanceRepository.getReferenceById(dto.getVaId()));

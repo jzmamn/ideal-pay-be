@@ -41,21 +41,28 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
 
     @Override
     public EmployeePayrollComponentsResponseDTO getEmployeeProfile(Long empId, boolean assignedOnly) {
+        return getEmployeeProfile(empId, assignedOnly, null);
+    }
+
+    @Override
+    public EmployeePayrollComponentsResponseDTO getEmployeeProfile(Long empId, boolean assignedOnly, String payrollMonth) {
         return EmployeePayrollComponentsResponseDTO.builder()
                 .employee(employeeService.getEmployeeById(empId))
-                .fixedAllowances(mergeFixedAllowances(empId, assignedOnly))
-                .fixedDeductions(mergeFixedDeductions(empId, assignedOnly))
-                .variableAllowances(mergeVariableAllowances(empId, assignedOnly))
-                .variableDeductions(mergeVariableDeductions(empId, assignedOnly))
-                .nopays(mergeNopays(empId, assignedOnly))
-                .overtimes(mergeOvertimes(empId, assignedOnly))
+                .fixedAllowances(mergeFixedAllowances(empId, assignedOnly, payrollMonth))
+                .fixedDeductions(mergeFixedDeductions(empId, assignedOnly, payrollMonth))
+                .variableAllowances(mergeVariableAllowances(empId, assignedOnly, payrollMonth))
+                .variableDeductions(mergeVariableDeductions(empId, assignedOnly, payrollMonth))
+                .nopays(mergeNopays(empId, assignedOnly, payrollMonth))
+                .overtimes(mergeOvertimes(empId, assignedOnly, payrollMonth))
                 .build();
     }
 
     // ── Merge helpers ────────────────────────────────────────────────────────
 
-    private List<EmployeeFixedAllowanceResponseDTO> mergeFixedAllowances(Long empId, boolean assignedOnly) {
-        Map<Long, EmployeeFixedAllowanceResponseDTO> assigned = employeeFixedAllowanceService.getByEmployeeId(empId)
+    private List<EmployeeFixedAllowanceResponseDTO> mergeFixedAllowances(Long empId, boolean assignedOnly, String payrollMonth) {
+        Map<Long, EmployeeFixedAllowanceResponseDTO> assigned = (payrollMonth != null
+                ? employeeFixedAllowanceService.getByEmployeeId(empId, payrollMonth)
+                : employeeFixedAllowanceService.getByEmployeeId(empId))
                 .stream().collect(Collectors.toMap(EmployeeFixedAllowanceResponseDTO::getFaId, dto -> dto, (a, b) -> b));
 
         return fixedAllowanceRepository.findAllByIsActive(true, ID_ASC).stream()
@@ -76,8 +83,10 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
                 .collect(Collectors.toList());
     }
 
-    private List<EmployeeFixedDeductionResponseDTO> mergeFixedDeductions(Long empId, boolean assignedOnly) {
-        Map<Long, EmployeeFixedDeductionResponseDTO> assigned = employeeFixedDeductionService.getByEmployeeId(empId)
+    private List<EmployeeFixedDeductionResponseDTO> mergeFixedDeductions(Long empId, boolean assignedOnly, String payrollMonth) {
+        Map<Long, EmployeeFixedDeductionResponseDTO> assigned = (payrollMonth != null
+                ? employeeFixedDeductionService.getByEmployeeId(empId, payrollMonth)
+                : employeeFixedDeductionService.getByEmployeeId(empId))
                 .stream().collect(Collectors.toMap(EmployeeFixedDeductionResponseDTO::getFdId, dto -> dto, (a, b) -> b));
 
         return fixedDeductionRepository.findAllByIsActive(true, ID_ASC).stream()
@@ -98,8 +107,10 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
                 .collect(Collectors.toList());
     }
 
-    private List<EmployeeVariableAllowanceResponseDTO> mergeVariableAllowances(Long empId, boolean assignedOnly) {
-        Map<Long, EmployeeVariableAllowanceResponseDTO> assigned = employeeVariableAllowanceService.getByEmployeeId(empId)
+    private List<EmployeeVariableAllowanceResponseDTO> mergeVariableAllowances(Long empId, boolean assignedOnly, String payrollMonth) {
+        Map<Long, EmployeeVariableAllowanceResponseDTO> assigned = (payrollMonth != null
+                ? employeeVariableAllowanceService.getByEmployeeId(empId, payrollMonth)
+                : employeeVariableAllowanceService.getByEmployeeId(empId))
                 .stream().collect(Collectors.toMap(EmployeeVariableAllowanceResponseDTO::getVaId, dto -> dto, (a, b) -> b));
 
         return variableAllowanceRepository.findAllByIsActive(true, ID_ASC).stream()
@@ -120,8 +131,10 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
                 .collect(Collectors.toList());
     }
 
-    private List<EmployeeVariableDeductionResponseDTO> mergeVariableDeductions(Long empId, boolean assignedOnly) {
-        Map<Long, EmployeeVariableDeductionResponseDTO> assigned = employeeVariableDeductionService.getByEmployeeId(empId)
+    private List<EmployeeVariableDeductionResponseDTO> mergeVariableDeductions(Long empId, boolean assignedOnly, String payrollMonth) {
+        Map<Long, EmployeeVariableDeductionResponseDTO> assigned = (payrollMonth != null
+                ? employeeVariableDeductionService.getByEmployeeId(empId, payrollMonth)
+                : employeeVariableDeductionService.getByEmployeeId(empId))
                 .stream().collect(Collectors.toMap(EmployeeVariableDeductionResponseDTO::getVdId, dto -> dto, (a, b) -> b));
 
         return variableDeductionRepository.findAllByIsActive(true, ID_ASC).stream()
@@ -142,8 +155,10 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
                 .collect(Collectors.toList());
     }
 
-    private List<EmployeeNopayResponseDTO> mergeNopays(Long empId, boolean assignedOnly) {
-        Map<Long, EmployeeNopayResponseDTO> assigned = employeeNopayService.getByEmployeeId(empId)
+    private List<EmployeeNopayResponseDTO> mergeNopays(Long empId, boolean assignedOnly, String payrollMonth) {
+        Map<Long, EmployeeNopayResponseDTO> assigned = (payrollMonth != null
+                ? employeeNopayService.getByEmployeeId(empId, payrollMonth)
+                : employeeNopayService.getByEmployeeId(empId))
                 .stream().collect(Collectors.toMap(EmployeeNopayResponseDTO::getNopayId, dto -> dto, (a, b) -> b));
 
         return nopayDaysRepository.findAllByIsActive(true, ID_ASC).stream()
@@ -164,8 +179,10 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
                 .collect(Collectors.toList());
     }
 
-    private List<EmployeeOvertimeResponseDTO> mergeOvertimes(Long empId, boolean assignedOnly) {
-        Map<Long, EmployeeOvertimeResponseDTO> assigned = employeeOvertimeService.getByEmployeeId(empId)
+    private List<EmployeeOvertimeResponseDTO> mergeOvertimes(Long empId, boolean assignedOnly, String payrollMonth) {
+        Map<Long, EmployeeOvertimeResponseDTO> assigned = (payrollMonth != null
+                ? employeeOvertimeService.getByEmployeeId(empId, payrollMonth)
+                : employeeOvertimeService.getByEmployeeId(empId))
                 .stream().collect(Collectors.toMap(EmployeeOvertimeResponseDTO::getOvertimeId, dto -> dto, (a, b) -> b));
 
         return overtimeRepository.findAllByIsActive(true, ID_ASC).stream()
@@ -262,6 +279,8 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
             });
         }
 
-        return getEmployeeProfile(empId, false);
+        // Return the profile filtered to the saved period (first month in the set, or null for all)
+        String savedMonth = months.size() == 1 ? months.iterator().next() : null;
+        return getEmployeeProfile(empId, false, savedMonth);
     }
 }

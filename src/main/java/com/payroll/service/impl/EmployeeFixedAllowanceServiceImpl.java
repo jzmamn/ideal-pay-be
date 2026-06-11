@@ -91,6 +91,14 @@ public class EmployeeFixedAllowanceServiceImpl implements EmployeeFixedAllowance
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<EmployeeFixedAllowanceResponseDTO> getByEmployeeId(Long empId, String payrollMonth) {
+        return employeeFixedAllowanceRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth).stream()
+                .map(employeeFixedAllowanceMapper::toResponseDTO)
+                .toList();
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void setRelationships(EmployeeFixedAllowance entity, EmployeeFixedAllowanceRequestDTO dto) {
