@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 public class EmployeeLateResponseDTO {
 
     private Long id;
+    /** Rate per hour set during load phase. Read-only in UI. */
+    private BigDecimal rate;
     private BigDecimal hours;
     private BigDecimal amount;
     private String payrollMonth;

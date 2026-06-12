@@ -3,7 +3,6 @@ package com.payroll.service;
 import com.payroll.entity.*;
 import com.payroll.entity.EmployeeSalaryAdvance;
 import com.payroll.enums.ComponentType;
-import com.payroll.formula.PayrollContextBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,7 +11,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Core payroll calculation engine.
@@ -35,8 +33,6 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class SalaryCalculationEngineService {
-
-    private final FormulaEngineService formulaEngineService;
 
     private static final BigDecimal EPF_EE_RATE = new BigDecimal("0.08");
     private static final BigDecimal EPF_ER_RATE = new BigDecimal("0.12");
@@ -73,26 +69,13 @@ public class SalaryCalculationEngineService {
         log.debug("Payroll calc start — emp={} basicSalary={} workingDays={}",
                 employee.getId(), basicSalary, workingDays);
 
-        // Build full MVEL context once; updated amounts written back to entities so
-        // the context always reflects the latest computed values.
-        Map<String, Object> ctx = PayrollContextBuilder.builder()
-                .employee(employee)
-                .workingDays(workingDays)
-                .fixedAllowances(faList)
-                .variableAllowances(vaList)
-                .overtimeEntries(otList)
-                .nopayEntries(npList)
-                .lateEntries(lateList)
-                .fixedDeductions(fdList)
-                .variableDeductions(vdList)
-                .build();
-
         // ── STEP A: Fixed Allowances ──────────────────────────────────────────
+        // Formula evaluation happens in PayrollComponentLoadService (load phase only).
+        // Processing uses the pre-stored amount from emp_fa.
         BigDecimal totalFa = BigDecimal.ZERO;
         for (EmployeeFixedAllowance efa : faList) {
             FixedAllowance fa = efa.getFixedAllowance();
-            BigDecimal amt = resolveAmount(fa.getFormulaEnabled(), fa.getFormula(), efa.getAmount(), ctx, "FA " + fa.getCode());
-            efa.setAmount(amt);
+            BigDecimal amt = orZero(efa.getAmount());
             totalFa = totalFa.add(amt);
             lines.add(new ComponentLine(ComponentType.FA, fa.getId(), fa.getCode(), fa.getName(), amt, null, null));
         }
@@ -107,83 +90,44 @@ public class SalaryCalculationEngineService {
         }
 
         // ── STEP C: Overtime ──────────────────────────────────────────────────
+        // Rate was stored by PayrollComponentLoadService. Amount = rate × hours,
+        // recorded in emp_ot by the batch/individual save. Use stored amount only.
         BigDecimal totalOt = BigDecimal.ZERO;
         for (EmployeeOvertime eot : otList) {
             Overtime ot = eot.getOvertime();
-            BigDecimal amt;
-            if (Boolean.TRUE.equals(ot.getFormulaEnabled()) && ot.getFormula() != null && !ot.getFormula().isBlank()) {
-                amt = formulaEngineService.evaluate(ot.getFormula(), ctx);
-                log.debug("OT formula [{}] → {}", ot.getCode(), amt);
-            } else {
-                // Default: basicSalary / workingDays / 8 * hours * 1.5
-                BigDecimal hours = orZero(eot.getHours());
-                if (workingDays == 0 || hours.compareTo(BigDecimal.ZERO) == 0) {
-                    amt = BigDecimal.ZERO;
-                } else {
-                    amt = basicSalary
-                            .divide(BigDecimal.valueOf(workingDays), 10, RoundingMode.HALF_UP)
-                            .divide(BigDecimal.valueOf(8), 10, RoundingMode.HALF_UP)
-                            .multiply(hours)
-                            .multiply(new BigDecimal("1.5"))
-                            .setScale(2, RoundingMode.HALF_UP);
-                }
-                log.debug("OT default calc [{}] hours={} → {}", ot.getCode(), hours, amt);
-            }
-            eot.setAmount(amt);
+            BigDecimal amt = orZero(eot.getAmount());
             totalOt = totalOt.add(amt);
             lines.add(new ComponentLine(ComponentType.OT, ot.getId(), ot.getCode(), ot.getName(), amt, eot.getHours(), null));
         }
 
         // ── STEP D: No Pay ────────────────────────────────────────────────────
+        // Rate was stored by PayrollComponentLoadService. Amount = rate × days,
+        // recorded in emp_np by the batch/individual save. Use stored amount only.
         BigDecimal totalNopay = BigDecimal.ZERO;
         for (EmployeeNopay enp : npList) {
             NopayDays nd = enp.getNopayDays();
-            BigDecimal amt;
-            if (Boolean.TRUE.equals(nd.getFormulaEnabled()) && nd.getFormula() != null && !nd.getFormula().isBlank()) {
-                amt = formulaEngineService.evaluate(nd.getFormula(), ctx);
-                log.debug("Nopay formula [{}] → {}", nd.getCode(), amt);
-            } else {
-                // Default: basicSalary / workingDays * days
-                BigDecimal days = orZero(enp.getDays());
-                amt = workingDays == 0 ? BigDecimal.ZERO
-                        : basicSalary
-                                .divide(BigDecimal.valueOf(workingDays), 10, RoundingMode.HALF_UP)
-                                .multiply(days)
-                                .setScale(2, RoundingMode.HALF_UP);
-                log.debug("Nopay default calc [{}] days={} → {}", nd.getCode(), days, amt);
-            }
-            enp.setAmount(amt);
+            BigDecimal amt = orZero(enp.getAmount());
             totalNopay = totalNopay.add(amt);
             lines.add(new ComponentLine(ComponentType.NOPAY, nd.getId(), nd.getCode(), nd.getName(), amt, null, enp.getDays()));
         }
 
         // ── STEP D2: Late Deduction ───────────────────────────────────────────
-        // Formula: basicSalary / (workingDays × 8) × lateHours
+        // Rate was stored by PayrollComponentLoadService. Amount = rate × hours,
+        // recorded in emp_late by the batch/individual save. Use stored amount only.
         BigDecimal totalLate = BigDecimal.ZERO;
         for (EmployeeLate elate : lateList) {
-            BigDecimal lateHours = orZero(elate.getHours());
-            BigDecimal amt;
-            if (workingDays == 0 || lateHours.compareTo(BigDecimal.ZERO) == 0) {
-                amt = BigDecimal.ZERO;
-            } else {
-                amt = basicSalary
-                        .divide(BigDecimal.valueOf(workingDays), 10, RoundingMode.HALF_UP)
-                        .divide(BigDecimal.valueOf(8), 10, RoundingMode.HALF_UP)
-                        .multiply(lateHours)
-                        .setScale(2, RoundingMode.HALF_UP);
-            }
-            elate.setAmount(amt);
+            BigDecimal amt = orZero(elate.getAmount());
             totalLate = totalLate.add(amt);
-            log.debug("Late deduction hours={} → {}", lateHours, amt);
-            lines.add(new ComponentLine(ComponentType.LATE, null, "LATE", "Late Deduction", amt, lateHours, null));
+            lines.add(new ComponentLine(ComponentType.LATE, null, "LATE", "Late Deduction", amt, elate.getHours(), null));
         }
 
         // ── STEP E: Fixed Deductions ──────────────────────────────────────────
+        // Formula evaluation happens in PayrollComponentLoadService (load phase only).
+        // Processing uses the pre-stored amount from emp_fd.
         BigDecimal totalFd = BigDecimal.ZERO;
         for (EmployeeFixedDeduction efd : fdList) {
             FixedDeduction fd = efd.getFixedDeduction();
-            BigDecimal amt = resolveAmount(fd.getFormulaEnabled(), fd.getFormula(), efd.getAmount(), ctx, "FD " + fd.getCode());
-            efd.setAmount(amt);
+            BigDecimal amt = orZero(efd.getAmount());
             totalFd = totalFd.add(amt);
             lines.add(new ComponentLine(ComponentType.FD, fd.getId(), fd.getCode(), fd.getName(), amt, null, null));
         }
@@ -290,16 +234,6 @@ public class SalaryCalculationEngineService {
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private BigDecimal resolveAmount(Boolean formulaEnabled, String formula,
-                                     BigDecimal fallback, Map<String, Object> ctx, String label) {
-        if (Boolean.TRUE.equals(formulaEnabled) && formula != null && !formula.isBlank()) {
-            BigDecimal result = formulaEngineService.evaluate(formula, ctx);
-            log.debug("Formula [{}] evaluated → {}", label, result);
-            return result;
-        }
-        return orZero(fallback);
-    }
 
     private BigDecimal orZero(BigDecimal v) {
         return v != null ? v : BigDecimal.ZERO;

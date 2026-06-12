@@ -24,7 +24,7 @@ public class TypeRequestDTO {
     private Boolean isActive = true;
 
     @Builder.Default
-    private Boolean isDateRange = false;
+    private Boolean endDate = false;
 
     @NotNull(message = "Created by is required")
     private Long createdBy;

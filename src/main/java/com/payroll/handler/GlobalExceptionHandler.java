@@ -1,6 +1,7 @@
 package com.payroll.handler;
 
 import com.payroll.dto.response.ApiResponseDTO;
+import com.payroll.exception.BackupRestoreException;
 import com.payroll.exception.FormulaEvaluationException;
 import com.payroll.exception.ImportException;
 import com.payroll.exception.ImportLockedException;
@@ -13,6 +14,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -73,6 +75,13 @@ public class GlobalExceptionHandler {
                 .body(ApiResponseDTO.error(ex.getMessage()));
     }
 
+    @ExceptionHandler(BackupRestoreException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleBackupRestoreException(BackupRestoreException ex) {
+        log.error("Backup/restore error: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponseDTO.error(ex.getMessage()));
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiResponseDTO<Object>> handleIllegalArgumentException(IllegalArgumentException ex) {
         log.warn("Illegal argument: {}", ex.getMessage());
@@ -85,6 +94,12 @@ public class GlobalExceptionHandler {
         log.warn("Illegal state: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponseDTO.error(ex.getMessage()));
+    }
+
+    /** Silently return 404 for missing static resources (e.g. browser favicon requests). */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Void> handleNoResourceFound() {
+        return ResponseEntity.notFound().build();
     }
 
     @ExceptionHandler(Exception.class)

@@ -14,6 +14,8 @@ public class EmployeeOvertimeResponseDTO {
 
     private Long id;
     private Boolean isAssigned;
+    /** Rate per hour set during load phase. Read-only in UI. */
+    private BigDecimal rate;
     private BigDecimal hours;
     private BigDecimal amount;
     private String payrollMonth;

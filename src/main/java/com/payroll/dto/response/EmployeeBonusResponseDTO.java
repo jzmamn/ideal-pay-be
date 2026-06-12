@@ -20,7 +20,7 @@ public class EmployeeBonusResponseDTO {
     private Long bonusId;
     private String bonusCode;
     private String bonusName;
-    private java.math.BigDecimal bonusAmount;
+    private Boolean formulaEnabled;
 
     private Long createdById;
     private String createdByCode;

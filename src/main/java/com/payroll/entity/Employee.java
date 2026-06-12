@@ -79,11 +79,8 @@ public class Employee {
     @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Type employeeType;
 
-    @Column(name = "cotract_from")
-    private LocalDate contractFrom;
-
-    @Column(name = "contract_to")
-    private LocalDate contractTo;
+    @Column(name = "emp_type_end_date")
+    private LocalDate empTypeEndDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nopay_days_id", nullable = false)

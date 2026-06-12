@@ -23,6 +23,11 @@ public class EmployeeOvertime {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Rate per hour computed during the load phase (formula or default basicSalary/workingDays/8). */
+    @Column(name = "rate", nullable = false, precision = 15, scale = 6,
+            columnDefinition = "DECIMAL(15,6) DEFAULT 0.000000")
+    private BigDecimal rate = BigDecimal.ZERO;
+
     @Column(name = "hours", nullable = false, precision = 5, scale = 2,
             columnDefinition = "DECIMAL(5,2) DEFAULT 0.00")
     private BigDecimal hours;

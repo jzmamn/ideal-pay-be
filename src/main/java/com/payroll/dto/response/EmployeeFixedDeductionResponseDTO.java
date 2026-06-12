@@ -26,6 +26,7 @@ public class EmployeeFixedDeductionResponseDTO {
     private Long fdId;
     private String fdCode;
     private String fdName;
+    private Boolean formulaEnabled;
 
     private Long createdById;
     private String createdByCode;

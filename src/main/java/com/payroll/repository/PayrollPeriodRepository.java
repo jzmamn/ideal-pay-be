@@ -32,4 +32,7 @@ public interface PayrollPeriodRepository extends JpaRepository<PayrollPeriod, Lo
     List<PayrollPeriod> findAllByPeriodCode(String periodCode);
 
     Optional<PayrollPeriod> findByCompany_IdAndPeriodCode(Long companyId, String periodCode);
+
+    /** Single-company convenience — returns the first period matching year + month. */
+    Optional<PayrollPeriod> findFirstByPeriodYearAndPeriodMonth(Integer periodYear, Integer periodMonth);
 }

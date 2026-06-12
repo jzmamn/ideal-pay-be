@@ -15,7 +15,7 @@ public class TypeResponseDTO {
     private String name;
     private String description;
     private Boolean isActive;
-    private Boolean isDateRange;
+    private Boolean endDate;
     private Long createdById;
     private String createdByCode;
     private String createdByUserName;

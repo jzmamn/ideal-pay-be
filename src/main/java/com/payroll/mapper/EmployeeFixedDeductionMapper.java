@@ -25,6 +25,7 @@ public interface EmployeeFixedDeductionMapper {
     @Mapping(target = "fdId",               source = "fixedDeduction.id")
     @Mapping(target = "fdCode",             source = "fixedDeduction.code")
     @Mapping(target = "fdName",             source = "fixedDeduction.name")
+    @Mapping(target = "formulaEnabled",     source = "fixedDeduction.formulaEnabled")
     @Mapping(target = "createdById",        source = "createdBy.id")
     @Mapping(target = "createdByCode",      source = "createdBy.code")
     @Mapping(target = "createdByUserName",  source = "createdBy.userName")

@@ -26,6 +26,7 @@ public class EmployeeFixedAllowanceResponseDTO {
     private Long faId;
     private String faCode;
     private String faName;
+    private Boolean formulaEnabled;
 
     private Long createdById;
     private String createdByCode;

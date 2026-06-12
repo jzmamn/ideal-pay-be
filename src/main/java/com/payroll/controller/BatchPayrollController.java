@@ -2,7 +2,9 @@ package com.payroll.controller;
 
 import com.payroll.dto.request.BatchSaveRequestDTO;
 import com.payroll.dto.response.ApiResponseDTO;
+import com.payroll.dto.response.LoadSummaryDTO;
 import com.payroll.service.BatchPayrollService;
+import com.payroll.service.PayrollComponentLoadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import java.util.Map;
 public class BatchPayrollController {
 
     private final BatchPayrollService batchPayrollService;
+    private final PayrollComponentLoadService payrollComponentLoadService;
 
     /**
      * Load pivot data for all component types for the given month/year.
@@ -37,6 +40,38 @@ public class BatchPayrollController {
         return ResponseEntity.ok(ApiResponseDTO.success(
                 "Batch payroll data fetched successfully",
                 batchPayrollService.load(month, year)));
+    }
+
+    /**
+     * Load (or reload) all payroll components for ALL active employees.
+     *
+     * <p>Working days are resolved automatically from the {@code PayrollPeriod} record
+     * for the given month/year — configure them when creating the payroll period.
+     *
+     * POST /payroll/batch-allowance/load?month=5&year=2026&userId=1
+     */
+    @PostMapping("/load")
+    public ResponseEntity<ApiResponseDTO<LoadSummaryDTO>> loadComponents(
+            @RequestParam Integer month,
+            @RequestParam Integer year,
+            @RequestParam Long userId) {
+        LoadSummaryDTO summary = payrollComponentLoadService.loadForPeriod(month, year, userId);
+        return ResponseEntity.ok(ApiResponseDTO.success("Payroll components loaded successfully", summary));
+    }
+
+    /**
+     * Load (or reload) all payroll components for a SINGLE employee.
+     *
+     * POST /payroll/batch-allowance/load/employee?empId=5&month=5&year=2026&userId=1
+     */
+    @PostMapping("/load/employee")
+    public ResponseEntity<ApiResponseDTO<LoadSummaryDTO>> loadComponentsForEmployee(
+            @RequestParam Long empId,
+            @RequestParam Integer month,
+            @RequestParam Integer year,
+            @RequestParam Long userId) {
+        LoadSummaryDTO summary = payrollComponentLoadService.loadForEmployee(empId, month, year, userId);
+        return ResponseEntity.ok(ApiResponseDTO.success("Payroll components loaded for employee", summary));
     }
 
     /**

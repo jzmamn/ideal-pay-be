@@ -4,12 +4,19 @@ import com.payroll.dto.request.PayslipEmailRequestDTO;
 import com.payroll.dto.response.ApiResponseDTO;
 import com.payroll.dto.response.PayrollRunSummaryDTO;
 import com.payroll.dto.response.PayslipEmailResultDTO;
+import com.payroll.entity.Company;
+import com.payroll.entity.EmpPayrollRun;
+import com.payroll.exception.ResourceNotFoundException;
+import com.payroll.repository.CompanyRepository;
+import com.payroll.repository.EmpPayrollRunRepository;
 import com.payroll.service.PayrollRunService;
 import com.payroll.service.PayslipEmailService;
 import com.payroll.service.PayslipPdfService;
+import com.payroll.service.impl.PayslipTokenMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Payslip endpoints — run queries, PDF generation, and email dispatch.
@@ -32,9 +40,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PayslipController {
 
-    private final PayrollRunService   payrollRunService;
-    private final PayslipEmailService payslipEmailService;
-    private final PayslipPdfService   payslipPdfService;
+    private final PayrollRunService      payrollRunService;
+    private final PayslipEmailService    payslipEmailService;
+    private final PayslipPdfService      payslipPdfService;
+    private final PayslipTokenMapper     payslipTokenMapper;
+    private final EmpPayrollRunRepository runRepo;
+    private final CompanyRepository      companyRepo;
 
     // ── Run query endpoints ───────────────────────────────────────────────
 
@@ -111,6 +122,35 @@ public class PayslipController {
         return pdfResponse(
                 payslipPdfService.generatePdf2Up(runIds, templateId),
                 "payslips-2up.pdf");
+    }
+
+    // ── Token debug endpoint ──────────────────────────────────────────────
+
+    /**
+     * Returns the full resolved token map for a payroll run as JSON.
+     * Useful for verifying that all {{TOKEN}} placeholders will be populated.
+     *
+     * GET /payroll/payslip/tokens/{runId}
+     *
+     * Example response:
+     * {
+     *   "BASIC_SALARY": "50,000.00",
+     *   "NOPAY": "1,923.08",
+     *   "FA_HRA": "5,000.00",
+     *   "lbl_FA_HRA": "House Rent Allowance",
+     *   ...
+     * }
+     */
+    @GetMapping("/tokens/{runId}")
+    public ResponseEntity<ApiResponseDTO<Map<String, String>>> debugTokens(
+            @PathVariable Long runId) {
+        EmpPayrollRun run = runRepo.findById(runId)
+                .orElseThrow(() -> new ResourceNotFoundException("PayrollRun", "id", runId));
+        Company company = companyRepo.findAllByIsActive(true, Sort.by("id"))
+                .stream().findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("No active company found."));
+        Map<String, String> tokens = payslipTokenMapper.buildTokens(run, company);
+        return ResponseEntity.ok(ApiResponseDTO.success("Token map for run " + runId, tokens));
     }
 
     // ── Email endpoint ────────────────────────────────────────────────────

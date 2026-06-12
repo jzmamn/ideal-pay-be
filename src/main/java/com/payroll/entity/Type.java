@@ -35,8 +35,8 @@ public class Type {
     private Boolean isActive;
 
     @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "is_date_range", length = 1, columnDefinition = "CHAR(1) DEFAULT 'N'")
-    private Boolean isDateRange = false;
+    @Column(name = "end_date", length = 1, columnDefinition = "CHAR(1) DEFAULT 'N'")
+    private Boolean endDate = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)

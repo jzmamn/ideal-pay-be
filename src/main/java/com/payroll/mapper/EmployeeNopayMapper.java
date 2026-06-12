@@ -11,6 +11,7 @@ import java.util.List;
 public interface EmployeeNopayMapper {
 
     @Mapping(target = "id",          ignore = true)
+    @Mapping(target = "rate",        ignore = true)
     @Mapping(target = "employee",    ignore = true)
     @Mapping(target = "nopayDays",   ignore = true)
     @Mapping(target = "createdBy",   ignore = true)
@@ -37,6 +38,7 @@ public interface EmployeeNopayMapper {
     List<EmployeeNopayResponseDTO> toResponseDTOList(List<EmployeeNopay> entities);
 
     @Mapping(target = "id",          ignore = true)
+    @Mapping(target = "rate",        ignore = true)
     @Mapping(target = "employee",    ignore = true)
     @Mapping(target = "nopayDays",   ignore = true)
     @Mapping(target = "createdBy",   ignore = true)

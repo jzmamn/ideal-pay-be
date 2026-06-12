@@ -3,8 +3,6 @@ package com.payroll.dto.request;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-import java.math.BigDecimal;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,11 +16,6 @@ public class BonusRequestDTO {
 
     @Size(max = 255, message = "Description must not exceed 255 characters")
     private String description;
-
-    @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Amount must be greater than 0")
-    @Digits(integer = 13, fraction = 2, message = "Amount format is invalid")
-    private BigDecimal amount;
 
     @NotNull(message = "isActive is required")
     private Boolean isActive;

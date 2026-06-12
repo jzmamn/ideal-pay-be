@@ -119,10 +119,10 @@ public class BonusServiceImpl implements BonusService {
             }
         }
 
-        log.debug("Bonus [{}] formula not enabled — returning configured amount {}", bonus.getCode(), bonus.getAmount());
+        log.debug("Bonus [{}] formula not enabled — no fixed amount configured", bonus.getCode());
         return FormulaEvaluateResponseDTO.builder()
-                .expression("configured amount")
-                .result(bonus.getAmount())
+                .expression("no formula")
+                .result(null)
                 .context(sanitise(ctx))
                 .build();
     }

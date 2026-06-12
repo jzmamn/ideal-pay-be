@@ -11,6 +11,8 @@ import java.util.List;
 public interface EmployeeLateMapper {
 
     @Mapping(target = "id",           ignore = true)
+    @Mapping(target = "rate",         ignore = true)
+    @Mapping(target = "lateConfig",   ignore = true)
     @Mapping(target = "employee",     ignore = true)
     @Mapping(target = "createdBy",    ignore = true)
     @Mapping(target = "modifiedBy",   ignore = true)
@@ -32,6 +34,8 @@ public interface EmployeeLateMapper {
     List<EmployeeLateResponseDTO> toResponseDTOList(List<EmployeeLate> entities);
 
     @Mapping(target = "id",           ignore = true)
+    @Mapping(target = "rate",         ignore = true)
+    @Mapping(target = "lateConfig",   ignore = true)
     @Mapping(target = "employee",     ignore = true)
     @Mapping(target = "createdBy",    ignore = true)
     @Mapping(target = "modifiedBy",   ignore = true)

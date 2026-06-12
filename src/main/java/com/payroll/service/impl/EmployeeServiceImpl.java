@@ -98,7 +98,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         entity.setJobCategory(jobCategoryRepository.getReferenceById(dto.getJobCategoryId()));
         entity.setDesignation(designationRepository.getReferenceById(dto.getDesignationId()));
         entity.setBranch(branchRepository.getReferenceById(dto.getBranchId()));
-        entity.setGrade(gradeRepository.getReferenceById(dto.getGradeId() != null ? dto.getGradeId() : -1L));
+        entity.setGrade(gradeRepository.getReferenceById(dto.getGradeId()));
         entity.setStatus(statusRepository.getReferenceById(dto.getStatusId()));
         entity.setCountry(countryRepository.getReferenceById(dto.getCountryId()));
         entity.setCreatedBy(usrRepository.getReferenceById(dto.getCreatedBy()));

@@ -24,7 +24,7 @@ public interface EmployeeBonusMapper {
     @Mapping(target = "bonusId",            source = "bonus.id")
     @Mapping(target = "bonusCode",          source = "bonus.code")
     @Mapping(target = "bonusName",          source = "bonus.name")
-    @Mapping(target = "bonusAmount",        source = "bonus.amount")
+    @Mapping(target = "formulaEnabled",     source = "bonus.formulaEnabled")
     @Mapping(target = "createdById",        source = "createdBy.id")
     @Mapping(target = "createdByCode",      source = "createdBy.code")
     @Mapping(target = "createdByUserName",  source = "createdBy.userName")

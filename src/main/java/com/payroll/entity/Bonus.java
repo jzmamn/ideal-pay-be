@@ -32,9 +32,6 @@ public class Bonus {
     @Column(name = "description", length = 255)
     private String description;
 
-    @Column(name = "amount", nullable = false, precision = 15, scale = 2)
-    private BigDecimal amount;
-
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "is_active", nullable = false, length = 1)
     private Boolean isActive;
@@ -58,6 +55,14 @@ public class Bonus {
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "liable_no_pay", nullable = false, length = 1)
     private Boolean liableNoPay;
+
+    /**
+     * Fixed bonus amount used when formulaEnabled = false.
+     * If both amount > 0 and formulaEnabled = true, the formula takes precedence.
+     */
+    @Column(name = "amount", nullable = false, precision = 15, scale = 2,
+            columnDefinition = "DECIMAL(15,2) DEFAULT 0.00")
+    private BigDecimal amount = BigDecimal.ZERO;
 
     /** Optional MVEL formula expression for dynamic calculation (e.g. "basicSalary * 0.1"). */
     @Column(name = "formula", nullable = true, length = 500)

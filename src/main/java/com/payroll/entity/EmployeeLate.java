@@ -3,6 +3,7 @@ package com.payroll.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.payroll.converter.BooleanToYNConverter;
 import jakarta.persistence.*;
+import com.payroll.entity.LateDeductionConfig;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -22,6 +23,11 @@ public class EmployeeLate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    /** Rate per hour computed during the load phase (config formula or basicSalary/(workingDays*8)). */
+    @Column(name = "rate", nullable = false, precision = 15, scale = 6,
+            columnDefinition = "DECIMAL(15,6) DEFAULT 0.000000")
+    private BigDecimal rate = BigDecimal.ZERO;
 
     @Column(name = "hours", nullable = false, precision = 5, scale = 2,
             columnDefinition = "DECIMAL(5,2) DEFAULT 0.00")
@@ -45,6 +51,12 @@ public class EmployeeLate {
     @JoinColumn(name = "emp_id", nullable = false)
     @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Employee employee;
+
+    /** Optional link to the LateDeductionConfig that generated this rate. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "late_config_id", nullable = true)
+    @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
+    private LateDeductionConfig lateConfig;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)

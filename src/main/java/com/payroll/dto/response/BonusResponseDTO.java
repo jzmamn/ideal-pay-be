@@ -16,13 +16,14 @@ public class BonusResponseDTO {
     private String code;
     private String name;
     private String description;
-    private BigDecimal amount;
     private Boolean isActive;
     private Boolean isTaxable;
     private Boolean liableForEpf;
     private Boolean liableForEtf;
     private Boolean liableForPaye;
     private Boolean liableNoPay;
+    /** Fixed amount used when formulaEnabled = false. */
+    private BigDecimal amount;
     private String formula;
     private Boolean formulaEnabled;
 

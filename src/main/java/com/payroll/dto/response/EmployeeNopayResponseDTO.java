@@ -14,6 +14,8 @@ public class EmployeeNopayResponseDTO {
 
     private Long id;
     private Boolean isAssigned;
+    /** Rate per day set during load phase. Read-only in UI. */
+    private BigDecimal rate;
     private BigDecimal days;
     private BigDecimal amount;
     private String payrollMonth;

@@ -11,6 +11,7 @@ import java.util.List;
 public interface EmployeeOvertimeMapper {
 
     @Mapping(target = "id",           ignore = true)
+    @Mapping(target = "rate",         ignore = true)
     @Mapping(target = "employee",     ignore = true)
     @Mapping(target = "overtime",     ignore = true)
     @Mapping(target = "createdBy",    ignore = true)
@@ -36,6 +37,7 @@ public interface EmployeeOvertimeMapper {
     List<EmployeeOvertimeResponseDTO> toResponseDTOList(List<EmployeeOvertime> entities);
 
     @Mapping(target = "id",           ignore = true)
+    @Mapping(target = "rate",         ignore = true)
     @Mapping(target = "employee",     ignore = true)
     @Mapping(target = "overtime",     ignore = true)
     @Mapping(target = "createdBy",    ignore = true)

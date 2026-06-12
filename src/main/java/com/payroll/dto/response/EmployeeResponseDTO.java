@@ -39,8 +39,7 @@ public class EmployeeResponseDTO {
     private String employeeTypeCode;
     private String employeeTypeName;
 
-    private LocalDate contractFrom;
-    private LocalDate contractTo;
+    private LocalDate empTypeEndDate;
 
     private Long nopayDaysId;
     private String nopayDaysCode;
