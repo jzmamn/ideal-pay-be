@@ -7,7 +7,6 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -55,14 +54,6 @@ public class Bonus {
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "liable_no_pay", nullable = false, length = 1)
     private Boolean liableNoPay;
-
-    /**
-     * Fixed bonus amount used when formulaEnabled = false.
-     * If both amount > 0 and formulaEnabled = true, the formula takes precedence.
-     */
-    @Column(name = "amount", nullable = false, precision = 15, scale = 2,
-            columnDefinition = "DECIMAL(15,2) DEFAULT 0.00")
-    private BigDecimal amount = BigDecimal.ZERO;
 
     /** Optional MVEL formula expression for dynamic calculation (e.g. "basicSalary * 0.1"). */
     @Column(name = "formula", nullable = true, length = 500)

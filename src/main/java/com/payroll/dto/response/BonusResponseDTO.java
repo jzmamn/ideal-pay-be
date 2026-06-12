@@ -2,7 +2,6 @@ package com.payroll.dto.response;
 
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -22,8 +21,6 @@ public class BonusResponseDTO {
     private Boolean liableForEtf;
     private Boolean liableForPaye;
     private Boolean liableNoPay;
-    /** Fixed amount used when formulaEnabled = false. */
-    private BigDecimal amount;
     private String formula;
     private Boolean formulaEnabled;
 

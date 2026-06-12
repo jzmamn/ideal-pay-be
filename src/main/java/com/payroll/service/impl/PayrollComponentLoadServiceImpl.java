@@ -373,7 +373,7 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
         int count = 0;
         for (Bonus bonus : activeList) {
             BigDecimal amt = resolveConfiguredAmount(
-                    bonus.getFormulaEnabled(), bonus.getFormula(), bonus.getAmount(), ctx,
+                    bonus.getFormulaEnabled(), bonus.getFormula(), null, ctx,
                     "Bonus/" + bonus.getCode());
             if (amt == null) continue;
 
