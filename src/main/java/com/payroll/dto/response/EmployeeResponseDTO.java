@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class EmployeeResponseDTO {
 
     private Long id;
+    private String code;
     private String employeeNo;
     private String firstName;
     private String lastName;

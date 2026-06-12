@@ -11,6 +11,7 @@ import java.util.List;
 public interface EmployeeMapper {
 
     @Mapping(target = "id",           ignore = true)
+    @Mapping(target = "code",         ignore = true)
     @Mapping(target = "employeeType", ignore = true)
     @Mapping(target = "nopayDays",    ignore = true)
     @Mapping(target = "jobCategory",  ignore = true)
@@ -67,6 +68,7 @@ public interface EmployeeMapper {
     List<EmployeeResponseDTO> toResponseDTOList(List<Employee> entities);
 
     @Mapping(target = "id",           ignore = true)
+    @Mapping(target = "code",         ignore = true)
     @Mapping(target = "employeeType", ignore = true)
     @Mapping(target = "nopayDays",    ignore = true)
     @Mapping(target = "jobCategory",  ignore = true)

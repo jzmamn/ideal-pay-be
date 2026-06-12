@@ -18,6 +18,8 @@ public class NopayDaysResponseDTO {
     private BigDecimal days;
     private String description;
     private Boolean isActive;
+    private String formula;
+    private Boolean formulaEnabled;
 
     private Long createdById;
     private String createdByCode;

@@ -68,7 +68,9 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
         Employee entity = employeeMapper.toEntity(requestDTO);
         setRelationships(entity, requestDTO);
-        return employeeMapper.toResponseDTO(employeeRepository.save(entity));
+        Employee saved = employeeRepository.save(entity);
+        saved.setCode("EMP_" + saved.getId());
+        return employeeMapper.toResponseDTO(employeeRepository.save(saved));
     }
 
     @Override
