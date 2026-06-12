@@ -143,7 +143,7 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
         int count = 0;
         for (FixedAllowance fa : activeList) {
             BigDecimal amt = resolveConfiguredAmount(
-                    fa.getFormulaEnabled(), fa.getFormula(), fa.getAmount(), ctx,
+                    fa.getFormulaEnabled(), fa.getFormula(), null, ctx,
                     "FA/" + fa.getCode());
             if (amt == null) continue; // no formula or amount configured — skip
 
@@ -180,7 +180,7 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
         int count = 0;
         for (FixedDeduction fd : activeList) {
             BigDecimal amt = resolveConfiguredAmount(
-                    fd.getFormulaEnabled(), fd.getFormula(), fd.getAmount(), ctx,
+                    fd.getFormulaEnabled(), fd.getFormula(), null, ctx,
                     "FD/" + fd.getCode());
             if (amt == null) continue;
 

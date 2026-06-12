@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -30,9 +29,6 @@ public class FixedDeduction {
 
     @Column(name = "description", length = 255)
     private String description;
-
-    @Column(name = "amount", nullable = false, precision = 18, scale = 2)
-    private BigDecimal amount;
 
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "is_active", nullable = false, length = 1)

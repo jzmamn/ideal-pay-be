@@ -64,7 +64,7 @@ public class BonusServiceImpl implements BonusService {
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         Bonus saved = bonusRepository.save(entity);
-        saved.setCode("BON_" + saved.getId());
+        saved.setCode("BS_" + saved.getId());
         return bonusMapper.toResponseDTO(bonusRepository.save(saved));
     }
 

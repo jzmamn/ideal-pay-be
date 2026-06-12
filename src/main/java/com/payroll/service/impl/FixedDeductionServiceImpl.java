@@ -119,10 +119,9 @@ public class FixedDeductionServiceImpl implements FixedDeductionService {
             }
         }
 
-        log.debug("FixedDeduction [{}] formula not enabled — returning configured amount {}", fixedDeduction.getCode(), fixedDeduction.getAmount());
+        log.debug("FixedDeduction [{}] formula not enabled — no fixed amount configured", fixedDeduction.getCode());
         return FormulaEvaluateResponseDTO.builder()
-                .expression("configured amount")
-                .result(fixedDeduction.getAmount())
+                .expression("formula not enabled")
                 .context(sanitise(ctx))
                 .build();
     }

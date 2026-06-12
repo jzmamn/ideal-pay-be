@@ -119,10 +119,9 @@ public class FixedAllowanceServiceImpl implements FixedAllowanceService {
             }
         }
 
-        log.debug("FixedAllowance [{}] formula not enabled — returning configured amount {}", fixedAllowance.getCode(), fixedAllowance.getAmount());
+        log.debug("FixedAllowance [{}] formula not enabled — no fixed amount configured", fixedAllowance.getCode());
         return FormulaEvaluateResponseDTO.builder()
-                .expression("configured amount")
-                .result(fixedAllowance.getAmount())
+                .expression("formula not enabled")
                 .context(sanitise(ctx))
                 .build();
     }

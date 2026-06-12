@@ -75,7 +75,7 @@ public class GratuityConfigServiceImpl implements GratuityConfigService {
                 .modifiedBy(usrRepo.getReferenceById(request.getModifiedBy()))
                 .build();
         GratuityConfig saved = repo.save(entity);
-        saved.setCode("GC_" + saved.getId());
+        saved.setCode("GT_" + saved.getId());
         return mapper.toResponse(repo.save(saved));
     }
 

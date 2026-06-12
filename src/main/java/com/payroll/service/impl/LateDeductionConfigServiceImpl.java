@@ -57,7 +57,7 @@ public class LateDeductionConfigServiceImpl implements LateDeductionConfigServic
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         LateDeductionConfig saved = configRepository.save(entity);
-        saved.setCode("LDC_" + saved.getId());
+        saved.setCode("LD_" + saved.getId());
         return configMapper.toResponseDTO(configRepository.save(saved));
     }
 

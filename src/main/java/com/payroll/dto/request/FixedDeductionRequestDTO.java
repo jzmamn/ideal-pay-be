@@ -2,7 +2,6 @@ package com.payroll.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
-import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -18,11 +17,6 @@ public class FixedDeductionRequestDTO {
 
     @Size(max = 255, message = "Description must not exceed 255 characters")
     private String description;
-
-    @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.0", inclusive = true, message = "Amount must be 0 or greater")
-    @Digits(integer = 16, fraction = 2, message = "Amount format is invalid")
-    private BigDecimal amount;
 
     @NotNull(message = "isActive is required")
     private Boolean isActive;
