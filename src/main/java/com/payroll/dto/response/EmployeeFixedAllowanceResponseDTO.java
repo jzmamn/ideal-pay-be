@@ -17,6 +17,8 @@ public class EmployeeFixedAllowanceResponseDTO {
     private BigDecimal amount;
     private String payrollMonth;
     private Boolean isProcessed;
+    /** True when the amount was produced by MVEL formula evaluation at load time (treat as read-only in UI). */
+    private Boolean formulaCalculated;
     private LocalDateTime processedDate;
 
     private Long empId;
@@ -36,4 +38,7 @@ public class EmployeeFixedAllowanceResponseDTO {
     private String modifiedByCode;
     private String modifiedByUserName;
     private LocalDateTime modifiedDate;
+
+    /** Set when the row was created via file import; null for manually entered rows. */
+    private Long importLogId;
 }

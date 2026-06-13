@@ -6,17 +6,17 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import java.math.BigDecimal;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "fixed_allowance")
+@Table(name = "nopay")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FixedAllowance {
+public class Nopay {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,7 +25,7 @@ public class FixedAllowance {
     @Column(name = "code", nullable = true, unique = true, length = 10)
     private String code;
 
-    @Column(name = "name", nullable = false, length = 150)
+    @Column(name = "name", nullable = false, length = 50)
     private String name;
 
     @Column(name = "description", length = 255)
@@ -36,40 +36,25 @@ public class FixedAllowance {
     private Boolean isActive;
 
     @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "is_taxable", nullable = false, length = 1)
-    private Boolean isTaxable;
-
-    @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "liable_for_epf", nullable = false, length = 1)
+    @Column(name = "liable_for_epf", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
     private Boolean liableForEpf;
 
     @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "liable_for_etf", nullable = false, length = 1)
+    @Column(name = "liable_for_etf", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
     private Boolean liableForEtf;
 
     @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "liable_for_paye", nullable = false, length = 1)
+    @Column(name = "liable_for_paye", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
     private Boolean liableForPaye;
 
-    @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "liable_no_pay", nullable = false, length = 1)
-    private Boolean liableNoPay;
-
-    /** Optional MVEL formula expression for dynamic calculation (e.g. "basicSalary * 0.1"). */
+    /** Optional MVEL formula expression for dynamic nopay deduction calculation. */
     @Column(name = "formula", nullable = true, length = 500)
     private String formula;
 
-    /** When true, the formula is evaluated at payroll run time instead of using the fixed amount. */
+    @Builder.Default
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "formula_enabled", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
     private Boolean formulaEnabled = false;
-
-    /**
-     * Static fixed amount used when {@code formulaEnabled = false}.
-     * Null means no company-level default — the amount must be entered per-employee in the batch screen.
-     */
-    @Column(name = "amount", nullable = true, precision = 15, scale = 2)
-    private BigDecimal amount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)

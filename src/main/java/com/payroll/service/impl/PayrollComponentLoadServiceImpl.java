@@ -142,17 +142,24 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
         List<FixedAllowance> activeList = faRepository.findByIsActiveTrue();
         int count = 0;
         for (FixedAllowance fa : activeList) {
-            BigDecimal amt = resolveConfiguredAmount(
-                    fa.getFormulaEnabled(), fa.getFormula(), null, ctx,
-                    "FA/" + fa.getCode());
-            if (amt == null) continue; // no formula or amount configured — skip
+            // formulaEnabled=true  → evaluate MVEL formula now (load phase only, never during execution)
+            // formulaEnabled=false → use the static company-level amount (fa.amount), if set
+            boolean fromFormula = Boolean.TRUE.equals(fa.getFormulaEnabled())
+                    && fa.getFormula() != null && !fa.getFormula().isBlank();
 
-            final BigDecimal finalAmt = amt;
+            BigDecimal amt = resolveConfiguredAmount(
+                    fa.getFormulaEnabled(), fa.getFormula(), fa.getAmount(), ctx,
+                    "FA/" + fa.getCode());
+            if (amt == null) continue; // neither formula nor static amount configured — skip
+
+            final BigDecimal finalAmt       = amt;
+            final boolean   finalFromFormula = fromFormula;
             empFaRepository.findByEmployee_IdAndFixedAllowance_IdAndPayrollMonth(
                     emp.getId(), fa.getId(), payrollMonth)
                     .ifPresentOrElse(
                             existing -> {
                                 existing.setAmount(finalAmt);
+                                existing.setFormulaCalculated(finalFromFormula);
                                 existing.setModifiedBy(user);
                                 empFaRepository.save(existing);
                             },
@@ -160,6 +167,7 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
                                     .employee(emp)
                                     .fixedAllowance(fa)
                                     .amount(finalAmt)
+                                    .formulaCalculated(finalFromFormula)
                                     .payrollMonth(payrollMonth)
                                     .isProcessed(false)
                                     .createdBy(user)

@@ -34,6 +34,15 @@ public class EmployeeFixedAllowance {
     @Column(name = "is_processed", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
     private Boolean isProcessed;
 
+    /**
+     * True when the {@code amount} was produced by evaluating the fixed allowance's MVEL formula
+     * at load time. False when the amount was entered manually via the batch / individual screen.
+     * The UI uses this flag to render formula-derived amounts as read-only.
+     */
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "formula_calculated", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
+    private Boolean formulaCalculated = false;
+
     @Column(name = "processed_date")
     private LocalDateTime processedDate;
 

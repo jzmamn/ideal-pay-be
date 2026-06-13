@@ -2,18 +2,16 @@ package com.payroll.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
-import java.math.BigDecimal;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FixedAllowanceRequestDTO {
-
+public class NopayRequestDTO {
 
     @NotBlank(message = "Name is required")
-    @Size(max = 150, message = "Name must not exceed 150 characters")
+    @Size(max = 50, message = "Name must not exceed 50 characters")
     private String name;
 
     @Size(max = 255, message = "Description must not exceed 255 characters")
@@ -21,9 +19,6 @@ public class FixedAllowanceRequestDTO {
 
     @NotNull(message = "isActive is required")
     private Boolean isActive;
-
-    @NotNull(message = "isTaxable is required")
-    private Boolean isTaxable;
 
     @NotNull(message = "liableForEpf is required")
     private Boolean liableForEpf;
@@ -34,23 +29,11 @@ public class FixedAllowanceRequestDTO {
     @NotNull(message = "liableForPaye is required")
     private Boolean liableForPaye;
 
-    @NotNull(message = "liableNoPay is required")
-    private Boolean liableNoPay;
-
-    /**
-     * Static fixed amount applied to all employees when {@code formulaEnabled = false}.
-     * Mutually exclusive with {@code formula} / {@code formulaEnabled}.
-     * Null means no company-level default (per-employee manual entry via batch screen).
-     */
-    @DecimalMin(value = "0.00", message = "Amount must be zero or greater")
-    private BigDecimal amount;
-
-    /** Optional MVEL formula expression (e.g. "basicSalary * 0.1"). */
+    /** Optional MVEL formula expression (e.g. "basicSalary / workingDays * nopayDays"). */
     @Size(max = 500, message = "Formula must not exceed 500 characters")
     private String formula;
 
-    /** When true, the formula is evaluated at load time instead of using the static amount. Defaults to false. */
-    private Boolean formulaEnabled = false;
+    private Boolean formulaEnabled;
 
     @NotNull(message = "createdBy is required")
     private Long createdBy;

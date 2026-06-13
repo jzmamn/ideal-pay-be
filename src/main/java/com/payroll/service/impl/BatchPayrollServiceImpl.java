@@ -205,7 +205,7 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
         try {
             return jdbcTemplate.queryForList("CALL " + spName + "(?)", payrollMonth);
         } catch (Exception ex) {
-            log.error("SP {} failed for month {}: {}", spName, payrollMonth, ex.getMessage());
+            log.error("SP {} failed for month {}", spName, payrollMonth, ex);
             return Collections.emptyList();
         }
     }
@@ -223,6 +223,7 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
                 .ifPresentOrElse(
                         existing -> {
                             existing.setAmount(entry.getAmount());
+                            existing.setFormulaCalculated(false); // manual edit clears the formula-calculated flag
                             existing.setModifiedBy(user);
                             empFaRepository.save(existing);
                         },
@@ -230,6 +231,7 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
                                 .employee(emp)
                                 .fixedAllowance(fa)
                                 .amount(entry.getAmount())
+                                .formulaCalculated(false) // manually entered
                                 .payrollMonth(payrollMonth)
                                 .isProcessed(false)
                                 .createdBy(user)
