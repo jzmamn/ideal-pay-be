@@ -8,6 +8,7 @@ import com.payroll.exception.ImportLockedException;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.license.LicenseException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -18,6 +19,8 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @RestControllerAdvice
@@ -94,6 +97,18 @@ public class GlobalExceptionHandler {
         log.warn("Illegal state: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ApiResponseDTO.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidDataAccessResourceUsageException.class)
+    public ResponseEntity<ApiResponseDTO<Object>> handleInvalidDataAccess(InvalidDataAccessResourceUsageException ex) {
+        String raw = ex.getMessage() != null ? ex.getMessage() : "";
+        Matcher m = Pattern.compile("Unknown column '[^.]+\\.([^']+)'").matcher(raw);
+        String userMessage = m.find()
+                ? "The field \"" + m.group(1) + "\" does not exist in the database. Please contact your system administrator."
+                : "A database configuration error occurred. Please contact your system administrator.";
+        log.error("Data access error: {}", raw);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponseDTO.error(userMessage));
     }
 
     /** Silently return 404 for missing static resources (e.g. browser favicon requests). */

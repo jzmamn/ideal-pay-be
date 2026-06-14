@@ -124,14 +124,25 @@ public class SalaryCalculationEngineService {
         }
 
         // ── STEP C: Overtime ──────────────────────────────────────────────────
-        // Rate was stored by PayrollComponentLoadService. Amount = rate × hours,
-        // recorded in emp_ot by the batch/individual save. Use stored amount only.
+        // Rate was stored by PayrollComponentLoadService (formula or default).
+        // Amount = rate × hours, already persisted in emp_ot.
+        // If liableForNopay=true, reduce the OT amount by the nopay proportion
+        // (same pattern as fixed allowances in STEP A2).
         BigDecimal totalOt = BigDecimal.ZERO;
         for (EmployeeOvertime eot : otList) {
             Overtime ot = eot.getOvertime();
-            BigDecimal amt = orZero(eot.getAmount());
-            totalOt = totalOt.add(amt);
-            lines.add(new ComponentLine(ComponentType.OT, ot.getId(), ot.getCode(), ot.getName(), amt, eot.getHours(), null));
+            BigDecimal stored = orZero(eot.getAmount());
+            BigDecimal adjusted;
+            if (Boolean.TRUE.equals(ot.getLiableForNopay()) && nopayProportion.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal reduction = stored.multiply(nopayProportion).setScale(2, RoundingMode.HALF_UP);
+                adjusted = stored.subtract(reduction).max(BigDecimal.ZERO);
+                log.debug("OT [{}] emp={} stored={} nopayReduction={} adjusted={}",
+                        ot.getCode(), employee.getId(), stored, reduction, adjusted);
+            } else {
+                adjusted = stored;
+            }
+            totalOt = totalOt.add(adjusted);
+            lines.add(new ComponentLine(ComponentType.OT, ot.getId(), ot.getCode(), ot.getName(), adjusted, eot.getHours(), null));
         }
 
         // ── STEP D: No Pay ────────────────────────────────────────────────────
@@ -158,10 +169,15 @@ public class SalaryCalculationEngineService {
         // ── STEP E: Fixed Deductions ──────────────────────────────────────────
         // Formula evaluation happens in PayrollComponentLoadService (load phase only).
         // Processing uses the pre-stored amount from emp_fd.
+        // If liableNoPay=true, the deduction is proportionally reduced by the no-pay ratio
+        // (same pattern as Fixed Allowances in STEP A2).
         BigDecimal totalFd = BigDecimal.ZERO;
         for (EmployeeFixedDeduction efd : fdList) {
             FixedDeduction fd = efd.getFixedDeduction();
-            BigDecimal amt = orZero(efd.getAmount());
+            BigDecimal stored = orZero(efd.getAmount());
+            BigDecimal amt = Boolean.TRUE.equals(fd.getLiableNoPay()) && nopayProportion.compareTo(BigDecimal.ZERO) > 0
+                    ? stored.subtract(stored.multiply(nopayProportion).setScale(2, RoundingMode.HALF_UP)).max(BigDecimal.ZERO)
+                    : stored;
             totalFd = totalFd.add(amt);
             lines.add(new ComponentLine(ComponentType.FD, fd.getId(), fd.getCode(), fd.getName(), amt, null, null));
         }
@@ -205,9 +221,29 @@ public class SalaryCalculationEngineService {
             if (Boolean.TRUE.equals(eva.getVariableAllowance().getLiableForEpf()))
                 epfBase = epfBase.add(orZero(eva.getAmount()));
 
-        for (EmployeeOvertime eot : otList)
-            if (Boolean.TRUE.equals(eot.getOvertime().getLiableForEpf()))
-                epfBase = epfBase.add(orZero(eot.getAmount()));
+        for (EmployeeVariableDeduction evd : vdList)
+            if (Boolean.TRUE.equals(evd.getVariableDeduction().getLiableForEpf()))
+                epfBase = epfBase.subtract(orZero(evd.getAmount()));
+
+        for (EmployeeOvertime eot : otList) {
+            if (!Boolean.TRUE.equals(eot.getOvertime().getLiableForEpf())) continue;
+            BigDecimal stored = orZero(eot.getAmount());
+            BigDecimal adjusted = Boolean.TRUE.equals(eot.getOvertime().getLiableForNopay())
+                    ? stored.subtract(stored.multiply(nopayProportion).setScale(2, RoundingMode.HALF_UP)).max(BigDecimal.ZERO)
+                    : stored;
+            epfBase = epfBase.add(adjusted);
+        }
+
+        // Fixed Deductions that are EPF-liable reduce the EPF-contributable base
+        for (EmployeeFixedDeduction efd : fdList) {
+            FixedDeduction fd = efd.getFixedDeduction();
+            if (!Boolean.TRUE.equals(fd.getLiableForEpf())) continue;
+            BigDecimal stored = orZero(efd.getAmount());
+            BigDecimal adjusted = Boolean.TRUE.equals(fd.getLiableNoPay())
+                    ? stored.subtract(stored.multiply(nopayProportion).setScale(2, RoundingMode.HALF_UP)).max(BigDecimal.ZERO)
+                    : stored;
+            epfBase = epfBase.subtract(adjusted);
+        }
 
         epfBase = epfBase.max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
 
@@ -236,9 +272,29 @@ public class SalaryCalculationEngineService {
             if (Boolean.TRUE.equals(eva.getVariableAllowance().getLiableForEtf()))
                 etfBase = etfBase.add(orZero(eva.getAmount()));
 
-        for (EmployeeOvertime eot : otList)
-            if (Boolean.TRUE.equals(eot.getOvertime().getLiableForEtf()))
-                etfBase = etfBase.add(orZero(eot.getAmount()));
+        for (EmployeeVariableDeduction evd : vdList)
+            if (Boolean.TRUE.equals(evd.getVariableDeduction().getLiableForEtf()))
+                etfBase = etfBase.subtract(orZero(evd.getAmount()));
+
+        for (EmployeeOvertime eot : otList) {
+            if (!Boolean.TRUE.equals(eot.getOvertime().getLiableForEtf())) continue;
+            BigDecimal stored = orZero(eot.getAmount());
+            BigDecimal adjusted = Boolean.TRUE.equals(eot.getOvertime().getLiableForNopay())
+                    ? stored.subtract(stored.multiply(nopayProportion).setScale(2, RoundingMode.HALF_UP)).max(BigDecimal.ZERO)
+                    : stored;
+            etfBase = etfBase.add(adjusted);
+        }
+
+        // Fixed Deductions that are ETF-liable reduce the ETF base
+        for (EmployeeFixedDeduction efd : fdList) {
+            FixedDeduction fd = efd.getFixedDeduction();
+            if (!Boolean.TRUE.equals(fd.getLiableForEtf())) continue;
+            BigDecimal stored = orZero(efd.getAmount());
+            BigDecimal adjusted = Boolean.TRUE.equals(fd.getLiableNoPay())
+                    ? stored.subtract(stored.multiply(nopayProportion).setScale(2, RoundingMode.HALF_UP)).max(BigDecimal.ZERO)
+                    : stored;
+            etfBase = etfBase.subtract(adjusted);
+        }
 
         etfBase = etfBase.max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
 
@@ -279,11 +335,49 @@ public class SalaryCalculationEngineService {
             if (Boolean.TRUE.equals(eva.getVariableAllowance().getLiableForPaye()))
                 payeBase = payeBase.add(orZero(eva.getAmount()));
 
-        for (EmployeeOvertime eot : otList)
-            if (Boolean.TRUE.equals(eot.getOvertime().getLiableForPaye()))
-                payeBase = payeBase.add(orZero(eot.getAmount()));
+        for (EmployeeVariableDeduction evd : vdList)
+            if (Boolean.TRUE.equals(evd.getVariableDeduction().getLiableForPaye()))
+                payeBase = payeBase.subtract(orZero(evd.getAmount()));
+
+        for (EmployeeOvertime eot : otList) {
+            if (!Boolean.TRUE.equals(eot.getOvertime().getLiableForPaye())) continue;
+            BigDecimal stored = orZero(eot.getAmount());
+            BigDecimal adjusted = Boolean.TRUE.equals(eot.getOvertime().getLiableForNopay())
+                    ? stored.subtract(stored.multiply(nopayProportion).setScale(2, RoundingMode.HALF_UP)).max(BigDecimal.ZERO)
+                    : stored;
+            payeBase = payeBase.add(adjusted);
+        }
+
+        // Fixed Deductions that are PAYE-liable reduce the PAYE base.
+        for (EmployeeFixedDeduction efd : fdList) {
+            FixedDeduction fd = efd.getFixedDeduction();
+            if (!Boolean.TRUE.equals(fd.getLiableForPaye())) continue;
+            BigDecimal stored = orZero(efd.getAmount());
+            BigDecimal adjusted = Boolean.TRUE.equals(fd.getLiableNoPay())
+                    ? stored.subtract(stored.multiply(nopayProportion).setScale(2, RoundingMode.HALF_UP)).max(BigDecimal.ZERO)
+                    : stored;
+            payeBase = payeBase.subtract(adjusted);
+        }
 
         payeBase = payeBase.subtract(employeeEpf).max(BigDecimal.ZERO);
+
+        // taxableEarnings: basic + all fixed allowances (nopay-adjusted) + taxable variable allowances
+        //                  − taxable variable deductions
+        BigDecimal taxableEarnings = basicSalary;
+        for (EmployeeFixedAllowance efa : faList) {
+            BigDecimal stored = orZero(efa.getAmount());
+            BigDecimal adjusted = Boolean.TRUE.equals(efa.getFixedAllowance().getLiableNoPay())
+                    ? stored.subtract(stored.multiply(nopayProportion).setScale(2, RoundingMode.HALF_UP)).max(BigDecimal.ZERO)
+                    : stored;
+            taxableEarnings = taxableEarnings.add(adjusted);
+        }
+        for (EmployeeVariableAllowance eva : vaList)
+            if (Boolean.TRUE.equals(eva.getVariableAllowance().getIsTaxable()))
+                taxableEarnings = taxableEarnings.add(orZero(eva.getAmount()));
+        for (EmployeeVariableDeduction evd : vdList)
+            if (Boolean.TRUE.equals(evd.getVariableDeduction().getIsTaxable()))
+                taxableEarnings = taxableEarnings.subtract(orZero(evd.getAmount()));
+        taxableEarnings = taxableEarnings.max(BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP);
 
         BigDecimal payeTax = BigDecimal.ZERO;
         if (rates.payeEnabled()) {
@@ -311,6 +405,7 @@ public class SalaryCalculationEngineService {
                 .grossPay(grossPay)
                 .netPay(netPay)
                 .epfLiableBase(epfBase)
+                .taxableEarnings(taxableEarnings)
                 .employeeEpf(employeeEpf)
                 .employerEpf(employerEpf)
                 .etf(etf)

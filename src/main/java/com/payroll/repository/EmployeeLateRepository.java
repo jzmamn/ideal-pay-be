@@ -17,7 +17,14 @@ public interface EmployeeLateRepository extends JpaRepository<EmployeeLate, Long
 
     List<EmployeeLate> findAllByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
 
+    List<EmployeeLate> findAllByPayrollMonth(String payrollMonth, Sort sort);
+
+    /** Legacy single-config lookup — kept for backward compatibility. */
     Optional<EmployeeLate> findByEmployee_IdAndPayrollMonth(Long employeeId, String payrollMonth);
+
+    /** One record per (employee, config, month) — primary multi-config lookup. */
+    Optional<EmployeeLate> findByEmployee_IdAndLateConfig_IdAndPayrollMonth(
+            Long employeeId, Long lateConfigId, String payrollMonth);
 
     // ── Import / export support ──────────────────────────────────────────
 

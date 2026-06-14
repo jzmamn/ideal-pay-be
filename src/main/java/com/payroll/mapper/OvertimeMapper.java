@@ -35,5 +35,10 @@ public interface OvertimeMapper {
     @Mapping(target = "modifiedBy", ignore = true)
     // Allow null formula to clear the value (overrides class-level IGNORE for this field)
     @Mapping(target = "formula", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
+    // Always overwrite liability flags — a null in the request resets to the entity default
+    @Mapping(target = "liableForEpf",   nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
+    @Mapping(target = "liableForEtf",   nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
+    @Mapping(target = "liableForPaye",  nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
+    @Mapping(target = "liableForNopay", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.SET_TO_NULL)
     void updateEntityFromDTO(OvertimeRequestDTO requestDTO, @MappingTarget Overtime entity);
 }

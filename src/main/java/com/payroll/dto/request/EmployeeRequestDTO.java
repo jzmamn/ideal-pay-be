@@ -71,6 +71,8 @@ public class EmployeeRequestDTO {
     @NotNull(message = "Designation is required")
     private Long designationId;
 
+    private Long departmentId;
+
     @NotNull(message = "Branch is required")
     private Long branchId;
 

@@ -1,7 +1,9 @@
 package com.payroll.dto.response;
 
+import com.payroll.enums.BonusCalculationMethod;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -15,8 +17,9 @@ public class BonusResponseDTO {
     private String code;
     private String name;
     private String description;
+    private BonusCalculationMethod calculationMethod;
+    private BigDecimal fixedAmount;
     private Boolean isActive;
-    private Boolean isTaxable;
     private Boolean liableForEpf;
     private Boolean liableForEtf;
     private Boolean liableForPaye;

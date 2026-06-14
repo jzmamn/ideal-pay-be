@@ -34,6 +34,8 @@ public class FixedDeduction {
     @Column(name = "is_active", nullable = false, length = 1)
     private Boolean isActive;
 
+    // ── Liability flags ───────────────────────────────────────────────────────
+
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "liable_for_epf", nullable = false, length = 1)
     private Boolean liableForEpf;
@@ -50,14 +52,17 @@ public class FixedDeduction {
     @Column(name = "liable_no_pay", nullable = false, length = 1)
     private Boolean liableNoPay;
 
-    /** Optional MVEL formula expression for dynamic calculation (e.g. "basicSalary * 0.05"). */
+    // ── Formula ───────────────────────────────────────────────────────────────
+
+    /** Optional MVEL formula expression for dynamic calculation (e.g. "basicSalary * 0.02"). */
     @Column(name = "formula", nullable = true, length = 500)
     private String formula;
 
-    /** When true, the formula is evaluated at payroll run time instead of using the fixed amount. */
-    @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "formula_enabled", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
-    private Boolean formulaEnabled = false;
+    /**
+     * When true, {@code formula} is evaluated at load time to derive the deduction amount.
+     * When false, no employee fixed-deduction amount is loaded from this definition.
+     */
+    // ── Audit ─────────────────────────────────────────────────────────────────
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)

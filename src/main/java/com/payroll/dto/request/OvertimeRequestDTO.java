@@ -28,6 +28,13 @@ public class OvertimeRequestDTO {
     /** When true, the formula is evaluated at payroll run time. */
     private Boolean formulaEnabled = false;
 
+    /** Statutory liability settings — default to true (most OT types are fully liable). */
+    private Boolean liableForEpf  = true;
+    private Boolean liableForEtf  = true;
+    private Boolean liableForPaye = true;
+    /** When true, OT amount is proportionally reduced for no-pay days. Defaults to false. */
+    private Boolean liableForNopay = false;
+
     @NotNull(message = "Created by is required")
     private Long createdBy;
 

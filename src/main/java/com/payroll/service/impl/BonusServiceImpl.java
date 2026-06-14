@@ -4,6 +4,8 @@ import com.payroll.dto.request.BonusRequestDTO;
 import com.payroll.dto.response.BonusResponseDTO;
 import com.payroll.dto.response.FormulaEvaluateResponseDTO;
 import com.payroll.entity.Bonus;
+import com.payroll.enums.BonusCalculationMethod;
+import com.payroll.enums.BonusCalculationMethod;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.BonusMapper;
 import com.payroll.repository.BonusRepository;
@@ -59,7 +61,7 @@ public class BonusServiceImpl implements BonusService {
 
     @Override
     public BonusResponseDTO createBonus(BonusRequestDTO requestDTO) {
-        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
+        normaliseAndValidateCalculation(requestDTO);
         Bonus entity = bonusMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -72,7 +74,7 @@ public class BonusServiceImpl implements BonusService {
     public BonusResponseDTO updateBonus(Long id, BonusRequestDTO requestDTO) {
         Bonus existing = bonusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bonus", "id", id));
-        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
+        normaliseAndValidateCalculation(requestDTO);
         bonusMapper.updateEntityFromDTO(requestDTO, existing);
         if (requestDTO.getModifiedBy() != null) {
             existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -94,8 +96,10 @@ public class BonusServiceImpl implements BonusService {
                 .orElseThrow(() -> new ResourceNotFoundException("Bonus", "id", id));
 
         Map<String, Object> ctx = new HashMap<>(context);
-        ctx.putIfAbsent("basicSalary", BigDecimal.ZERO);
-        ctx.putIfAbsent("workingDays", 26);
+        ctx.putIfAbsent("basicSalary",  BigDecimal.ZERO);
+        ctx.putIfAbsent("BASIC_SALARY", BigDecimal.ZERO);
+        ctx.putIfAbsent("workingDays",  26);
+        ctx.putIfAbsent("WORKING_DAYS", 26);
 
         if (Boolean.TRUE.equals(bonus.getFormulaEnabled())
                 && bonus.getFormula() != null
@@ -146,6 +150,13 @@ public class BonusServiceImpl implements BonusService {
         if (error != null) {
             throw new IllegalArgumentException("Invalid formula: " + error);
         }
+    }
+
+    private void normaliseAndValidateCalculation(BonusRequestDTO requestDTO) {
+        boolean formulaBased = requestDTO.getCalculationMethod() == BonusCalculationMethod.FORMULA_BASED;
+        requestDTO.setFormulaEnabled(formulaBased);
+        validateFormula(formulaBased, requestDTO.getFormula());
+
     }
 
     private Map<String, Object> sanitise(Map<String, Object> ctx) {

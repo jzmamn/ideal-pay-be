@@ -1,6 +1,7 @@
 package com.payroll.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.payroll.converter.BooleanToYNConverter;
 import com.payroll.converter.BooleanToZeroOneConverter;
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,6 +34,15 @@ public class EmployeeFixedDeduction {
     @Convert(converter = BooleanToZeroOneConverter.class)
     @Column(name = "is_processed", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean isProcessed;
+
+    /**
+     * True when the {@code amount} was produced by evaluating the fixed deduction's MVEL formula
+     * at load time. False when the employee amount was entered manually.
+     * The UI uses this flag to render formula-derived amounts as read-only.
+     */
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "formula_calculated", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
+    private Boolean formulaCalculated = false;
 
     @Column(name = "processed_date")
     private LocalDateTime processedDate;

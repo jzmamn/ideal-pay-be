@@ -22,6 +22,7 @@ public class SalaryCalculationResult {
 
     // Statutory
     private final BigDecimal epfLiableBase;
+    private final BigDecimal taxableEarnings;
     private final BigDecimal employeeEpf;
     private final BigDecimal employerEpf;
     private final BigDecimal etf;

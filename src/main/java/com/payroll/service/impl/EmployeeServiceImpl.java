@@ -27,6 +27,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final NopayDaysRepository nopayDaysRepository;
     private final JobCategoryRepository jobCategoryRepository;
     private final DesignationRepository designationRepository;
+    private final DepartmentRepository departmentRepository;
     private final BranchRepository branchRepository;
     private final GradeRepository gradeRepository;
     private final StatusRepository statusRepository;
@@ -99,6 +100,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         entity.setNopayDays(nopayDaysRepository.getReferenceById(dto.getNopayDaysId()));
         entity.setJobCategory(jobCategoryRepository.getReferenceById(dto.getJobCategoryId()));
         entity.setDesignation(designationRepository.getReferenceById(dto.getDesignationId()));
+        if (dto.getDepartmentId() != null)
+            entity.setDepartment(departmentRepository.getReferenceById(dto.getDepartmentId()));
         entity.setBranch(branchRepository.getReferenceById(dto.getBranchId()));
         entity.setGrade(gradeRepository.getReferenceById(dto.getGradeId()));
         entity.setStatus(statusRepository.getReferenceById(dto.getStatusId()));
@@ -120,6 +123,8 @@ public class EmployeeServiceImpl implements EmployeeService {
             entity.setJobCategory(jobCategoryRepository.getReferenceById(dto.getJobCategoryId()));
         if (dto.getDesignationId() != null)
             entity.setDesignation(designationRepository.getReferenceById(dto.getDesignationId()));
+        entity.setDepartment(dto.getDepartmentId() != null
+                ? departmentRepository.getReferenceById(dto.getDepartmentId()) : null);
         if (dto.getBranchId() != null)
             entity.setBranch(branchRepository.getReferenceById(dto.getBranchId()));
         if (dto.getGradeId() != null)

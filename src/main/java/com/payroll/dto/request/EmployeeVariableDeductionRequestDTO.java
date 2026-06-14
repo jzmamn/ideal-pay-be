@@ -2,7 +2,7 @@ package com.payroll.dto.request;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -25,7 +25,8 @@ public class EmployeeVariableDeductionRequestDTO {
     @DecimalMin(value = "0.00", message = "Amount must be zero or greater")
     private BigDecimal amount;
 
-    @Size(max = 20, message = "Payroll month must not exceed 20 characters")
+    @NotNull(message = "Payroll month is required")
+    @Pattern(regexp = "^\\d{4}-(0[1-9]|1[0-2])$", message = "Payroll month must match YYYY-MM")
     private String payrollMonth;
 
     private Boolean isProcessed = false;

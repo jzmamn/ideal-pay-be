@@ -10,7 +10,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "late_deduction_config")
+@Table(name = "late_deduction")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -59,6 +59,28 @@ public class LateDeductionConfig {
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "is_active", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
     private Boolean isActive = true;
+
+    // ── Statutory liability flags ────────────────────────────────────────────
+
+    @Builder.Default
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "liable_for_epf", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
+    private Boolean liableForEpf = true;
+
+    @Builder.Default
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "liable_for_etf", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
+    private Boolean liableForEtf = true;
+
+    @Builder.Default
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "liable_for_paye", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
+    private Boolean liableForPaye = true;
+
+    @Builder.Default
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "liable_for_nopay", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
+    private Boolean liableForNopay = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)

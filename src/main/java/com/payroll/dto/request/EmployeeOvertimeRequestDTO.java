@@ -25,7 +25,11 @@ public class EmployeeOvertimeRequestDTO {
     @DecimalMin(value = "0.00", message = "Hours must be zero or greater")
     private BigDecimal hours;
 
-    @NotNull(message = "Amount is required")
+    /**
+     * Amount is derived server-side as rate × hours; clients must not send this.
+     * Kept as an optional field (no @NotNull) for backward-compatibility with any
+     * existing callers that may still supply it — the value is always ignored.
+     */
     @DecimalMin(value = "0.00", message = "Amount must be zero or greater")
     private BigDecimal amount;
 

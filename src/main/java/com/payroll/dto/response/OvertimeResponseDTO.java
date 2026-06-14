@@ -21,6 +21,12 @@ public class OvertimeResponseDTO {
     private String formula;
     private Boolean formulaEnabled;
 
+    /** Statutory liability flags. */
+    private Boolean liableForEpf;
+    private Boolean liableForEtf;
+    private Boolean liableForPaye;
+    private Boolean liableForNopay;
+
     private Long createdById;
     private String createdByCode;
     private String createdByUserName;

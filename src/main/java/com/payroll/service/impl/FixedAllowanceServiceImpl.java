@@ -94,8 +94,10 @@ public class FixedAllowanceServiceImpl implements FixedAllowanceService {
                 .orElseThrow(() -> new ResourceNotFoundException("FixedAllowance", "id", id));
 
         Map<String, Object> ctx = new HashMap<>(context);
-        ctx.putIfAbsent("basicSalary", BigDecimal.ZERO);
-        ctx.putIfAbsent("workingDays", 26);
+        ctx.putIfAbsent("basicSalary",  BigDecimal.ZERO);
+        ctx.putIfAbsent("BASIC_SALARY", BigDecimal.ZERO);
+        ctx.putIfAbsent("workingDays",  26);
+        ctx.putIfAbsent("WORKING_DAYS", 26);
 
         if (Boolean.TRUE.equals(fixedAllowance.getFormulaEnabled())
                 && fixedAllowance.getFormula() != null

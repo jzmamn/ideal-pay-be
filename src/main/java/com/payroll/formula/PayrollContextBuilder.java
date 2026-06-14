@@ -60,8 +60,9 @@ public class PayrollContextBuilder {
      */
     public PayrollContextBuilder employee(Employee employee) {
         if (employee != null) {
-            context.put("basicSalary",  employee.getBasicSalary() != null
-                    ? employee.getBasicSalary() : BigDecimal.ZERO);
+            BigDecimal bs = employee.getBasicSalary() != null ? employee.getBasicSalary() : BigDecimal.ZERO;
+            context.put("basicSalary",  bs);
+            context.put("BASIC_SALARY", bs);
             context.put("employeeId",   employee.getId());
             context.put("employeeNo",   employee.getEmployeeNo());
         }
@@ -70,7 +71,9 @@ public class PayrollContextBuilder {
 
     /** Sets {@code basicSalary} directly (use when employee object is not available). */
     public PayrollContextBuilder basicSalary(BigDecimal basicSalary) {
-        context.put("basicSalary", basicSalary != null ? basicSalary : BigDecimal.ZERO);
+        BigDecimal bs = basicSalary != null ? basicSalary : BigDecimal.ZERO;
+        context.put("basicSalary",  bs);
+        context.put("BASIC_SALARY", bs);
         return this;
     }
 
@@ -78,31 +81,39 @@ public class PayrollContextBuilder {
 
     /** Total working/payable days in the period (e.g. 26). */
     public PayrollContextBuilder workingDays(int workingDays) {
-        context.put("workingDays", workingDays);
+        context.put("workingDays",  workingDays);
+        context.put("WORKING_DAYS", workingDays);
         return this;
     }
 
     /** Number of no-pay (unpaid leave) days taken. */
     public PayrollContextBuilder nopayDays(int nopayDays) {
-        context.put("nopayDays", nopayDays);
+        context.put("nopayDays",  nopayDays);
+        context.put("NOPAY_DAYS", nopayDays);
         return this;
     }
 
     /** Overtime hours worked during the period. */
     public PayrollContextBuilder otHours(BigDecimal otHours) {
-        context.put("otHours", otHours != null ? otHours : BigDecimal.ZERO);
+        BigDecimal v = otHours != null ? otHours : BigDecimal.ZERO;
+        context.put("otHours",  v);
+        context.put("OT_HOURS", v);
         return this;
     }
 
     /** Overtime rate multiplier (e.g. 1.5 = time-and-a-half). */
     public PayrollContextBuilder otRate(BigDecimal otRate) {
-        context.put("otRate", otRate != null ? otRate : BigDecimal.ONE);
+        BigDecimal v = otRate != null ? otRate : BigDecimal.ONE;
+        context.put("otRate",  v);
+        context.put("OT_RATE", v);
         return this;
     }
 
     /** Total late hours (used in formula test / calculate endpoints). */
     public PayrollContextBuilder lateHours(BigDecimal lateHours) {
-        context.put("lateHours", lateHours != null ? lateHours : BigDecimal.ZERO);
+        BigDecimal v = lateHours != null ? lateHours : BigDecimal.ZERO;
+        context.put("lateHours",  v);
+        context.put("LATE_HOURS", v);
         return this;
     }
 
@@ -234,11 +245,16 @@ public class PayrollContextBuilder {
 
     /** Returns the assembled context map ready for MVEL evaluation. */
     public Map<String, Object> build() {
-        context.putIfAbsent("basicSalary", BigDecimal.ZERO);
-        context.putIfAbsent("workingDays", 26);
-        context.putIfAbsent("nopayDays",   0);
-        context.putIfAbsent("otHours",     BigDecimal.ZERO);
-        context.putIfAbsent("otRate",      BigDecimal.ONE);
+        context.putIfAbsent("basicSalary",  BigDecimal.ZERO);
+        context.putIfAbsent("BASIC_SALARY", BigDecimal.ZERO);
+        context.putIfAbsent("workingDays",  26);
+        context.putIfAbsent("WORKING_DAYS", 26);
+        context.putIfAbsent("nopayDays",    0);
+        context.putIfAbsent("NOPAY_DAYS",   0);
+        context.putIfAbsent("otHours",      BigDecimal.ZERO);
+        context.putIfAbsent("OT_HOURS",     BigDecimal.ZERO);
+        context.putIfAbsent("otRate",       BigDecimal.ONE);
+        context.putIfAbsent("OT_RATE",      BigDecimal.ONE);
         return new HashMap<>(context);
     }
 }

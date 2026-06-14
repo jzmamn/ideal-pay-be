@@ -18,11 +18,17 @@ public class EmployeeLateRequestDTO {
     @NotNull(message = "Employee is required")
     private Long empId;
 
+    /** Links this record to a specific LateDeductionConfig type. */
+    private Long lateConfigId;
+
     @NotNull(message = "Hours is required")
     @DecimalMin(value = "0.00", message = "Hours must be zero or greater")
     private BigDecimal hours;
 
-    @NotNull(message = "Amount is required")
+    /**
+     * Amount is derived server-side as rate × hours; clients should not send this.
+     * Kept optional for backward-compatibility — the value is always recalculated.
+     */
     @DecimalMin(value = "0.00", message = "Amount must be zero or greater")
     private BigDecimal amount;
 

@@ -63,6 +63,12 @@ public class EmpPayrollRun {
             columnDefinition = "DECIMAL(15,2) DEFAULT '0.00'")
     private BigDecimal epfLiableBase = BigDecimal.ZERO;
 
+    /** Taxable earnings derived from component taxable-liability settings. */
+    @Builder.Default
+    @Column(name = "taxable_earnings", nullable = false, precision = 15, scale = 2,
+            columnDefinition = "DECIMAL(15,2) DEFAULT '0.00'")
+    private BigDecimal taxableEarnings = BigDecimal.ZERO;
+
     /** Employee EPF contribution — 8% of epfLiableBase (deducted from net pay). */
     @Builder.Default
     @Column(name = "employee_epf", nullable = false, precision = 15, scale = 2,

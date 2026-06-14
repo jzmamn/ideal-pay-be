@@ -33,6 +33,11 @@ public class LateDeductionConfigRequestDTO {
 
     private Boolean isActive = true;
 
+    private Boolean liableForEpf   = true;
+    private Boolean liableForEtf   = true;
+    private Boolean liableForPaye  = true;
+    private Boolean liableForNopay = false;
+
     @NotNull(message = "Created by is required")
     private Long createdBy;
 

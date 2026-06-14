@@ -187,10 +187,9 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
         List<FixedDeduction> activeList = fdRepository.findAllByIsActive(true, Sort.by("id"));
         int count = 0;
         for (FixedDeduction fd : activeList) {
-            BigDecimal amt = resolveConfiguredAmount(
-                    fd.getFormulaEnabled(), fd.getFormula(), null, ctx,
-                    "FD/" + fd.getCode());
-            if (amt == null) continue;
+            if (fd.getFormula() == null || fd.getFormula().isBlank()) continue;
+            BigDecimal amt = orZero(formulaEngineService.evaluate(fd.getFormula(), ctx));
+            log.debug("Formula [FD/{}] → {}", fd.getCode(), amt);
 
             final BigDecimal finalAmt = amt;
             empFdRepository.findByEmployee_IdAndFixedDeduction_IdAndPayrollMonth(
@@ -198,6 +197,7 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
                     .ifPresentOrElse(
                             existing -> {
                                 existing.setAmount(finalAmt);
+                                existing.setFormulaCalculated(true);
                                 existing.setModifiedBy(user);
                                 empFdRepository.save(existing);
                             },
@@ -205,6 +205,7 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
                                     .employee(emp)
                                     .fixedDeduction(fd)
                                     .amount(finalAmt)
+                                    .formulaCalculated(true)
                                     .payrollMonth(payrollMonth)
                                     .isProcessed(false)
                                     .createdBy(user)
@@ -318,58 +319,67 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Late Deduction — stores RATE; amount = rate × hours
+    // Late Deduction — stores RATE per config; amount = rate × hours
+    // One EmployeeLate row is created per (employee, config, month).
     // ─────────────────────────────────────────────────────────────────────────
 
     private int loadLate(Employee emp, String payrollMonth, BigDecimal basicSalary,
                          Map<String, Object> ctx, Usr user) {
-        LateDeductionConfig config = lateConfigRepository.findFirstByIsActiveTrueOrderByIdAsc()
-                .orElse(null);
-        if (config == null) {
+        List<LateDeductionConfig> activeConfigs =
+                lateConfigRepository.findAllByIsActive(true, Sort.by("id"));
+
+        if (activeConfigs.isEmpty()) {
             log.debug("No active LateDeductionConfig — skipping late load for emp={}", emp.getId());
             return 0;
         }
 
-        BigDecimal rate;
-        if (Boolean.TRUE.equals(config.getFormulaEnabled())
-                && config.getFormula() != null && !config.getFormula().isBlank()) {
-            rate = formulaEngineService.evaluate(config.getFormula(), ctx);
-            log.debug("Late rate formula emp={} → {}", emp.getId(), rate);
-        } else {
-            // Default: basicSalary / (config.workingDays × config.workingHoursPerDay)
-            int configWd   = config.getWorkingDays()        != null ? config.getWorkingDays()        : 26;
-            int configHpd  = config.getWorkingHoursPerDay() != null ? config.getWorkingHoursPerDay() : 8;
-            int denominator = configWd * configHpd;
-            rate = denominator > 0
-                    ? basicSalary.divide(BigDecimal.valueOf(denominator), 6, RoundingMode.HALF_UP)
-                    : BigDecimal.ZERO;
-        }
+        int count = 0;
+        for (LateDeductionConfig config : activeConfigs) {
+            BigDecimal rate;
+            if (Boolean.TRUE.equals(config.getFormulaEnabled())
+                    && config.getFormula() != null && !config.getFormula().isBlank()) {
+                rate = formulaEngineService.evaluate(config.getFormula(), ctx);
+                log.debug("Late rate formula [{}] emp={} → {}", config.getCode(), emp.getId(), rate);
+            } else {
+                // Default: basicSalary / (workingDays × workingHoursPerDay)
+                int wd          = config.getWorkingDays()        != null ? config.getWorkingDays()        : 26;
+                int hpd         = config.getWorkingHoursPerDay() != null ? config.getWorkingHoursPerDay() : 8;
+                int denominator = wd * hpd;
+                rate = denominator > 0
+                        ? basicSalary.divide(BigDecimal.valueOf(denominator), 6, RoundingMode.HALF_UP)
+                        : BigDecimal.ZERO;
+            }
 
-        final BigDecimal finalRate = orZero(rate);
-        final LateDeductionConfig finalConfig = config;
-        empLateRepository.findByEmployee_IdAndPayrollMonth(emp.getId(), payrollMonth)
-                .ifPresentOrElse(
-                        existing -> {
-                            BigDecimal hours = orZero(existing.getHours());
-                            existing.setRate(finalRate);
-                            existing.setLateConfig(finalConfig);
-                            existing.setAmount(finalRate.multiply(hours).setScale(2, RoundingMode.HALF_UP));
-                            existing.setModifiedBy(user);
-                            empLateRepository.save(existing);
-                        },
-                        () -> empLateRepository.save(EmployeeLate.builder()
-                                .employee(emp)
-                                .lateConfig(finalConfig)
-                                .rate(finalRate)
-                                .hours(BigDecimal.ZERO)
-                                .amount(BigDecimal.ZERO)
-                                .payrollMonth(payrollMonth)
-                                .isProcessed(false)
-                                .createdBy(user)
-                                .modifiedBy(user)
-                                .build())
-                );
-        return 1;
+            final BigDecimal         finalRate   = orZero(rate);
+            final LateDeductionConfig finalConfig = config;
+
+            empLateRepository.findByEmployee_IdAndLateConfig_IdAndPayrollMonth(
+                            emp.getId(), config.getId(), payrollMonth)
+                    .ifPresentOrElse(
+                            existing -> {
+                                BigDecimal hours = orZero(existing.getHours());
+                                existing.setRate(finalRate);
+                                existing.setLateConfig(finalConfig);
+                                existing.setAmount(finalRate.multiply(hours)
+                                        .setScale(2, RoundingMode.HALF_UP));
+                                existing.setModifiedBy(user);
+                                empLateRepository.save(existing);
+                            },
+                            () -> empLateRepository.save(EmployeeLate.builder()
+                                    .employee(emp)
+                                    .lateConfig(finalConfig)
+                                    .rate(finalRate)
+                                    .hours(BigDecimal.ZERO)
+                                    .amount(BigDecimal.ZERO)
+                                    .payrollMonth(payrollMonth)
+                                    .isProcessed(false)
+                                    .createdBy(user)
+                                    .modifiedBy(user)
+                                    .build())
+                    );
+            count++;
+        }
+        return count;
     }
 
     // ─────────────────────────────────────────────────────────────────────────

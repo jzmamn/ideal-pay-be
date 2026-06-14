@@ -50,6 +50,7 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
     private final EmployeeOvertimeRepository          empOtRepository;
     private final EmployeeNopayRepository             empNpRepository;
     private final EmployeeLateRepository              empLateRepository;
+    private final LateDeductionConfigRepository       lateConfigRepository;
     private final EmployeeSalaryAdvanceRepository     empSalAdvRepository;
     private final EmployeeBonusRepository             empBonusRepository;
     private final BonusRepository                     bonusRepository;
@@ -130,10 +131,10 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
                 case "FA"    -> { if (isDelete) deleteFa(employee, entry, payrollMonth); else upsertFa(employee, entry, payrollMonth, user); }
                 case "FD"    -> { if (isDelete) deleteFd(employee, entry, payrollMonth); else upsertFd(employee, entry, payrollMonth, user); }
                 case "VA"    -> { if (isDelete) deleteVa(employee, entry, payrollMonth); else upsertVa(employee, entry, payrollMonth, user); }
-                case "VD"    -> upsertVd(employee, entry, payrollMonth, user);
+                case "VD"    -> { if (isDelete) deleteVd(employee, entry, payrollMonth); else upsertVd(employee, entry, payrollMonth, user); }
                 case "OT"    -> { if (isDelete) deleteOt(employee, entry, payrollMonth); else upsertOt(employee, entry, payrollMonth, user); }
                 case "NOPAY"   -> { if (isDelete) deleteNp(employee, entry, payrollMonth);   else upsertNp(employee, entry, payrollMonth, user); }
-                case "LATE"    -> { if (isDelete) deleteLate(employee, payrollMonth);         else upsertLate(employee, entry, payrollMonth, user); }
+                case "LATE"    -> { if (isDelete) deleteLate(employee, entry, payrollMonth);   else upsertLate(employee, entry, payrollMonth, user); }
                 case "SAL_ADV"  -> { if (isDelete) deleteSalAdv(employee, payrollMonth);               else upsertSalAdv(employee, entry, payrollMonth, user); }
                 case "BONUS"    -> { if (isDelete) deleteBonus(employee, entry, payrollMonth);           else upsertBonus(employee, entry, payrollMonth, user); }
                 case "LOAN"     -> { if (isDelete) deleteLoan(employee, entry, payrollMonth);          else upsertLoan(employee, entry, payrollMonth, user); }
@@ -194,9 +195,18 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
                 .ifPresent(empNpRepository::delete));
     }
 
-    private void deleteLate(Employee emp, String payrollMonth) {
-        empLateRepository.findByEmployee_IdAndPayrollMonth(emp.getId(), payrollMonth)
-                .ifPresent(empLateRepository::delete);
+    private void deleteLate(Employee emp, BatchSaveEntryDTO entry, String payrollMonth) {
+        if (entry.getComponentCode() != null) {
+            // Delete only the specific late-config entry for this employee/month.
+            lateConfigRepository.findByCodeIgnoreCase(entry.getComponentCode()).ifPresent(config ->
+                empLateRepository.findByEmployee_IdAndLateConfig_IdAndPayrollMonth(
+                                emp.getId(), config.getId(), payrollMonth)
+                        .ifPresent(empLateRepository::delete));
+        } else {
+            // Legacy: no code supplied — delete all late entries for this employee/month.
+            empLateRepository.findAllByEmployeeIdAndPayrollMonth(emp.getId(), payrollMonth)
+                    .forEach(empLateRepository::delete);
+        }
     }
 
     // ── SP caller ─────────────────────────────────────────────────────────────
@@ -253,6 +263,7 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
                 .ifPresentOrElse(
                         existing -> {
                             existing.setAmount(entry.getAmount());
+                            existing.setFormulaCalculated(false); // manual batch edit clears the formula-calculated flag
                             existing.setModifiedBy(user);
                             empFdRepository.save(existing);
                         },
@@ -260,6 +271,7 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
                                 .employee(emp)
                                 .fixedDeduction(fd)
                                 .amount(entry.getAmount())
+                                .formulaCalculated(false) // manually entered via batch
                                 .payrollMonth(payrollMonth)
                                 .isProcessed(false)
                                 .createdBy(user)
@@ -393,24 +405,65 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
     private void upsertLate(Employee emp, BatchSaveEntryDTO entry, String payrollMonth, Usr user) {
         BigDecimal hours = entry.getHours() != null ? entry.getHours() : BigDecimal.ZERO;
 
-        empLateRepository.findByEmployee_IdAndPayrollMonth(emp.getId(), payrollMonth)
-                .ifPresentOrElse(
-                        existing -> {
-                            existing.setHours(hours);
-                            existing.setAmount(entry.getAmount() != null ? entry.getAmount() : BigDecimal.ZERO);
-                            existing.setModifiedBy(user);
-                            empLateRepository.save(existing);
-                        },
-                        () -> empLateRepository.save(EmployeeLate.builder()
-                                .employee(emp)
-                                .hours(hours)
-                                .amount(entry.getAmount() != null ? entry.getAmount() : BigDecimal.ZERO)
-                                .payrollMonth(payrollMonth)
-                                .isProcessed(false)
-                                .createdBy(user)
-                                .modifiedBy(user)
-                                .build())
-                );
+        LateDeductionConfig config = entry.getComponentCode() != null
+                ? lateConfigRepository.findByCodeIgnoreCase(entry.getComponentCode()).orElse(null)
+                : null;
+
+        if (config != null) {
+            // Multi-config path: one row per (employee, config, month).
+            // Rate was set by the load phase and must not be overwritten here.
+            empLateRepository.findByEmployee_IdAndLateConfig_IdAndPayrollMonth(
+                            emp.getId(), config.getId(), payrollMonth)
+                    .ifPresentOrElse(
+                            existing -> {
+                                existing.setHours(hours);
+                                // Recalculate amount using the stored (load-phase) rate.
+                                BigDecimal amount = existing.getRate() != null
+                                        ? existing.getRate().multiply(hours)
+                                                  .setScale(2, java.math.RoundingMode.HALF_UP)
+                                        : BigDecimal.ZERO;
+                                existing.setAmount(amount);
+                                existing.setModifiedBy(user);
+                                empLateRepository.save(existing);
+                            },
+                            () -> empLateRepository.save(EmployeeLate.builder()
+                                    .employee(emp)
+                                    .lateConfig(config)
+                                    .hours(hours)
+                                    .rate(BigDecimal.ZERO)   // rate set at load phase; 0 until loaded
+                                    .amount(BigDecimal.ZERO) // 0 until load phase provides rate
+                                    .payrollMonth(payrollMonth)
+                                    .isProcessed(false)
+                                    .createdBy(user)
+                                    .modifiedBy(user)
+                                    .build())
+                    );
+        } else {
+            // Legacy / no-code path: single row per (employee, month).
+            empLateRepository.findByEmployee_IdAndPayrollMonth(emp.getId(), payrollMonth)
+                    .ifPresentOrElse(
+                            existing -> {
+                                existing.setHours(hours);
+                                BigDecimal amount = existing.getRate() != null
+                                        ? existing.getRate().multiply(hours)
+                                                  .setScale(2, java.math.RoundingMode.HALF_UP)
+                                        : BigDecimal.ZERO;
+                                existing.setAmount(amount);
+                                existing.setModifiedBy(user);
+                                empLateRepository.save(existing);
+                            },
+                            () -> empLateRepository.save(EmployeeLate.builder()
+                                    .employee(emp)
+                                    .hours(hours)
+                                    .rate(BigDecimal.ZERO)
+                                    .amount(BigDecimal.ZERO)
+                                    .payrollMonth(payrollMonth)
+                                    .isProcessed(false)
+                                    .createdBy(user)
+                                    .modifiedBy(user)
+                                    .build())
+                    );
+        }
     }
 
     // ── Upsert — Bonus ────────────────────────────────────────────────────────

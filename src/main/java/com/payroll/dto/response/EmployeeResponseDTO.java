@@ -54,6 +54,10 @@ public class EmployeeResponseDTO {
     private String designationCode;
     private String designationName;
 
+    private Long departmentId;
+    private String departmentCode;
+    private String departmentName;
+
     private Long branchId;
     private String branchCode;
     private String branchName;

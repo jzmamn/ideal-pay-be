@@ -35,6 +35,7 @@ public class PayrollRunResponseDTO {
 
     // Statutory
     private BigDecimal epfLiableBase;
+    private BigDecimal taxableEarnings;
     private BigDecimal employeeEpf;
     private BigDecimal employerEpf;
     private BigDecimal etf;

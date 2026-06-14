@@ -18,4 +18,6 @@ public interface EmployeeLateService {
     void deleteEmployeeLate(Long id);
 
     List<EmployeeLateResponseDTO> getByEmployeeId(Long empId);
+
+    List<EmployeeLateResponseDTO> getByPayrollMonth(String payrollMonth);
 }

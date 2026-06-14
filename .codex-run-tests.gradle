@@ -1,0 +1,6 @@
+gradle.projectsEvaluated {
+    rootProject.tasks.named("test") {
+        enabled = true
+        useJUnitPlatform()
+    }
+}

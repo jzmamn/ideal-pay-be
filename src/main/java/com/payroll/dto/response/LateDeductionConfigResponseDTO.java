@@ -21,6 +21,11 @@ public class LateDeductionConfigResponseDTO {
     private Boolean formulaEnabled;
     private Boolean isActive;
 
+    private Boolean liableForEpf;
+    private Boolean liableForEtf;
+    private Boolean liableForPaye;
+    private Boolean liableForNopay;
+
     private Long          createdById;
     private String        createdByCode;
     private String        createdByUserName;

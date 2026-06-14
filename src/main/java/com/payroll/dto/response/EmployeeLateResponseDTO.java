@@ -25,6 +25,11 @@ public class EmployeeLateResponseDTO {
     private String empCode;
     private String empName;
 
+    /** The LateDeductionConfig that generated the rate. */
+    private Long   lateConfigId;
+    private String lateConfigCode;
+    private String lateConfigName;
+
     private Long createdById;
     private String createdByCode;
     private String createdByUserName;

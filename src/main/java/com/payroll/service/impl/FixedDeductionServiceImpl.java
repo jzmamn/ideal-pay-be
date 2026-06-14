@@ -59,7 +59,7 @@ public class FixedDeductionServiceImpl implements FixedDeductionService {
 
     @Override
     public FixedDeductionResponseDTO createFixedDeduction(FixedDeductionRequestDTO requestDTO) {
-        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
+        validateFormula(requestDTO.getFormula());
         FixedDeduction entity = fixedDeductionMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -72,7 +72,7 @@ public class FixedDeductionServiceImpl implements FixedDeductionService {
     public FixedDeductionResponseDTO updateFixedDeduction(Long id, FixedDeductionRequestDTO requestDTO) {
         FixedDeduction existing = fixedDeductionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("FixedDeduction", "id", id));
-        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
+        validateFormula(requestDTO.getFormula());
         fixedDeductionMapper.updateEntityFromDTO(requestDTO, existing);
         if (requestDTO.getModifiedBy() != null) {
             existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -94,11 +94,12 @@ public class FixedDeductionServiceImpl implements FixedDeductionService {
                 .orElseThrow(() -> new ResourceNotFoundException("FixedDeduction", "id", id));
 
         Map<String, Object> ctx = new HashMap<>(context);
-        ctx.putIfAbsent("basicSalary", BigDecimal.ZERO);
-        ctx.putIfAbsent("workingDays", 26);
+        ctx.putIfAbsent("basicSalary",  BigDecimal.ZERO);
+        ctx.putIfAbsent("BASIC_SALARY", BigDecimal.ZERO);
+        ctx.putIfAbsent("workingDays",  26);
+        ctx.putIfAbsent("WORKING_DAYS", 26);
 
-        if (Boolean.TRUE.equals(fixedDeduction.getFormulaEnabled())
-                && fixedDeduction.getFormula() != null
+        if (fixedDeduction.getFormula() != null
                 && !fixedDeduction.getFormula().isBlank()) {
             String expression = fixedDeduction.getFormula();
             try {
@@ -119,31 +120,25 @@ public class FixedDeductionServiceImpl implements FixedDeductionService {
             }
         }
 
-        log.debug("FixedDeduction [{}] formula not enabled — no fixed amount configured", fixedDeduction.getCode());
+        log.debug("FixedDeduction [{}] formula not enabled", fixedDeduction.getCode());
         return FormulaEvaluateResponseDTO.builder()
-                .expression("formula not enabled")
+                .expression("no formula")
                 .context(sanitise(ctx))
                 .build();
     }
 
     /**
-     * Validates the MVEL formula when formulaEnabled is true.
-     * Throws {@link IllegalArgumentException} (→ HTTP 400) if:
+     * Validates the deduction definition:
      * <ul>
-     *   <li>formulaEnabled is true but formula is blank/null</li>
-     *   <li>formulaEnabled is true and the expression has a syntax error</li>
+     *   <li>When a formula is present, it must be syntactically valid.</li>
      * </ul>
-     * When formulaEnabled is false or null, the formula field is ignored.
      */
-    private void validateFormula(Boolean formulaEnabled, String formula) {
-        if (!Boolean.TRUE.equals(formulaEnabled)) return;
-        if (formula == null || formula.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Formula expression is required when formulaEnabled is true");
-        }
-        String error = formulaEngineService.validateExpression(formula);
-        if (error != null) {
-            throw new IllegalArgumentException("Invalid formula: " + error);
+    private void validateFormula(String formula) {
+        if (formula != null && !formula.isBlank()) {
+            String error = formulaEngineService.validateExpression(formula);
+            if (error != null) {
+                throw new IllegalArgumentException("Invalid formula: " + error);
+            }
         }
     }
 

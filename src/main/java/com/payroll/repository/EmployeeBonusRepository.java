@@ -18,6 +18,38 @@ public interface EmployeeBonusRepository extends JpaRepository<EmployeeBonus, Lo
     List<EmployeeBonus> findAllByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
     Optional<EmployeeBonus> findByEmployeeIdAndPayrollMonthAndBonusId(Long empId, String payrollMonth, Long bonusId);
 
+    // ── Bonus processing batch ───────────────────────────────────────────
+
+    List<EmployeeBonus> findAllByProcessingBatchId(Long batchId, Sort sort);
+
+    @Query("""
+           SELECT eb FROM EmployeeBonus eb
+           JOIN FETCH eb.employee e
+           LEFT JOIN FETCH e.department
+           LEFT JOIN FETCH e.designation
+           LEFT JOIN FETCH e.branch
+           LEFT JOIN FETCH eb.bonus
+           LEFT JOIN FETCH eb.approvedBy
+           WHERE eb.processingBatch.id = :batchId
+           ORDER BY e.payrollName
+           """)
+    List<EmployeeBonus> findBatchEntriesWithDetails(@Param("batchId") Long batchId);
+
+    // ── Reports ──────────────────────────────────────────────────────────
+
+    @Query("""
+           SELECT eb FROM EmployeeBonus eb
+           JOIN FETCH eb.employee e
+           LEFT JOIN FETCH e.department
+           LEFT JOIN FETCH e.designation
+           LEFT JOIN FETCH e.branch
+           LEFT JOIN FETCH eb.bonus
+           LEFT JOIN FETCH eb.processingBatch pb
+           WHERE pb.payrollMonth = :month
+           ORDER BY e.payrollName
+           """)
+    List<EmployeeBonus> findByPayrollMonthWithDetails(@Param("month") String month);
+
     // ── Import / export support ──────────────────────────────────────────
 
     long countByImportLogIdAndIsProcessedTrue(Long importLogId);

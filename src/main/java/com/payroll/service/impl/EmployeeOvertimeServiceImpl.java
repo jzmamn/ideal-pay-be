@@ -15,6 +15,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 @Service
@@ -54,14 +56,18 @@ public class EmployeeOvertimeServiceImpl implements EmployeeOvertimeService {
                 .orElse(null);
 
         if (entity != null) {
-            entity.setHours(requestDTO.getHours());
-            entity.setAmount(requestDTO.getAmount());
+            BigDecimal hours = orZero(requestDTO.getHours());
+            entity.setHours(hours);
+            // Amount is always derived: rate (set at load phase) × hours
+            entity.setAmount(computeAmount(entity.getRate(), hours));
             entity.setIsProcessed(requestDTO.getIsProcessed() != null ? requestDTO.getIsProcessed() : Boolean.FALSE);
             entity.setProcessedDate(requestDTO.getProcessedDate());
             entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         } else {
             entity = employeeOvertimeMapper.toEntity(requestDTO);
             setRelationships(entity, requestDTO);
+            // rate defaults to ZERO until the load phase sets it; amount = 0 × hours
+            entity.setAmount(computeAmount(entity.getRate(), orZero(requestDTO.getHours())));
         }
 
         return employeeOvertimeMapper.toResponseDTO(employeeOvertimeRepository.save(entity));
@@ -73,6 +79,9 @@ public class EmployeeOvertimeServiceImpl implements EmployeeOvertimeService {
                 .orElseThrow(() -> new ResourceNotFoundException("EmployeeOvertime", "id", id));
         employeeOvertimeMapper.updateEntityFromDTO(requestDTO, existing);
         updateRelationships(existing, requestDTO);
+        // Recalculate amount from the stored rate and updated hours
+        BigDecimal hours = orZero(existing.getHours());
+        existing.setAmount(computeAmount(existing.getRate(), hours));
         return employeeOvertimeMapper.toResponseDTO(employeeOvertimeRepository.save(existing));
     }
 
@@ -114,5 +123,16 @@ public class EmployeeOvertimeServiceImpl implements EmployeeOvertimeService {
             entity.setOvertime(overtimeRepository.getReferenceById(dto.getOvertimeId()));
         if (dto.getModifiedBy() != null)
             entity.setModifiedBy(usrRepository.getReferenceById(dto.getModifiedBy()));
+    }
+
+    /** Computes OT amount = rate × hours, rounded to 2 decimal places. */
+    private BigDecimal computeAmount(BigDecimal rate, BigDecimal hours) {
+        BigDecimal r = rate  != null ? rate  : BigDecimal.ZERO;
+        BigDecimal h = hours != null ? hours : BigDecimal.ZERO;
+        return r.multiply(h).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal orZero(BigDecimal value) {
+        return value != null ? value : BigDecimal.ZERO;
     }
 }

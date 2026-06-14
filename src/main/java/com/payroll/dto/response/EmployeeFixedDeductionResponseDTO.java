@@ -26,7 +26,11 @@ public class EmployeeFixedDeductionResponseDTO {
     private Long fdId;
     private String fdCode;
     private String fdName;
-    private Boolean formulaEnabled;
+    /**
+     * True when {@code amount} was set by evaluating the deduction's MVEL formula at load time.
+     * Formula-calculated amounts can only be changed by updating the deduction definition and re-loading.
+     */
+    private Boolean formulaCalculated;
 
     private Long createdById;
     private String createdByCode;

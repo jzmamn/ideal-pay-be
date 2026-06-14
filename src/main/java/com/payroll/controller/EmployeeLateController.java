@@ -41,6 +41,19 @@ public class EmployeeLateController {
                 employeeLateService.getByEmployeeId(empId)));
     }
 
+    /**
+     * GET /payroll/emp-late/period/{payrollMonth}
+     * Returns all EmployeeLate records for a given payroll month (all employees, all config types).
+     * Used by the Individual Employee Entry screen to load server-calculated rates.
+     */
+    @GetMapping("/period/{payrollMonth}")
+    public ResponseEntity<ApiResponseDTO<List<EmployeeLateResponseDTO>>> getByPayrollMonth(
+            @PathVariable String payrollMonth) {
+        return ResponseEntity.ok(ApiResponseDTO.success(
+                "Employee late records fetched successfully",
+                employeeLateService.getByPayrollMonth(payrollMonth)));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponseDTO<EmployeeLateResponseDTO>> createEmployeeLate(
             @Valid @RequestBody EmployeeLateRequestDTO requestDTO) {

@@ -31,6 +31,7 @@ public class PayrollRunSummaryDTO {
     private BigDecimal netPay;
 
     private BigDecimal epfLiableBase;
+    private BigDecimal taxableEarnings;
     private BigDecimal employeeEpf;
     private BigDecimal employerEpf;
     private BigDecimal etf;

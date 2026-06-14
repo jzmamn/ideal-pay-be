@@ -94,8 +94,11 @@ public class NopayServiceImpl implements NopayService {
 
         Map<String, Object> ctx = new HashMap<>(context);
         ctx.putIfAbsent("basicSalary",  BigDecimal.ZERO);
+        ctx.putIfAbsent("BASIC_SALARY", BigDecimal.ZERO);
         ctx.putIfAbsent("workingDays",  26);
+        ctx.putIfAbsent("WORKING_DAYS", 26);
         ctx.putIfAbsent("nopayDays",    BigDecimal.ZERO);
+        ctx.putIfAbsent("NOPAY_DAYS",   BigDecimal.ZERO);
 
         if (Boolean.TRUE.equals(nopay.getFormulaEnabled())
                 && nopay.getFormula() != null

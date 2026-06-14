@@ -83,8 +83,10 @@ public class LateDeductionConfigServiceImpl implements LateDeductionConfigServic
         LateDeductionConfig config = findOrThrow(configId);
 
         Map<String, Object> ctx = new HashMap<>(context);
-        ctx.putIfAbsent("basicSalary",          BigDecimal.ZERO);
+        ctx.putIfAbsent("basicSalary",           BigDecimal.ZERO);
+        ctx.putIfAbsent("BASIC_SALARY",          BigDecimal.ZERO);
         ctx.putIfAbsent("workingDays",           config.getWorkingDays());
+        ctx.putIfAbsent("WORKING_DAYS",          config.getWorkingDays());
         ctx.putIfAbsent("workingHoursPerDay",    config.getWorkingHoursPerDay());
         ctx.putIfAbsent("lateHours",             BigDecimal.ZERO);
 

@@ -64,6 +64,16 @@ public class Overtime {
     @Column(name = "liable_for_paye", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
     private Boolean liableForPaye = true;
 
+    /**
+     * When true, the OT amount is reduced proportionally by the no-pay ratio
+     * (nopayDays / workingDays) during payroll processing, consistent with the
+     * no-pay treatment applied to fixed allowances.
+     */
+    @Builder.Default
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "liable_for_nopay", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
+    private Boolean liableForNopay = false;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})

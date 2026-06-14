@@ -57,4 +57,20 @@ public class EmployeeOvertimeController {
         return ResponseEntity.ok(ApiResponseDTO.success(
                 "Employee overtime record deleted successfully", null));
     }
+
+    /**
+     * GET /payroll/emp-ot/by-employee?empId={empId}&payrollMonth={YYYY-MM}
+     *
+     * Returns all overtime records for a single employee in the given pay period.
+     * Used by the individual payroll entry screen to display rate (read-only) and
+     * allow the user to enter overtime hours.
+     */
+    @GetMapping("/by-employee")
+    public ResponseEntity<ApiResponseDTO<List<EmployeeOvertimeResponseDTO>>> getByEmployee(
+            @RequestParam Long empId,
+            @RequestParam String payrollMonth) {
+        return ResponseEntity.ok(ApiResponseDTO.success(
+                "Employee overtime records fetched successfully",
+                employeeOvertimeService.getByEmployeeId(empId, payrollMonth)));
+    }
 }

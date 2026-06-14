@@ -21,6 +21,9 @@ public class VariableAllowanceRequestDTO {
     @NotNull(message = "isActive is required")
     private Boolean isActive;
 
+    @NotNull(message = "isTaxable is required")
+    private Boolean isTaxable;
+
     @NotNull(message = "liableForEpf is required")
     private Boolean liableForEpf;
 

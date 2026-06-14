@@ -1,7 +1,9 @@
 package com.payroll.dto.request;
 
+import com.payroll.enums.BonusCalculationMethod;
 import jakarta.validation.constraints.*;
 import lombok.*;
+
 
 @Getter
 @Setter
@@ -17,11 +19,11 @@ public class BonusRequestDTO {
     @Size(max = 255, message = "Description must not exceed 255 characters")
     private String description;
 
+    @NotNull(message = "Calculation method is required")
+    private BonusCalculationMethod calculationMethod;
+
     @NotNull(message = "isActive is required")
     private Boolean isActive;
-
-    @NotNull(message = "isTaxable is required")
-    private Boolean isTaxable;
 
     @NotNull(message = "liableForEpf is required")
     private Boolean liableForEpf;
@@ -40,6 +42,7 @@ public class BonusRequestDTO {
     private String formula;
 
     /** When true, the formula is used at payroll run time instead of the fixed amount. Defaults to false. */
+    @Builder.Default
     private Boolean formulaEnabled = false;
 
     @NotNull(message = "createdBy is required")

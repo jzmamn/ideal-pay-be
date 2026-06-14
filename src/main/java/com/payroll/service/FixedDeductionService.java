@@ -20,7 +20,7 @@ public interface FixedDeductionService {
 
     /**
      * Evaluates the linked MVEL formula for this fixed deduction type.
-     * Falls back to the configured fixed {@code amount} if formulaEnabled is false or formula is blank.
+     * Returns no result when the formula is blank.
      */
     FormulaEvaluateResponseDTO calculateAmount(Long id, Map<String, Object> context);
 }

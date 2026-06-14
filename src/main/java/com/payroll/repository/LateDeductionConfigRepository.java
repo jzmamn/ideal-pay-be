@@ -11,6 +11,9 @@ public interface LateDeductionConfigRepository extends JpaRepository<LateDeducti
 
     List<LateDeductionConfig> findAllByIsActive(Boolean isActive, Sort sort);
 
-    /** Returns the first active config, used by the calculation engine. */
+    /** Returns the first active config, used by the calculation engine (legacy). */
     Optional<LateDeductionConfig> findFirstByIsActiveTrueOrderByIdAsc();
+
+    /** Lookup by code — used by batch-save to resolve the config for a given componentCode. */
+    Optional<LateDeductionConfig> findByCodeIgnoreCase(String code);
 }

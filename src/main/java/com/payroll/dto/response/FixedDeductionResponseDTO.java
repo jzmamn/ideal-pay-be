@@ -15,12 +15,15 @@ public class FixedDeductionResponseDTO {
     private String name;
     private String description;
     private Boolean isActive;
+    // ── Liability flags ───────────────────────────────────────────────────────
     private Boolean liableForEpf;
     private Boolean liableForEtf;
     private Boolean liableForPaye;
     private Boolean liableNoPay;
+
+    // ── Formula ───────────────────────────────────────────────────────────────
     private String formula;
-    private Boolean formulaEnabled;
+    // ── Audit ─────────────────────────────────────────────────────────────────
     private Long createdById;
     private String createdByCode;
     private String createdByUserName;

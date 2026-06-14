@@ -94,11 +94,16 @@ public class OvertimeServiceImpl implements OvertimeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Overtime", "id", overtimeId));
 
         Map<String, Object> ctx = new HashMap<>(context);
-        ctx.putIfAbsent("basicSalary", BigDecimal.ZERO);
-        ctx.putIfAbsent("workingDays", 26);
-        ctx.putIfAbsent("nopayDays",   0);
-        ctx.putIfAbsent("otHours",     BigDecimal.ZERO);
-        ctx.putIfAbsent("otRate",      BigDecimal.ONE);
+        ctx.putIfAbsent("basicSalary",  BigDecimal.ZERO);
+        ctx.putIfAbsent("BASIC_SALARY", BigDecimal.ZERO);
+        ctx.putIfAbsent("workingDays",  26);
+        ctx.putIfAbsent("WORKING_DAYS", 26);
+        ctx.putIfAbsent("nopayDays",    0);
+        ctx.putIfAbsent("NOPAY_DAYS",   0);
+        ctx.putIfAbsent("otHours",      BigDecimal.ZERO);
+        ctx.putIfAbsent("OT_HOURS",     BigDecimal.ZERO);
+        ctx.putIfAbsent("otRate",       BigDecimal.ONE);
+        ctx.putIfAbsent("OT_RATE",      BigDecimal.ONE);
 
         if (Boolean.TRUE.equals(overtime.getFormulaEnabled()) && overtime.getFormula() != null && !overtime.getFormula().isBlank()) {
             String expression = overtime.getFormula();

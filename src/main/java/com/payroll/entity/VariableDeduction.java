@@ -34,6 +34,10 @@ public class VariableDeduction {
     private Boolean isActive;
 
     @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "is_taxable", nullable = false, length = 1)
+    private Boolean isTaxable;
+
+    @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "liable_for_epf", nullable = false, length = 1)
     private Boolean liableForEpf;
 

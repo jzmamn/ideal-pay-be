@@ -15,6 +15,7 @@ public class VariableAllowanceResponseDTO {
     private String name;
     private String description;
     private Boolean isActive;
+    private Boolean isTaxable;
     private Boolean liableForEpf;
     private Boolean liableForEtf;
     private Boolean liableForPaye;

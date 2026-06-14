@@ -10,13 +10,14 @@ import java.util.List;
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface EmployeeFixedDeductionMapper {
 
-    @Mapping(target = "id",             ignore = true)
-    @Mapping(target = "employee",       ignore = true)
-    @Mapping(target = "fixedDeduction", ignore = true)
-    @Mapping(target = "createdBy",      ignore = true)
-    @Mapping(target = "modifiedBy",     ignore = true)
-    @Mapping(target = "createdDate",    ignore = true)
-    @Mapping(target = "modifiedDate",   ignore = true)
+    @Mapping(target = "id",                ignore = true)
+    @Mapping(target = "employee",          ignore = true)
+    @Mapping(target = "fixedDeduction",    ignore = true)
+    @Mapping(target = "createdBy",         ignore = true)
+    @Mapping(target = "modifiedBy",        ignore = true)
+    @Mapping(target = "createdDate",       ignore = true)
+    @Mapping(target = "modifiedDate",      ignore = true)
+    @Mapping(target = "formulaCalculated", ignore = true)
     EmployeeFixedDeduction toEntity(EmployeeFixedDeductionRequestDTO requestDTO);
 
     @Mapping(target = "empId",              source = "employee.id")
@@ -25,7 +26,7 @@ public interface EmployeeFixedDeductionMapper {
     @Mapping(target = "fdId",               source = "fixedDeduction.id")
     @Mapping(target = "fdCode",             source = "fixedDeduction.code")
     @Mapping(target = "fdName",             source = "fixedDeduction.name")
-    @Mapping(target = "formulaEnabled",     source = "fixedDeduction.formulaEnabled")
+    @Mapping(target = "formulaCalculated",  source = "formulaCalculated")
     @Mapping(target = "createdById",        source = "createdBy.id")
     @Mapping(target = "createdByCode",      source = "createdBy.code")
     @Mapping(target = "createdByUserName",  source = "createdBy.userName")
@@ -36,12 +37,13 @@ public interface EmployeeFixedDeductionMapper {
 
     List<EmployeeFixedDeductionResponseDTO> toResponseDTOList(List<EmployeeFixedDeduction> entities);
 
-    @Mapping(target = "id",             ignore = true)
-    @Mapping(target = "employee",       ignore = true)
-    @Mapping(target = "fixedDeduction", ignore = true)
-    @Mapping(target = "createdBy",      ignore = true)
-    @Mapping(target = "modifiedBy",     ignore = true)
-    @Mapping(target = "createdDate",    ignore = true)
-    @Mapping(target = "modifiedDate",   ignore = true)
+    @Mapping(target = "id",                ignore = true)
+    @Mapping(target = "employee",          ignore = true)
+    @Mapping(target = "fixedDeduction",    ignore = true)
+    @Mapping(target = "createdBy",         ignore = true)
+    @Mapping(target = "modifiedBy",        ignore = true)
+    @Mapping(target = "createdDate",       ignore = true)
+    @Mapping(target = "modifiedDate",      ignore = true)
+    @Mapping(target = "formulaCalculated", ignore = true)
     void updateEntityFromDTO(EmployeeFixedDeductionRequestDTO requestDTO, @MappingTarget EmployeeFixedDeduction entity);
 }
