@@ -45,14 +45,9 @@ public class NopayDays {
     private Boolean liableNoPay = true;
 
     /** MVEL formula to compute nopay deduction amount.
-     *  Default behaviour (when disabled): basicSalary / workingDays * days */
+     *  Default behaviour (when blank): basicSalary / workingDays * days */
     @Column(name = "formula", nullable = true, length = 500)
     private String formula;
-
-    @Builder.Default
-    @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "formula_enabled", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
-    private Boolean formulaEnabled = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)

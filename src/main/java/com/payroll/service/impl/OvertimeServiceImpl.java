@@ -59,7 +59,7 @@ public class OvertimeServiceImpl implements OvertimeService {
 
     @Override
     public OvertimeResponseDTO createOvertime(OvertimeRequestDTO requestDTO) {
-        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
+        validateFormula(requestDTO.getFormula());
         Overtime entity = overtimeMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -72,7 +72,7 @@ public class OvertimeServiceImpl implements OvertimeService {
     public OvertimeResponseDTO updateOvertime(Long id, OvertimeRequestDTO requestDTO) {
         Overtime existing = overtimeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Overtime", "id", id));
-        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
+        validateFormula(requestDTO.getFormula());
         overtimeMapper.updateEntityFromDTO(requestDTO, existing);
         if (requestDTO.getModifiedBy() != null) {
             existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -105,7 +105,7 @@ public class OvertimeServiceImpl implements OvertimeService {
         ctx.putIfAbsent("otRate",       BigDecimal.ONE);
         ctx.putIfAbsent("OT_RATE",      BigDecimal.ONE);
 
-        if (Boolean.TRUE.equals(overtime.getFormulaEnabled()) && overtime.getFormula() != null && !overtime.getFormula().isBlank()) {
+        if (overtime.getFormula() != null && !overtime.getFormula().isBlank()) {
             String expression = overtime.getFormula();
             try {
                 BigDecimal result = formulaEngineService.evaluate(expression, ctx);
@@ -134,20 +134,11 @@ public class OvertimeServiceImpl implements OvertimeService {
     }
 
     /**
-     * Validates the MVEL formula when formulaEnabled is true.
-     * Throws {@link IllegalArgumentException} (→ HTTP 400) if:
-     * <ul>
-     *   <li>formulaEnabled is true but formula is blank/null</li>
-     *   <li>formulaEnabled is true and the expression has a syntax error</li>
-     * </ul>
-     * When formulaEnabled is false or null, the formula field is ignored.
+     * Validates the MVEL formula syntax when one is provided. The formula is
+     * optional — when blank/null, the default rate calculation is used instead.
      */
-    private void validateFormula(Boolean formulaEnabled, String formula) {
-        if (!Boolean.TRUE.equals(formulaEnabled)) return;
-        if (formula == null || formula.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Formula expression is required when formulaEnabled is true");
-        }
+    private void validateFormula(String formula) {
+        if (formula == null || formula.isBlank()) return;
         String error = formulaEngineService.validateExpression(formula);
         if (error != null) {
             throw new IllegalArgumentException("Invalid formula: " + error);

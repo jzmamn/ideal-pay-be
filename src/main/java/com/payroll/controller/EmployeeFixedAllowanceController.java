@@ -1,5 +1,6 @@
 package com.payroll.controller;
 
+import com.payroll.dto.request.EmployeeFixedAllowanceAssignRequestDTO;
 import com.payroll.dto.request.EmployeeFixedAllowanceRequestDTO;
 import com.payroll.dto.response.ApiResponseDTO;
 import com.payroll.dto.response.EmployeeFixedAllowanceResponseDTO;
@@ -56,5 +57,20 @@ public class EmployeeFixedAllowanceController {
         employeeFixedAllowanceService.deleteEmployeeFixedAllowance(id);
         return ResponseEntity.ok(ApiResponseDTO.success(
                 "Employee fixed allowance deleted successfully", null));
+    }
+
+    /**
+     * Employee → Salary Tab → Fixed Allowance checkbox grid.
+     * Replaces the employee's Fixed Allowance assignments for the given payroll month with
+     * exactly the selections sent — unselected allowances are removed, selected ones are
+     * created or updated.
+     */
+    @PutMapping("/employee/{empId}/assign")
+    public ResponseEntity<ApiResponseDTO<List<EmployeeFixedAllowanceResponseDTO>>> assignFixedAllowances(
+            @PathVariable Long empId,
+            @Valid @RequestBody EmployeeFixedAllowanceAssignRequestDTO requestDTO) {
+        return ResponseEntity.ok(ApiResponseDTO.success(
+                "Employee fixed allowances updated successfully",
+                employeeFixedAllowanceService.assignFixedAllowances(empId, requestDTO)));
     }
 }

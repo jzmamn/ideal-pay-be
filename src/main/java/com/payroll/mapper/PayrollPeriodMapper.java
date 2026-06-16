@@ -27,11 +27,11 @@ public interface PayrollPeriodMapper {
 
     @Mapping(target = "companyId",          source = "company.id")
     @Mapping(target = "companyName",        source = "company.name")
-    @Mapping(target = "closedByUserName",   source = "closedBy.userName")
+    @Mapping(target = "closedByUserName",   source = "closedBy.username")
     @Mapping(target = "createdById",        source = "createdBy.id")
-    @Mapping(target = "createdByUserName",  source = "createdBy.userName")
+    @Mapping(target = "createdByUserName",  source = "createdBy.username")
     @Mapping(target = "modifiedById",       source = "modifiedBy.id")
-    @Mapping(target = "modifiedByUserName", source = "modifiedBy.userName")
+    @Mapping(target = "modifiedByUserName", source = "modifiedBy.username")
     PayrollPeriodResponseDTO toResponseDTO(PayrollPeriod entity);
 
     List<PayrollPeriodResponseDTO> toResponseDTOList(List<PayrollPeriod> entities);

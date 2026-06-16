@@ -15,6 +15,7 @@ import java.math.BigDecimal;
 @Builder
 public class GradeRequestDTO {
     // code is auto-generated as GRD_<id> on create — not accepted from caller
+    // createdBy / modifiedBy resolved server-side from the JWT security context
 
     @NotBlank(message = "Name is required")
     @Size(max = 150, message = "Name must not exceed 150 characters")
@@ -24,12 +25,9 @@ public class GradeRequestDTO {
     @DecimalMin(value = "0.00", message = "Amount must be zero or greater")
     private BigDecimal amount;
 
+    @Size(max = 255, message = "Description must not exceed 255 characters")
+    private String description;
+
     @Builder.Default
     private Boolean isActive = true;
-
-    @NotNull(message = "Created by is required")
-    private Long createdBy;
-
-    @NotNull(message = "Modified by is required")
-    private Long modifiedBy;
 }

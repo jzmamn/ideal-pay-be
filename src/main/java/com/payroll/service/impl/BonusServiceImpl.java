@@ -5,7 +5,6 @@ import com.payroll.dto.response.BonusResponseDTO;
 import com.payroll.dto.response.FormulaEvaluateResponseDTO;
 import com.payroll.entity.Bonus;
 import com.payroll.enums.BonusCalculationMethod;
-import com.payroll.enums.BonusCalculationMethod;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.BonusMapper;
 import com.payroll.repository.BonusRepository;
@@ -101,9 +100,7 @@ public class BonusServiceImpl implements BonusService {
         ctx.putIfAbsent("workingDays",  26);
         ctx.putIfAbsent("WORKING_DAYS", 26);
 
-        if (Boolean.TRUE.equals(bonus.getFormulaEnabled())
-                && bonus.getFormula() != null
-                && !bonus.getFormula().isBlank()) {
+        if (bonus.getFormula() != null && !bonus.getFormula().isBlank()) {
             String expression = bonus.getFormula();
             try {
                 BigDecimal result = formulaEngineService.evaluate(expression, ctx);
@@ -123,7 +120,7 @@ public class BonusServiceImpl implements BonusService {
             }
         }
 
-        log.debug("Bonus [{}] formula not enabled — no fixed amount configured", bonus.getCode());
+        log.debug("Bonus [{}] has no formula configured", bonus.getCode());
         return FormulaEvaluateResponseDTO.builder()
                 .expression("no formula")
                 .result(null)
@@ -132,19 +129,14 @@ public class BonusServiceImpl implements BonusService {
     }
 
     /**
-     * Validates the MVEL formula when formulaEnabled is true.
-     * Throws {@link IllegalArgumentException} (→ HTTP 400) if:
-     * <ul>
-     *   <li>formulaEnabled is true but formula is blank/null</li>
-     *   <li>formulaEnabled is true and the expression has a syntax error</li>
-     * </ul>
-     * When formulaEnabled is false or null, the formula field is ignored.
+     * Validates the MVEL formula. Bonus calculation is formula-only, so a
+     * formula is always required.
+     * Throws {@link IllegalArgumentException} (→ HTTP 400) if the formula is
+     * blank/null or has a syntax error.
      */
-    private void validateFormula(Boolean formulaEnabled, String formula) {
-        if (!Boolean.TRUE.equals(formulaEnabled)) return;
+    private void validateFormula(String formula) {
         if (formula == null || formula.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Formula expression is required when formulaEnabled is true");
+            throw new IllegalArgumentException("Formula expression is required");
         }
         String error = formulaEngineService.validateExpression(formula);
         if (error != null) {
@@ -153,10 +145,8 @@ public class BonusServiceImpl implements BonusService {
     }
 
     private void normaliseAndValidateCalculation(BonusRequestDTO requestDTO) {
-        boolean formulaBased = requestDTO.getCalculationMethod() == BonusCalculationMethod.FORMULA_BASED;
-        requestDTO.setFormulaEnabled(formulaBased);
-        validateFormula(formulaBased, requestDTO.getFormula());
-
+        requestDTO.setCalculationMethod(BonusCalculationMethod.FORMULA_BASED);
+        validateFormula(requestDTO.getFormula());
     }
 
     private Map<String, Object> sanitise(Map<String, Object> ctx) {

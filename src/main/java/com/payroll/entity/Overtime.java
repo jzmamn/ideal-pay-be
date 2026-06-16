@@ -38,16 +38,11 @@ public class Overtime {
 
     /**
      * Optional MVEL formula for this overtime type.
-     * When set and formulaEnabled is true, the formula result is used as the computed amount.
+     * When set (non-blank), the formula result is used as the computed amount.
      * Available variables: basicSalary, workingDays, nopayDays, otHours, otRate, + custom vars.
      */
     @Column(name = "formula", nullable = true, length = 500)
     private String formula;
-
-    @Builder.Default
-    @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "formula_enabled", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
-    private Boolean formulaEnabled = false;
 
     @Builder.Default
     @Convert(converter = BooleanToYNConverter.class)

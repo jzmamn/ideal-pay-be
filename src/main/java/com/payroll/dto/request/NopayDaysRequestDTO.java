@@ -29,12 +29,9 @@ public class NopayDaysRequestDTO {
 
     private Boolean isActive = true;
 
-    /** Optional MVEL formula expression (e.g. "basicSalary / workingDays * days"). */
+    /** Optional MVEL formula expression (e.g. "basicSalary / workingDays * days"). Used at payroll run time when non-blank. */
     @Size(max = 500, message = "Formula must not exceed 500 characters")
     private String formula;
-
-    /** When true, the formula is used at payroll run time instead of the default calculation. */
-    private Boolean formulaEnabled = false;
 
     @NotNull(message = "Created by is required")
     private Long createdBy;

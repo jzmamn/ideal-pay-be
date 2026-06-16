@@ -1,13 +1,12 @@
 package com.payroll.service.impl;
 
+import com.payroll.config.SecurityContextHelper;
 import com.payroll.dto.request.JobCategoryRequestDTO;
 import com.payroll.dto.response.JobCategoryResponseDTO;
 import com.payroll.entity.JobCategory;
-import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.JobCategoryMapper;
 import com.payroll.repository.JobCategoryRepository;
-import com.payroll.repository.UsrRepository;
 import com.payroll.service.JobCategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -22,15 +21,14 @@ import java.util.List;
 public class JobCategoryServiceImpl implements JobCategoryService {
 
     private final JobCategoryRepository jobCategoryRepository;
-    private final UsrRepository usrRepository;
     private final JobCategoryMapper jobCategoryMapper;
+    private final SecurityContextHelper securityContextHelper;
 
     @Override
     @Transactional(readOnly = true)
     public List<JobCategoryResponseDTO> getAllJobCategories(boolean showDefaultRow, String isActive) {
         if (!isActive.equalsIgnoreCase("true") && !isActive.equalsIgnoreCase("false") && !isActive.equalsIgnoreCase("all")) {
-            throw new IllegalArgumentException(
-                    "Invalid value for isActive. Accepted values: true, false, all");
+            throw new IllegalArgumentException("Invalid value for isActive. Accepted values: true, false, all");
         }
         Sort sort = Sort.by("id").ascending();
         List<JobCategory> records = "all".equals(isActive)
@@ -53,9 +51,9 @@ public class JobCategoryServiceImpl implements JobCategoryService {
     @Override
     public JobCategoryResponseDTO createJobCategory(JobCategoryRequestDTO requestDTO) {
         JobCategory entity = jobCategoryMapper.toEntity(requestDTO);
-        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
-        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        // Auto-generate code as JBC_<id>
+        var currentUser = securityContextHelper.getCurrentUser();
+        entity.setCreatedBy(currentUser);
+        entity.setModifiedBy(currentUser);
         JobCategory saved = jobCategoryRepository.save(entity);
         saved.setCode("JBC_" + saved.getId());
         return jobCategoryMapper.toResponseDTO(jobCategoryRepository.save(saved));
@@ -66,9 +64,7 @@ public class JobCategoryServiceImpl implements JobCategoryService {
         JobCategory existing = jobCategoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("JobCategory", "id", id));
         jobCategoryMapper.updateEntityFromDTO(requestDTO, existing);
-        if (requestDTO.getModifiedBy() != null) {
-            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        }
+        existing.setModifiedBy(securityContextHelper.getCurrentUser());
         return jobCategoryMapper.toResponseDTO(jobCategoryRepository.save(existing));
     }
 

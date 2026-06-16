@@ -1,5 +1,6 @@
 package com.payroll.service.impl;
 
+import com.payroll.config.SecurityContextHelper;
 import com.payroll.dto.request.EmployeeRequestDTO;
 import com.payroll.dto.response.EmployeeResponseDTO;
 import com.payroll.entity.Employee;
@@ -34,7 +35,7 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final CountryRepository countryRepository;
     private final BankRepository bankRepository;
     private final BankBranchRepository bankBranchRepository;
-    private final UsrRepository usrRepository;
+    private final SecurityContextHelper securityContextHelper;
     private final LicenseService licenseService;
 
     @Override
@@ -106,8 +107,9 @@ public class EmployeeServiceImpl implements EmployeeService {
         entity.setGrade(gradeRepository.getReferenceById(dto.getGradeId()));
         entity.setStatus(statusRepository.getReferenceById(dto.getStatusId()));
         entity.setCountry(countryRepository.getReferenceById(dto.getCountryId()));
-        entity.setCreatedBy(usrRepository.getReferenceById(dto.getCreatedBy()));
-        entity.setModifiedBy(usrRepository.getReferenceById(dto.getModifiedBy()));
+        var currentUser = securityContextHelper.getCurrentUser();
+        entity.setCreatedBy(currentUser);
+        entity.setModifiedBy(currentUser);
         if (dto.getBankId() != null)
             entity.setBank(bankRepository.getReferenceById(dto.getBankId()));
         if (dto.getBankBranchId() != null)
@@ -136,8 +138,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // bank is nullable — explicitly clear when not provided
         entity.setBank(dto.getBankId() != null ? bankRepository.getReferenceById(dto.getBankId()) : null);
         entity.setBankBranch(dto.getBankBranchId() != null ? bankBranchRepository.getReferenceById(dto.getBankBranchId()) : null);
-        if (dto.getModifiedBy() != null)
-            entity.setModifiedBy(usrRepository.getReferenceById(dto.getModifiedBy()));
+        entity.setModifiedBy(securityContextHelper.getCurrentUser());
     }
 }
 

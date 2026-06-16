@@ -22,6 +22,14 @@ public interface EmployeeFixedDeductionRepository extends JpaRepository<Employee
     Optional<EmployeeFixedDeduction> findByEmployee_IdAndFixedDeduction_IdAndPayrollMonth(
             Long employeeId, Long fixedDeductionId, String payrollMonth);
 
+    /**
+     * True when the employee has been assigned this fixed deduction for at least one
+     * payroll month (i.e. the deduction was explicitly selected via the Employee
+     * Salary tab at some point). Used to gate automatic carry-forward during batch
+     * component load — deductions the employee never selected are never auto-created.
+     */
+    boolean existsByEmployee_IdAndFixedDeduction_Id(Long employeeId, Long fixedDeductionId);
+
     // ── Import / export support ──────────────────────────────────────────
 
     long countByImportLogIdAndIsProcessedTrue(Long importLogId);

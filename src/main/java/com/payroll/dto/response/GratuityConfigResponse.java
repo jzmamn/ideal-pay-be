@@ -12,7 +12,6 @@ public class GratuityConfigResponse {
     private String  name;
     private String  description;
     private String  formula;
-    private Boolean formulaEnabled;
     private Boolean isActive;
 
     private Long          createdById;

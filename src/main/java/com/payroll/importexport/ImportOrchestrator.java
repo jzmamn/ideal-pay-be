@@ -244,7 +244,7 @@ public class ImportOrchestrator {
                 .errorRows(logEntry.getErrorRows())
                 .status(logEntry.getStatus().name())
                 .errorDetail(detail)
-                .createdBy(logEntry.getCreatedBy().getUserName())
+                .createdBy(logEntry.getCreatedBy().getUsername())
                 .createdAt(logEntry.getCreatedAt())
                 .build();
     }

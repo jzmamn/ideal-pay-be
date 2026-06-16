@@ -64,12 +64,11 @@ public class GratuityConfigServiceImpl implements GratuityConfigService {
 
     @Override
     public GratuityConfigResponse create(GratuityConfigRequest request) {
-        validateFormula(request.getFormulaEnabled(), request.getFormula());
+        validateFormula(request.getFormula());
         GratuityConfig entity = GratuityConfig.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .formula(request.getFormula())
-                .formulaEnabled(Boolean.TRUE.equals(request.getFormulaEnabled()))
                 .isActive(Boolean.TRUE.equals(request.getIsActive()))
                 .createdBy(usrRepo.getReferenceById(request.getCreatedBy()))
                 .modifiedBy(usrRepo.getReferenceById(request.getModifiedBy()))
@@ -82,7 +81,7 @@ public class GratuityConfigServiceImpl implements GratuityConfigService {
     @Override
     public GratuityConfigResponse update(Long id, GratuityConfigRequest request) {
         GratuityConfig existing = findOrThrow(id);
-        validateFormula(request.getFormulaEnabled(), request.getFormula());
+        validateFormula(request.getFormula());
         mapper.updateFromRequest(request, existing);
         existing.setModifiedBy(usrRepo.getReferenceById(request.getModifiedBy()));
         return mapper.toResponse(repo.save(existing));
@@ -102,7 +101,7 @@ public class GratuityConfigServiceImpl implements GratuityConfigService {
         BigDecimal basicSalary    = toBD(context.get("basicSalary"));
         BigDecimal yearsOfService = toBD(context.get("yearsOfService"));
 
-        if (Boolean.TRUE.equals(config.getFormulaEnabled()) && config.getFormula() != null && !config.getFormula().isBlank()) {
+        if (config.getFormula() != null && !config.getFormula().isBlank()) {
             try {
                 BigDecimal result = formulaEngine.evaluate(config.getFormula(), context);
                 return FormulaEvaluateResponseDTO.builder()
@@ -140,10 +139,8 @@ public class GratuityConfigServiceImpl implements GratuityConfigService {
                 .orElseThrow(() -> new ResourceNotFoundException("GratuityConfig", "id", id));
     }
 
-    private void validateFormula(Boolean formulaEnabled, String formula) {
-        if (!Boolean.TRUE.equals(formulaEnabled)) return;
-        if (formula == null || formula.isBlank())
-            throw new IllegalArgumentException("Formula expression is required when formulaEnabled is true.");
+    private void validateFormula(String formula) {
+        if (formula == null || formula.isBlank()) return;
         String error = formulaEngine.validateExpression(formula);
         if (error != null) throw new IllegalArgumentException("Invalid formula: " + error);
     }

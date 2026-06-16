@@ -35,19 +35,16 @@ public class FixedAllowanceRequestDTO {
     private Boolean liableNoPay;
 
     /**
-     * Static fixed amount applied to all employees when {@code formulaEnabled = false}.
-     * Mutually exclusive with {@code formula} / {@code formulaEnabled}.
+     * Static fixed amount applied to all employees when no formula is configured.
+     * Mutually exclusive with {@code formula}.
      * Null means no company-level default (per-employee manual entry via batch screen).
      */
     @DecimalMin(value = "0.00", message = "Amount must be zero or greater")
     private BigDecimal amount;
 
-    /** Optional MVEL formula expression (e.g. "basicSalary * 0.1"). */
+    /** Optional MVEL formula expression (e.g. "basicSalary * 0.1"). When present, it is evaluated at load time instead of using the static amount. */
     @Size(max = 500, message = "Formula must not exceed 500 characters")
     private String formula;
-
-    /** When true, the formula is evaluated at load time instead of using the static amount. Defaults to false. */
-    private Boolean formulaEnabled = false;
 
     @NotNull(message = "createdBy is required")
     private Long createdBy;

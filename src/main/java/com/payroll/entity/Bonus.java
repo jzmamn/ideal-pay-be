@@ -35,7 +35,7 @@ public class Bonus {
     @Enumerated(EnumType.STRING)
     @Column(name = "calculation_method", nullable = false, length = 20)
     @Builder.Default
-    private BonusCalculationMethod calculationMethod = BonusCalculationMethod.FIXED_AMOUNT;
+    private BonusCalculationMethod calculationMethod = BonusCalculationMethod.FORMULA_BASED;
 
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "is_active", nullable = false, length = 1)
@@ -60,12 +60,6 @@ public class Bonus {
     /** Optional MVEL formula expression for dynamic calculation (e.g. "basicSalary * 0.1"). */
     @Column(name = "formula", nullable = true, length = 500)
     private String formula;
-
-    /** When true, the formula is evaluated at payroll run time instead of using the fixed amount. */
-    @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "formula_enabled", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
-    @Builder.Default
-    private Boolean formulaEnabled = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)

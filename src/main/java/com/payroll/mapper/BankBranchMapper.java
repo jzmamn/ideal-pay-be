@@ -23,10 +23,10 @@ public interface BankBranchMapper {
     @Mapping(target = "bankName",           source = "bank.name")
     @Mapping(target = "createdById",        source = "createdBy.id")
     @Mapping(target = "createdByCode",      source = "createdBy.code")
-    @Mapping(target = "createdByUserName",  source = "createdBy.userName")
+    @Mapping(target = "createdByUserName",  source = "createdBy.username")
     @Mapping(target = "modifiedById",       source = "modifiedBy.id")
     @Mapping(target = "modifiedByCode",     source = "modifiedBy.code")
-    @Mapping(target = "modifiedByUserName", source = "modifiedBy.userName")
+    @Mapping(target = "modifiedByUserName", source = "modifiedBy.username")
     BankBranchResponseDTO toResponseDTO(BankBranch entity);
 
     List<BankBranchResponseDTO> toResponseDTOList(List<BankBranch> entities);

@@ -19,14 +19,15 @@ public interface UsrMapper {
     @Mapping(target = "modifiedDate", ignore = true)
     Usr toEntity(UsrRequestDTO requestDTO);
 
+    @Mapping(target = "userName",          source = "username")
     @Mapping(target = "roleId",           source = "role.id")
     @Mapping(target = "roleName",         source = "role.name")
     @Mapping(target = "createdById",      source = "createdBy.id")
     @Mapping(target = "createdByCode",    source = "createdBy.code")
-    @Mapping(target = "createdByUserName",source = "createdBy.userName")
+    @Mapping(target = "createdByUserName",source = "createdBy.username")
     @Mapping(target = "modifiedById",     source = "modifiedBy.id")
     @Mapping(target = "modifiedByCode",   source = "modifiedBy.code")
-    @Mapping(target = "modifiedByUserName",source = "modifiedBy.userName")
+    @Mapping(target = "modifiedByUserName",source = "modifiedBy.username")
     UsrResponseDTO toResponseDTO(Usr entity);
 
     List<UsrResponseDTO> toResponseDTOList(List<Usr> entities);

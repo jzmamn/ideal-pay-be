@@ -24,13 +24,12 @@ public interface EmployeeBonusMapper {
     @Mapping(target = "bonusId",            source = "bonus.id")
     @Mapping(target = "bonusCode",          source = "bonus.code")
     @Mapping(target = "bonusName",          source = "bonus.name")
-    @Mapping(target = "formulaEnabled",     source = "bonus.formulaEnabled")
     @Mapping(target = "createdById",        source = "createdBy.id")
     @Mapping(target = "createdByCode",      source = "createdBy.code")
-    @Mapping(target = "createdByUserName",  source = "createdBy.userName")
+    @Mapping(target = "createdByUserName",  source = "createdBy.username")
     @Mapping(target = "modifiedById",       source = "modifiedBy.id")
     @Mapping(target = "modifiedByCode",     source = "modifiedBy.code")
-    @Mapping(target = "modifiedByUserName", source = "modifiedBy.userName")
+    @Mapping(target = "modifiedByUserName", source = "modifiedBy.username")
     EmployeeBonusResponseDTO toResponseDTO(EmployeeBonus entity);
 
     List<EmployeeBonusResponseDTO> toResponseDTOList(List<EmployeeBonus> entities);

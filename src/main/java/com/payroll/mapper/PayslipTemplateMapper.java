@@ -18,9 +18,9 @@ public interface PayslipTemplateMapper {
     PayslipTemplate toEntity(PayslipTemplateRequestDTO requestDTO);
 
     @Mapping(target = "createdById", source = "createdBy.id")
-    @Mapping(target = "createdByUserName", source = "createdBy.userName")
+    @Mapping(target = "createdByUserName", source = "createdBy.username")
     @Mapping(target = "modifiedById", source = "modifiedBy.id")
-    @Mapping(target = "modifiedByUserName", source = "modifiedBy.userName")
+    @Mapping(target = "modifiedByUserName", source = "modifiedBy.username")
     PayslipTemplateResponseDTO toResponseDTO(PayslipTemplate entity);
 
     List<PayslipTemplateResponseDTO> toResponseDTOList(List<PayslipTemplate> entities);

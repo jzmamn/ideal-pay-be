@@ -337,10 +337,10 @@ public class PayrollRunServiceImpl implements PayrollRunService {
                         .hours(d.getHours())
                         .days(d.getDays())
                         .createdById(d.getCreatedBy() != null ? d.getCreatedBy().getId() : null)
-                        .createdByUserName(d.getCreatedBy() != null ? d.getCreatedBy().getUserName() : null)
+                        .createdByUserName(d.getCreatedBy() != null ? d.getCreatedBy().getUsername() : null)
                         .createdDate(d.getCreatedDate())
                         .modifiedById(d.getModifiedBy() != null ? d.getModifiedBy().getId() : null)
-                        .modifiedByUserName(d.getModifiedBy() != null ? d.getModifiedBy().getUserName() : null)
+                        .modifiedByUserName(d.getModifiedBy() != null ? d.getModifiedBy().getUsername() : null)
                         .modifiedDate(d.getModifiedDate())
                         .build())
                 .collect(Collectors.toList());
@@ -368,12 +368,12 @@ public class PayrollRunServiceImpl implements PayrollRunService {
                 .workingDays(run.getWorkingDays())
                 .processedDate(run.getProcessedDate())
                 .processedById(run.getProcessedBy() != null ? run.getProcessedBy().getId() : null)
-                .processedByUserName(run.getProcessedBy() != null ? run.getProcessedBy().getUserName() : null)
+                .processedByUserName(run.getProcessedBy() != null ? run.getProcessedBy().getUsername() : null)
                 .createdById(run.getCreatedBy() != null ? run.getCreatedBy().getId() : null)
-                .createdByUserName(run.getCreatedBy() != null ? run.getCreatedBy().getUserName() : null)
+                .createdByUserName(run.getCreatedBy() != null ? run.getCreatedBy().getUsername() : null)
                 .createdDate(run.getCreatedDate())
                 .modifiedById(run.getModifiedBy() != null ? run.getModifiedBy().getId() : null)
-                .modifiedByUserName(run.getModifiedBy() != null ? run.getModifiedBy().getUserName() : null)
+                .modifiedByUserName(run.getModifiedBy() != null ? run.getModifiedBy().getUsername() : null)
                 .modifiedDate(run.getModifiedDate())
                 .details(detailDTOs)
                 .build();
@@ -410,7 +410,7 @@ public class PayrollRunServiceImpl implements PayrollRunService {
                 .workingDays(run.getWorkingDays())
                 .salaryAdvanceAmount(sumSaDetails(run))
                 .processedDate(run.getProcessedDate())
-                .processedByUserName(run.getProcessedBy() != null ? run.getProcessedBy().getUserName() : null)
+                .processedByUserName(run.getProcessedBy() != null ? run.getProcessedBy().getUsername() : null)
                 .build();
     }
 

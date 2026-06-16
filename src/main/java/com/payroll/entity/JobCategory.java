@@ -29,7 +29,7 @@ public class JobCategory {
     @Column(name = "name", nullable = false, length = 150)
     private String name;
 
-    @Column(name = "description", nullable = false, length = 255)
+    @Column(name = "description", nullable = true, length = 255)
     private String description;
 
     @Convert(converter = BooleanToYNConverter.class)

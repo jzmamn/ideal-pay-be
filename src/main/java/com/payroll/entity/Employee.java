@@ -115,6 +115,10 @@ public class Employee {
     @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Grade grade;
 
+    @Convert(converter = BooleanToYNConverter.class)
+    @Column(name = "grade_is_active", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
+    private Boolean gradeIsActive;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_id", nullable = false)
     @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})

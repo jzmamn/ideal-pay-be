@@ -1,12 +1,12 @@
 package com.payroll.service.impl;
 
+import com.payroll.config.SecurityContextHelper;
 import com.payroll.dto.request.CountryRequestDTO;
 import com.payroll.dto.response.CountryResponseDTO;
 import com.payroll.entity.Country;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.CountryMapper;
 import com.payroll.repository.CountryRepository;
-import com.payroll.repository.UsrRepository;
 import com.payroll.service.CountryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -22,7 +22,7 @@ public class CountryServiceImpl implements CountryService {
 
     private final CountryRepository countryRepository;
     private final CountryMapper countryMapper;
-    private final UsrRepository usrRepository;
+    private final SecurityContextHelper securityContextHelper;
 
     @Override
     @Transactional(readOnly = true)
@@ -56,8 +56,9 @@ public class CountryServiceImpl implements CountryService {
                     "A country with ISO2 code '" + requestDTO.getIso2() + "' already exists.");
         }
         Country entity = countryMapper.toEntity(requestDTO);
-        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
-        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        var currentUser = securityContextHelper.getCurrentUser();
+        entity.setCreatedBy(currentUser);
+        entity.setModifiedBy(currentUser);
         // Auto-generate code as CNT_<id>
         Country saved = countryRepository.save(entity);
         saved.setCode("CNT_" + saved.getId());
@@ -69,9 +70,7 @@ public class CountryServiceImpl implements CountryService {
         Country existing = countryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Country", "id", id));
         countryMapper.updateEntityFromDTO(requestDTO, existing);
-        if (requestDTO.getModifiedBy() != null) {
-            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        }
+        existing.setModifiedBy(securityContextHelper.getCurrentUser());
         return countryMapper.toResponseDTO(countryRepository.save(existing));
     }
 

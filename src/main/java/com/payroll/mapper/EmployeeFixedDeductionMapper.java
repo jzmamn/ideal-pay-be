@@ -29,10 +29,10 @@ public interface EmployeeFixedDeductionMapper {
     @Mapping(target = "formulaCalculated",  source = "formulaCalculated")
     @Mapping(target = "createdById",        source = "createdBy.id")
     @Mapping(target = "createdByCode",      source = "createdBy.code")
-    @Mapping(target = "createdByUserName",  source = "createdBy.userName")
+    @Mapping(target = "createdByUserName",  source = "createdBy.username")
     @Mapping(target = "modifiedById",       source = "modifiedBy.id")
     @Mapping(target = "modifiedByCode",     source = "modifiedBy.code")
-    @Mapping(target = "modifiedByUserName", source = "modifiedBy.userName")
+    @Mapping(target = "modifiedByUserName", source = "modifiedBy.username")
     EmployeeFixedDeductionResponseDTO toResponseDTO(EmployeeFixedDeduction entity);
 
     List<EmployeeFixedDeductionResponseDTO> toResponseDTOList(List<EmployeeFixedDeduction> entities);

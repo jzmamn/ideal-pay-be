@@ -55,13 +55,8 @@ public class FixedAllowance {
     @Column(name = "formula", nullable = true, length = 500)
     private String formula;
 
-    /** When true, the formula is evaluated at payroll run time instead of using the fixed amount. */
-    @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "formula_enabled", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
-    private Boolean formulaEnabled = false;
-
     /**
-     * Static fixed amount used when {@code formulaEnabled = false}.
+     * Static fixed amount used when no formula is configured.
      * Null means no company-level default — the amount must be entered per-employee in the batch screen.
      */
     @Column(name = "amount", nullable = true, precision = 15, scale = 2)

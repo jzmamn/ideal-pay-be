@@ -22,7 +22,7 @@ public interface NopayService {
     /**
      * Evaluates the MVEL formula for this nopay type.
      * Falls back to the default formula {@code basicSalary / workingDays * nopayDays}
-     * when formulaEnabled is false or formula is blank.
+     * when the formula is blank.
      */
     FormulaEvaluateResponseDTO calculateAmount(Long id, Map<String, Object> context);
 }

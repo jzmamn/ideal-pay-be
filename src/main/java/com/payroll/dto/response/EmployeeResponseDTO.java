@@ -65,6 +65,7 @@ public class EmployeeResponseDTO {
     private Long gradeId;
     private String gradeCode;
     private String gradeName;
+    private Boolean gradeIsActive;
 
     private Long statusId;
     private String statusCode;

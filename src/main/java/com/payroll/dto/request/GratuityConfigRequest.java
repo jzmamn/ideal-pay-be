@@ -16,7 +16,6 @@ public class GratuityConfigRequest {
     private String description;
 
     private String  formula;
-    private Boolean formulaEnabled = false;
     private Boolean isActive       = true;
 
     @NotNull

@@ -20,7 +20,7 @@ public interface FixedAllowanceService {
 
     /**
      * Evaluates the linked MVEL formula for this fixed allowance type.
-     * Falls back to the configured fixed {@code amount} if formulaEnabled is false or formula is blank.
+     * Falls back to the configured fixed {@code amount} if the formula is blank.
      */
     FormulaEvaluateResponseDTO calculateAmount(Long id, Map<String, Object> context);
 }

@@ -18,7 +18,6 @@ public class LateDeductionConfigResponseDTO {
     private Integer workingDays;
     private Integer workingHoursPerDay;
     private String  formula;
-    private Boolean formulaEnabled;
     private Boolean isActive;
 
     private Boolean liableForEpf;

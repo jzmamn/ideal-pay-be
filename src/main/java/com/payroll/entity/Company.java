@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.payroll.converter.BooleanToYNConverter;
 import com.payroll.entity.Usr;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -69,6 +71,7 @@ public class Company {
     @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Usr createdBy;
 
+    @CreationTimestamp
     @Column(name = "created_date", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdDate;
@@ -78,6 +81,7 @@ public class Company {
     @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Usr modifiedBy;
 
+    @UpdateTimestamp
     @Column(name = "modified_date", nullable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime modifiedDate;

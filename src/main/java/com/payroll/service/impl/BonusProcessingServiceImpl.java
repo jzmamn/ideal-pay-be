@@ -6,7 +6,6 @@ import com.payroll.dto.request.BonusProcessingCalculateRequestDTO;
 import com.payroll.dto.response.*;
 import com.payroll.entity.*;
 import com.payroll.enums.BonusStatus;
-import com.payroll.enums.BonusCalculationMethod;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.repository.*;
 import com.payroll.service.BonusProcessingService;
@@ -83,7 +82,7 @@ public class BonusProcessingServiceImpl implements BonusProcessingService {
 
         for (Employee emp : employees) {
             BigDecimal calculated = computeAmount(bonus, emp, req);
-            String     expression = Boolean.TRUE.equals(bonus.getFormulaEnabled()) ? bonus.getFormula() : "fixed";
+            String     expression = bonus.getFormula();
 
             EmployeeBonus entry = empBonusRepository
                     .findByEmployeeIdAndPayrollMonthAndBonusId(emp.getId(), req.getPayrollMonth(), bonus.getId())
@@ -353,9 +352,9 @@ public class BonusProcessingServiceImpl implements BonusProcessingService {
                 .status(b.getStatus().name())
                 .employeeCount(b.getEmployeeCount())
                 .totalAmount(b.getTotalAmount())
-                .approvedByUserName(b.getApprovedBy() != null ? b.getApprovedBy().getUserName() : null)
+                .approvedByUserName(b.getApprovedBy() != null ? b.getApprovedBy().getUsername() : null)
                 .approvedDate(b.getApprovedDate() != null ? b.getApprovedDate().toString() : null)
-                .createdByUserName(b.getCreatedBy() != null ? b.getCreatedBy().getUserName() : null)
+                .createdByUserName(b.getCreatedBy() != null ? b.getCreatedBy().getUsername() : null)
                 .createdDate(b.getCreatedDate() != null ? b.getCreatedDate().toString() : null)
                 .build()).collect(Collectors.toList());
     }
@@ -388,25 +387,17 @@ public class BonusProcessingServiceImpl implements BonusProcessingService {
 
     private BigDecimal computeAmount(Bonus bonus, Employee emp,
                                      BonusProcessingCalculateRequestDTO req) {
-        if (bonus.getCalculationMethod() == BonusCalculationMethod.FORMULA_BASED
-                && bonus.getFormula() != null
-                && !bonus.getFormula().isBlank()) {
-
-            Map<String, Object> ctx = buildFormulaContext(emp, req);
-            BigDecimal result = formulaEngineService.evaluate(bonus.getFormula(), ctx);
-            if (result.signum() < 0) {
-                throw new IllegalArgumentException("Bonus formula produced a negative amount for employee "
-                        + emp.getEmployeeNo());
-            }
-            return result.setScale(2, RoundingMode.HALF_UP);
+        if (bonus.getFormula() == null || bonus.getFormula().isBlank()) {
+            throw new IllegalStateException("No formula is configured for bonus '" + bonus.getName() + "'");
         }
 
-        // Fixed amount — use the value from the request
-        BigDecimal fixedAmount = req.getFixedAmount();
-        if (fixedAmount == null) {
-            throw new IllegalStateException("No fixed amount is configured for bonus '" + bonus.getName() + "'");
+        Map<String, Object> ctx = buildFormulaContext(emp, req);
+        BigDecimal result = formulaEngineService.evaluate(bonus.getFormula(), ctx);
+        if (result.signum() < 0) {
+            throw new IllegalArgumentException("Bonus formula produced a negative amount for employee "
+                    + emp.getEmployeeNo());
         }
-        return fixedAmount.setScale(2, RoundingMode.HALF_UP);
+        return result.setScale(2, RoundingMode.HALF_UP);
     }
 
     private Map<String, Object> buildFormulaContext(Employee emp,
@@ -483,19 +474,18 @@ public class BonusProcessingServiceImpl implements BonusProcessingService {
                 .bonusCode(bonus.getCode())
                 .bonusName(bonus.getName())
                 .calculationMethod(bonus.getCalculationMethod())
-                .formulaEnabled(bonus.getFormulaEnabled())
                 .formula(bonus.getFormula())
                 .createdById(b.getCreatedBy() != null ? b.getCreatedBy().getId() : null)
-                .createdByUserName(b.getCreatedBy() != null ? b.getCreatedBy().getUserName() : null)
+                .createdByUserName(b.getCreatedBy() != null ? b.getCreatedBy().getUsername() : null)
                 .createdDate(b.getCreatedDate())
                 .approvedById(b.getApprovedBy() != null ? b.getApprovedBy().getId() : null)
-                .approvedByUserName(b.getApprovedBy() != null ? b.getApprovedBy().getUserName() : null)
+                .approvedByUserName(b.getApprovedBy() != null ? b.getApprovedBy().getUsername() : null)
                 .approvedDate(b.getApprovedDate())
                 .processedById(b.getProcessedBy() != null ? b.getProcessedBy().getId() : null)
-                .processedByUserName(b.getProcessedBy() != null ? b.getProcessedBy().getUserName() : null)
+                .processedByUserName(b.getProcessedBy() != null ? b.getProcessedBy().getUsername() : null)
                 .processedDate(b.getProcessedDate())
                 .modifiedById(b.getModifiedBy() != null ? b.getModifiedBy().getId() : null)
-                .modifiedByUserName(b.getModifiedBy() != null ? b.getModifiedBy().getUserName() : null)
+                .modifiedByUserName(b.getModifiedBy() != null ? b.getModifiedBy().getUsername() : null)
                 .modifiedDate(b.getModifiedDate())
                 .build();
 
@@ -523,7 +513,7 @@ public class BonusProcessingServiceImpl implements BonusProcessingService {
                 .formulaResult(e.getFormulaResult())
                 .status(e.getStatus())
                 .approvedById(e.getApprovedBy() != null ? e.getApprovedBy().getId() : null)
-                .approvedByUserName(e.getApprovedBy() != null ? e.getApprovedBy().getUserName() : null)
+                .approvedByUserName(e.getApprovedBy() != null ? e.getApprovedBy().getUsername() : null)
                 .approvedDate(e.getApprovedDate())
                 .note(e.getNote())
                 .createdDate(e.getCreatedDate())

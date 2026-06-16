@@ -61,16 +61,17 @@ class BonusProcessingServiceImplTest {
     }
 
     @Test
-    void calculateUsesConfiguredFixedAmount() {
-        Bonus bonus = bonus(BonusCalculationMethod.FIXED_AMOUNT, new BigDecimal("25000.00"), null);
+    void calculateUsesConfiguredFormulaLiteral() {
+        // A "fixed" bonus is now expressed as a literal-value formula, e.g. "25000".
+        Bonus bonus = bonus("25000");
         Employee employee = employee();
         Usr user = Usr.builder().id(9L).userName("tester").build();
         BonusProcessingCalculateRequestDTO request = request();
-        request.setFixedAmount(new BigDecimal("1.00"));
 
         when(bonusRepository.findById(1L)).thenReturn(Optional.of(bonus));
         when(employeeRepository.findAllById(List.of(10L))).thenReturn(List.of(employee));
         when(usrRepository.getReferenceById(9L)).thenReturn(user);
+        when(formulaEngineService.evaluate("25000", any())).thenReturn(new BigDecimal("25000.00"));
         when(batchRepository.save(any(BonusProcessingBatch.class))).thenAnswer(invocation -> {
             BonusProcessingBatch batch = invocation.getArgument(0);
             batch.setId(100L);
@@ -90,7 +91,7 @@ class BonusProcessingServiceImplTest {
 
     @Test
     void calculateRejectsDuplicateActiveBatch() {
-        Bonus bonus = bonus(BonusCalculationMethod.FIXED_AMOUNT, BigDecimal.TEN, null);
+        Bonus bonus = bonus("10");
         when(bonusRepository.findById(1L)).thenReturn(Optional.of(bonus));
         when(batchRepository.existsByBonusIdAndPayrollMonthAndStatusIn(any(), any(), anyList()))
                 .thenReturn(true);
@@ -100,8 +101,20 @@ class BonusProcessingServiceImplTest {
     }
 
     @Test
+    void calculateRejectsBonusWithNoFormulaConfigured() {
+        Bonus bonus = bonus(null);
+        when(bonusRepository.findById(1L)).thenReturn(Optional.of(bonus));
+        when(employeeRepository.findAllById(List.of(10L))).thenReturn(List.of(employee()));
+        when(usrRepository.getReferenceById(9L)).thenReturn(Usr.builder().id(9L).build());
+        when(batchRepository.save(any(BonusProcessingBatch.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertThrows(IllegalStateException.class, () -> service.calculate(request()));
+        verify(employeeBonusRepository, never()).save(any());
+    }
+
+    @Test
     void calculateDoesNotSilentlyConvertFormulaFailureToZero() {
-        Bonus bonus = bonus(BonusCalculationMethod.FORMULA_BASED, BigDecimal.ZERO, "missingValue * 2");
+        Bonus bonus = bonus("missingValue * 2");
         when(bonusRepository.findById(1L)).thenReturn(Optional.of(bonus));
         when(employeeRepository.findAllById(List.of(10L))).thenReturn(List.of(employee()));
         when(usrRepository.getReferenceById(9L)).thenReturn(Usr.builder().id(9L).build());
@@ -113,15 +126,13 @@ class BonusProcessingServiceImplTest {
         verify(employeeBonusRepository, never()).save(any());
     }
 
-    private Bonus bonus(BonusCalculationMethod method, BigDecimal amount, String formula) {
+    private Bonus bonus(String formula) {
         return Bonus.builder()
                 .id(1L)
                 .code("BS_1")
                 .name("Annual Bonus")
                 .isActive(true)
-                .calculationMethod(method)
-                .fixedAmount(amount)
-                .formulaEnabled(method == BonusCalculationMethod.FORMULA_BASED)
+                .calculationMethod(BonusCalculationMethod.FORMULA_BASED)
                 .formula(formula)
                 .build();
     }

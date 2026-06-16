@@ -6,8 +6,13 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Table(name = "usr")
@@ -16,7 +21,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Usr {
+public class Usr implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,6 +47,9 @@ public class Usr {
     @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private UserRole role;
 
+    @Column(name = "company_id")
+    private Long companyId;
+
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "is_active", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
     private Boolean isActive;
@@ -65,4 +73,29 @@ public class Usr {
     @Column(name = "modified_date", nullable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime modifiedDate;
+
+    // ── UserDetails ──────────────────────────────────────────────────────────
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+    }
+
+    /** Spring Security username = our userName field. */
+    @Override
+    public String getUsername() {
+        return userName;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() { return true; }
+
+    @Override
+    public boolean isAccountNonLocked() { return true; }
+
+    @Override
+    public boolean isCredentialsNonExpired() { return true; }
+
+    @Override
+    public boolean isEnabled() { return Boolean.TRUE.equals(isActive); }
 }

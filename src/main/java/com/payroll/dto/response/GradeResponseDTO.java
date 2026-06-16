@@ -16,6 +16,7 @@ public class GradeResponseDTO {
     private String code;
     private String name;
     private BigDecimal amount;
+    private String description;
     private Boolean isActive;
     private Long createdById;
     private String createdByCode;

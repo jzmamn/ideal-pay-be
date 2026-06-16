@@ -33,6 +33,9 @@ public class Grade {
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
+    @Column(name = "description", nullable = true, length = 255)
+    private String description;
+
     @Convert(converter = BooleanToYNConverter.class)
     @Column(name = "is_active", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'Y'")
     private Boolean isActive;

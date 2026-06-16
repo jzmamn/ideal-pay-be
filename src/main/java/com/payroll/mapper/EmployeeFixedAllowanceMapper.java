@@ -27,14 +27,13 @@ public interface EmployeeFixedAllowanceMapper {
     @Mapping(target = "faId",              source = "fixedAllowance.id")
     @Mapping(target = "faCode",            source = "fixedAllowance.code")
     @Mapping(target = "faName",            source = "fixedAllowance.name")
-    @Mapping(target = "formulaEnabled",    source = "fixedAllowance.formulaEnabled")
     @Mapping(target = "formulaCalculated", source = "formulaCalculated")
     @Mapping(target = "createdById",       source = "createdBy.id")
     @Mapping(target = "createdByCode",     source = "createdBy.code")
-    @Mapping(target = "createdByUserName", source = "createdBy.userName")
+    @Mapping(target = "createdByUserName", source = "createdBy.username")
     @Mapping(target = "modifiedById",      source = "modifiedBy.id")
     @Mapping(target = "modifiedByCode",    source = "modifiedBy.code")
-    @Mapping(target = "modifiedByUserName",source = "modifiedBy.userName")
+    @Mapping(target = "modifiedByUserName",source = "modifiedBy.username")
     @Mapping(target = "importLogId",       source = "importLogId")
     EmployeeFixedAllowanceResponseDTO toResponseDTO(EmployeeFixedAllowance entity);
 

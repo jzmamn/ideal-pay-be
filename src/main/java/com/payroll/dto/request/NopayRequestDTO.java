@@ -33,8 +33,6 @@ public class NopayRequestDTO {
     @Size(max = 500, message = "Formula must not exceed 500 characters")
     private String formula;
 
-    private Boolean formulaEnabled;
-
     @NotNull(message = "createdBy is required")
     private Long createdBy;
 

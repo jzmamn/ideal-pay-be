@@ -19,7 +19,6 @@ public class OvertimeResponseDTO {
 
     /** MVEL formula expression for this overtime type, if set. */
     private String formula;
-    private Boolean formulaEnabled;
 
     /** Statutory liability flags. */
     private Boolean liableForEpf;

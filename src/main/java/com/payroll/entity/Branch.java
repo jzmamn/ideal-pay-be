@@ -5,6 +5,8 @@ import com.payroll.converter.BooleanToYNConverter;
 import com.payroll.entity.Usr;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -27,7 +29,7 @@ public class Branch {
     @Column(name = "name", nullable = false, length = 150)
     private String name;
 
-    @Column(name = "description", nullable = false, length = 255)
+    @Column(name = "description", nullable = true, length = 255)
     private String description;
 
     @Column(name = "location", nullable = false, length = 255)
@@ -42,6 +44,7 @@ public class Branch {
     @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Usr createdBy;
 
+    @CreationTimestamp
     @Column(name = "created_date", nullable = false, updatable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdDate;
@@ -51,6 +54,7 @@ public class Branch {
     @JsonIgnoreProperties({"role", "createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
     private Usr modifiedBy;
 
+    @UpdateTimestamp
     @Column(name = "modified_date", nullable = false,
             columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime modifiedDate;

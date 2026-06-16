@@ -44,16 +44,11 @@ public class LateDeductionConfig {
     /**
      * Optional MVEL formula expression.
      * Available context variables: basicSalary, workingDays, workingHoursPerDay, lateHours.
-     * Default behaviour (formulaEnabled = false):
+     * Default behaviour (when blank):
      *   basicSalary / (workingDays * workingHoursPerDay) * lateHours
      */
     @Column(name = "formula", nullable = true, length = 500)
     private String formula;
-
-    @Builder.Default
-    @Convert(converter = BooleanToYNConverter.class)
-    @Column(name = "formula_enabled", nullable = false, columnDefinition = "CHAR(1) DEFAULT 'N'")
-    private Boolean formulaEnabled = false;
 
     @Builder.Default
     @Convert(converter = BooleanToYNConverter.class)

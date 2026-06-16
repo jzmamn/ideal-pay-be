@@ -54,6 +54,9 @@ public class CompanyRequestDTO {
     @Size(max = 50, message = "ETF number must not exceed 50 characters")
     private String etfNo;
 
+    @NotNull(message = "isActive is required")
+    private Boolean isActive;
+
     @NotNull(message = "createdBy is required")
     private Long createdBy;
 

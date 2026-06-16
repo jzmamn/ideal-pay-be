@@ -1,13 +1,12 @@
 package com.payroll.service.impl;
 
+import com.payroll.config.SecurityContextHelper;
 import com.payroll.dto.request.DesignationRequestDTO;
 import com.payroll.dto.response.DesignationResponseDTO;
 import com.payroll.entity.Designation;
-import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.DesignationMapper;
 import com.payroll.repository.DesignationRepository;
-import com.payroll.repository.UsrRepository;
 import com.payroll.service.DesignationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -22,15 +21,14 @@ import java.util.List;
 public class DesignationServiceImpl implements DesignationService {
 
     private final DesignationRepository designationRepository;
-    private final UsrRepository usrRepository;
     private final DesignationMapper designationMapper;
+    private final SecurityContextHelper securityContextHelper;
 
     @Override
     @Transactional(readOnly = true)
     public List<DesignationResponseDTO> getAllDesignations(boolean showDefaultRow, String isActive) {
         if (!isActive.equalsIgnoreCase("true") && !isActive.equalsIgnoreCase("false") && !isActive.equalsIgnoreCase("all")) {
-            throw new IllegalArgumentException(
-                    "Invalid value for isActive. Accepted values: true, false, all");
+            throw new IllegalArgumentException("Invalid value for isActive. Accepted values: true, false, all");
         }
         Sort sort = Sort.by("id").ascending();
         List<Designation> records = "all".equals(isActive)
@@ -53,9 +51,9 @@ public class DesignationServiceImpl implements DesignationService {
     @Override
     public DesignationResponseDTO createDesignation(DesignationRequestDTO requestDTO) {
         Designation entity = designationMapper.toEntity(requestDTO);
-        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
-        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        // Auto-generate code as DSG_<id>
+        var currentUser = securityContextHelper.getCurrentUser();
+        entity.setCreatedBy(currentUser);
+        entity.setModifiedBy(currentUser);
         Designation saved = designationRepository.save(entity);
         saved.setCode("DSG_" + saved.getId());
         return designationMapper.toResponseDTO(designationRepository.save(saved));
@@ -66,9 +64,7 @@ public class DesignationServiceImpl implements DesignationService {
         Designation existing = designationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Designation", "id", id));
         designationMapper.updateEntityFromDTO(requestDTO, existing);
-        if (requestDTO.getModifiedBy() != null) {
-            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        }
+        existing.setModifiedBy(securityContextHelper.getCurrentUser());
         return designationMapper.toResponseDTO(designationRepository.save(existing));
     }
 

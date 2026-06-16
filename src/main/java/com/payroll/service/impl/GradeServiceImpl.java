@@ -1,13 +1,12 @@
 package com.payroll.service.impl;
 
+import com.payroll.config.SecurityContextHelper;
 import com.payroll.dto.request.GradeRequestDTO;
 import com.payroll.dto.response.GradeResponseDTO;
 import com.payroll.entity.Grade;
-import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.GradeMapper;
 import com.payroll.repository.GradeRepository;
-import com.payroll.repository.UsrRepository;
 import com.payroll.service.GradeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -22,15 +21,14 @@ import java.util.List;
 public class GradeServiceImpl implements GradeService {
 
     private final GradeRepository gradeRepository;
-    private final UsrRepository usrRepository;
     private final GradeMapper gradeMapper;
+    private final SecurityContextHelper securityContextHelper;
 
     @Override
     @Transactional(readOnly = true)
     public List<GradeResponseDTO> getAllGrades(boolean showDefaultRow, String isActive) {
         if (!isActive.equalsIgnoreCase("true") && !isActive.equalsIgnoreCase("false") && !isActive.equalsIgnoreCase("all")) {
-            throw new IllegalArgumentException(
-                    "Invalid value for isActive. Accepted values: true, false, all");
+            throw new IllegalArgumentException("Invalid value for isActive. Accepted values: true, false, all");
         }
         Sort sort = Sort.by("id").ascending();
         List<Grade> records = "all".equals(isActive)
@@ -53,9 +51,9 @@ public class GradeServiceImpl implements GradeService {
     @Override
     public GradeResponseDTO createGrade(GradeRequestDTO requestDTO) {
         Grade entity = gradeMapper.toEntity(requestDTO);
-        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
-        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        // Auto-generate code as GRD_<id>
+        var currentUser = securityContextHelper.getCurrentUser();
+        entity.setCreatedBy(currentUser);
+        entity.setModifiedBy(currentUser);
         Grade saved = gradeRepository.save(entity);
         saved.setCode("GRD_" + saved.getId());
         return gradeMapper.toResponseDTO(gradeRepository.save(saved));
@@ -66,9 +64,7 @@ public class GradeServiceImpl implements GradeService {
         Grade existing = gradeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Grade", "id", id));
         gradeMapper.updateEntityFromDTO(requestDTO, existing);
-        if (requestDTO.getModifiedBy() != null) {
-            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        }
+        existing.setModifiedBy(securityContextHelper.getCurrentUser());
         return gradeMapper.toResponseDTO(gradeRepository.save(existing));
     }
 

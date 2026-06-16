@@ -79,6 +79,9 @@ public class EmployeeRequestDTO {
     @NotNull(message = "Grade is required")
     private Long gradeId;
 
+    @Builder.Default
+    private Boolean gradeIsActive = false;
+
     @NotNull(message = "Status is required")
     private Long statusId;
 
@@ -118,10 +121,5 @@ public class EmployeeRequestDTO {
 
     @Size(max = 20, message = "Contact person number must not exceed 20 characters")
     private String cpContactNumber;
-
-    @NotNull(message = "createdBy is required")
-    private Long createdBy;
-
-    @NotNull(message = "modifiedBy is required")
-    private Long modifiedBy;
+    // createdBy / modifiedBy resolved server-side from the JWT security context
 }

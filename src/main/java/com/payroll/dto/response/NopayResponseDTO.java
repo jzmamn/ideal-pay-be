@@ -20,7 +20,6 @@ public class NopayResponseDTO {
     private Boolean liableForEtf;
     private Boolean liableForPaye;
     private String formula;
-    private Boolean formulaEnabled;
     private Long createdById;
     private String createdByCode;
     private String createdByUserName;

@@ -58,7 +58,7 @@ public class NopayServiceImpl implements NopayService {
 
     @Override
     public NopayResponseDTO createNopay(NopayRequestDTO requestDTO) {
-        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
+        validateFormula(requestDTO.getFormula());
         Nopay entity = nopayMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -71,7 +71,7 @@ public class NopayServiceImpl implements NopayService {
     public NopayResponseDTO updateNopay(Long id, NopayRequestDTO requestDTO) {
         Nopay existing = nopayRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Nopay", "id", id));
-        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
+        validateFormula(requestDTO.getFormula());
         nopayMapper.updateEntityFromDTO(requestDTO, existing);
         if (requestDTO.getModifiedBy() != null) {
             existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -100,9 +100,7 @@ public class NopayServiceImpl implements NopayService {
         ctx.putIfAbsent("nopayDays",    BigDecimal.ZERO);
         ctx.putIfAbsent("NOPAY_DAYS",   BigDecimal.ZERO);
 
-        if (Boolean.TRUE.equals(nopay.getFormulaEnabled())
-                && nopay.getFormula() != null
-                && !nopay.getFormula().isBlank()) {
+        if (nopay.getFormula() != null && !nopay.getFormula().isBlank()) {
             String expression = nopay.getFormula();
             try {
                 BigDecimal result = formulaEngineService.evaluate(expression, ctx);
@@ -122,19 +120,15 @@ public class NopayServiceImpl implements NopayService {
             }
         }
 
-        log.debug("Nopay [{}] formula not enabled — using default calculation", nopay.getCode());
+        log.debug("Nopay [{}] has no formula configured — using default calculation", nopay.getCode());
         return FormulaEvaluateResponseDTO.builder()
-                .expression("formula not enabled")
+                .expression("no formula")
                 .context(sanitise(ctx))
                 .build();
     }
 
-    private void validateFormula(Boolean formulaEnabled, String formula) {
-        if (!Boolean.TRUE.equals(formulaEnabled)) return;
-        if (formula == null || formula.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Formula expression is required when formulaEnabled is true");
-        }
+    private void validateFormula(String formula) {
+        if (formula == null || formula.isBlank()) return;
         String error = formulaEngineService.validateExpression(formula);
         if (error != null) {
             throw new IllegalArgumentException("Invalid formula: " + error);

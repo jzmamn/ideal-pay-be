@@ -22,7 +22,6 @@ public class FixedAllowanceResponseDTO {
     private Boolean liableNoPay;
     private BigDecimal amount;
     private String formula;
-    private Boolean formulaEnabled;
     private Long createdById;
     private String createdByCode;
     private String createdByUserName;

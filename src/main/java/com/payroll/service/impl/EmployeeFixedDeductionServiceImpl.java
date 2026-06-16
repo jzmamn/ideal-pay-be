@@ -1,21 +1,29 @@
 package com.payroll.service.impl;
 
+import com.payroll.dto.request.EmployeeFixedDeductionAssignRequestDTO;
 import com.payroll.dto.request.EmployeeFixedDeductionRequestDTO;
 import com.payroll.dto.response.EmployeeFixedDeductionResponseDTO;
 import com.payroll.entity.EmployeeFixedDeduction;
+import com.payroll.entity.Usr;
+import com.payroll.enums.PayrollRunStatus;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.EmployeeFixedDeductionMapper;
+import com.payroll.repository.EmpPayrollRunRepository;
 import com.payroll.repository.EmployeeRepository;
 import com.payroll.repository.EmployeeFixedDeductionRepository;
 import com.payroll.repository.FixedDeductionRepository;
 import com.payroll.repository.UsrRepository;
 import com.payroll.service.EmployeeFixedDeductionService;
+import com.payroll.service.PayrollPeriodService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +35,8 @@ public class EmployeeFixedDeductionServiceImpl implements EmployeeFixedDeduction
     private final EmployeeRepository employeeRepository;
     private final FixedDeductionRepository fixedDeductionRepository;
     private final UsrRepository usrRepository;
+    private final PayrollPeriodService payrollPeriodService;
+    private final EmpPayrollRunRepository empPayrollRunRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -98,6 +108,69 @@ public class EmployeeFixedDeductionServiceImpl implements EmployeeFixedDeduction
                 .map(employeeFixedDeductionMapper::toResponseDTO)
                 .toList();
     }
+
+    @Override
+    public List<EmployeeFixedDeductionResponseDTO> assignFixedDeductions(
+            Long empId, EmployeeFixedDeductionAssignRequestDTO requestDTO) {
+
+        String payrollMonth = requestDTO.getPayrollMonth();
+
+        if (!payrollPeriodService.isPeriodOpen(payrollMonth)) {
+            throw new IllegalStateException(
+                    "Cannot modify fixed deductions — payroll period " + payrollMonth
+                    + " is closed. Use a correction run instead.");
+        }
+        if (empPayrollRunRepository.existsByEmployee_IdAndPayrollMonthAndStatus(
+                empId, payrollMonth, PayrollRunStatus.LOCKED)) {
+            throw new IllegalStateException(
+                    "Cannot modify fixed deductions — payroll is already locked for month: " + payrollMonth
+                    + ". Use a correction run instead.");
+        }
+
+        List<EmployeeFixedDeduction> existing =
+                employeeFixedDeductionRepository.findAllByEmployeeIdAndPayrollMonth(empId, payrollMonth);
+        Map<Long, EmployeeFixedDeduction> existingByFdId = existing.stream()
+                .collect(Collectors.toMap(e -> e.getFixedDeduction().getId(), e -> e, (a, b) -> b));
+
+        Set<Long> selectedFdIds = requestDTO.getSelections().stream()
+                .map(EmployeeFixedDeductionAssignRequestDTO.Selection::getFdId)
+                .collect(Collectors.toSet());
+
+        // Unselected deductions: remove any existing assignment for this employee/month.
+        List<EmployeeFixedDeduction> toRemove = existing.stream()
+                .filter(e -> !selectedFdIds.contains(e.getFixedDeduction().getId()))
+                .toList();
+        if (!toRemove.isEmpty()) {
+            employeeFixedDeductionRepository.deleteAll(toRemove);
+        }
+
+        Usr createdByUser  = usrRepository.getReferenceById(requestDTO.getCreatedBy());
+        Usr modifiedByUser = usrRepository.getReferenceById(requestDTO.getModifiedBy());
+
+        for (EmployeeFixedDeductionAssignRequestDTO.Selection selection : requestDTO.getSelections()) {
+            EmployeeFixedDeduction entity = existingByFdId.get(selection.getFdId());
+            if (entity != null) {
+                entity.setAmount(selection.getAmount());
+                entity.setModifiedBy(modifiedByUser);
+                employeeFixedDeductionRepository.save(entity);
+            } else {
+                employeeFixedDeductionRepository.save(EmployeeFixedDeduction.builder()
+                        .employee(employeeRepository.getReferenceById(empId))
+                        .fixedDeduction(fixedDeductionRepository.getReferenceById(selection.getFdId()))
+                        .amount(selection.getAmount())
+                        .payrollMonth(payrollMonth)
+                        .isProcessed(false)
+                        .formulaCalculated(false)
+                        .createdBy(createdByUser)
+                        .modifiedBy(modifiedByUser)
+                        .build());
+            }
+        }
+
+        return getByEmployeeId(empId, payrollMonth);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void setRelationships(EmployeeFixedDeduction entity, EmployeeFixedDeductionRequestDTO dto) {
         entity.setEmployee(employeeRepository.getReferenceById(dto.getEmpId()));

@@ -29,10 +29,5 @@ public class CountryRequestDTO {
 
     @NotNull(message = "Phone code is required")
     private Long phoneCode;
-
-    @NotNull(message = "createdBy is required")
-    private Long createdBy;
-
-    @NotNull(message = "modifiedBy is required")
-    private Long modifiedBy;
+    // createdBy / modifiedBy resolved server-side from the JWT security context
 }

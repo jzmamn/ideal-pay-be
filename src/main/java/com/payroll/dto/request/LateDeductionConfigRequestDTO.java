@@ -29,8 +29,6 @@ public class LateDeductionConfigRequestDTO {
 
     private String formula;
 
-    private Boolean formulaEnabled = false;
-
     private Boolean isActive = true;
 
     private Boolean liableForEpf   = true;

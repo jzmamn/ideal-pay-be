@@ -1,5 +1,6 @@
 package com.payroll.controller;
 
+import com.payroll.dto.request.EmployeeFixedDeductionAssignRequestDTO;
 import com.payroll.dto.request.EmployeeFixedDeductionRequestDTO;
 import com.payroll.dto.response.ApiResponseDTO;
 import com.payroll.dto.response.EmployeeFixedDeductionResponseDTO;
@@ -56,5 +57,20 @@ public class EmployeeFixedDeductionController {
         employeeFixedDeductionService.deleteEmployeeFixedDeduction(id);
         return ResponseEntity.ok(ApiResponseDTO.success(
                 "Employee fixed deduction deleted successfully", null));
+    }
+
+    /**
+     * Employee → Salary Tab → Fixed Deduction checkbox grid.
+     * Replaces the employee's Fixed Deduction assignments for the given payroll month with
+     * exactly the selections sent — unselected deductions are removed, selected ones are
+     * created or updated.
+     */
+    @PutMapping("/employee/{empId}/assign")
+    public ResponseEntity<ApiResponseDTO<List<EmployeeFixedDeductionResponseDTO>>> assignFixedDeductions(
+            @PathVariable Long empId,
+            @Valid @RequestBody EmployeeFixedDeductionAssignRequestDTO requestDTO) {
+        return ResponseEntity.ok(ApiResponseDTO.success(
+                "Employee fixed deductions updated successfully",
+                employeeFixedDeductionService.assignFixedDeductions(empId, requestDTO)));
     }
 }

@@ -16,17 +16,13 @@ public class OvertimeRequestDTO {
     @Size(max = 150, message = "Name must not exceed 150 characters")
     private String name;
 
-    @NotBlank(message = "Description is required")
     @Size(max = 255, message = "Description must not exceed 255 characters")
     private String description;
 
     private Boolean isActive = true;
 
-    /** Optional MVEL formula expression for this overtime type. */
+    /** Optional MVEL formula expression for this overtime type. Evaluated when non-blank. */
     private String formula;
-
-    /** When true, the formula is evaluated at payroll run time. */
-    private Boolean formulaEnabled = false;
 
     /** Statutory liability settings — default to true (most OT types are fully liable). */
     private Boolean liableForEpf  = true;

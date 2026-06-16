@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -47,12 +46,6 @@ public class BonusProcessingCalculateRequestDTO {
 
     /** Filter by employee type (job category) ID. */
     private Long employeeTypeId;
-
-    /**
-     * Fixed amount to use for all employees when the bonus calculation method is FIXED_AMOUNT.
-     * Ignored when the bonus has formulaEnabled = true.
-     */
-    private BigDecimal fixedAmount;
 
     /**
      * Extra MVEL context variables merged with the standard context.

@@ -52,7 +52,7 @@ public class LateDeductionConfigServiceImpl implements LateDeductionConfigServic
 
     @Override
     public LateDeductionConfigResponseDTO create(LateDeductionConfigRequestDTO requestDTO) {
-        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
+        validateFormula(requestDTO.getFormula());
         LateDeductionConfig entity = configMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -64,7 +64,7 @@ public class LateDeductionConfigServiceImpl implements LateDeductionConfigServic
     @Override
     public LateDeductionConfigResponseDTO update(Long id, LateDeductionConfigRequestDTO requestDTO) {
         LateDeductionConfig existing = findOrThrow(id);
-        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
+        validateFormula(requestDTO.getFormula());
         configMapper.updateEntityFromDTO(requestDTO, existing);
         if (requestDTO.getModifiedBy() != null) {
             existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -90,9 +90,7 @@ public class LateDeductionConfigServiceImpl implements LateDeductionConfigServic
         ctx.putIfAbsent("workingHoursPerDay",    config.getWorkingHoursPerDay());
         ctx.putIfAbsent("lateHours",             BigDecimal.ZERO);
 
-        if (Boolean.TRUE.equals(config.getFormulaEnabled())
-                && config.getFormula() != null
-                && !config.getFormula().isBlank()) {
+        if (config.getFormula() != null && !config.getFormula().isBlank()) {
             try {
                 BigDecimal result = formulaEngineService.evaluate(config.getFormula(), ctx);
                 return FormulaEvaluateResponseDTO.builder()
@@ -138,12 +136,8 @@ public class LateDeductionConfigServiceImpl implements LateDeductionConfigServic
                 .orElseThrow(() -> new ResourceNotFoundException("LateDeductionConfig", "id", id));
     }
 
-    private void validateFormula(Boolean formulaEnabled, String formula) {
-        if (!Boolean.TRUE.equals(formulaEnabled)) return;
-        if (formula == null || formula.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Formula expression is required when formulaEnabled is true");
-        }
+    private void validateFormula(String formula) {
+        if (formula == null || formula.isBlank()) return;
         String error = formulaEngineService.validateExpression(formula);
         if (error != null) throw new IllegalArgumentException("Invalid formula: " + error);
     }

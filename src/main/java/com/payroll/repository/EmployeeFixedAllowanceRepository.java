@@ -22,6 +22,14 @@ public interface EmployeeFixedAllowanceRepository extends JpaRepository<Employee
     Optional<EmployeeFixedAllowance> findByEmployee_IdAndFixedAllowance_IdAndPayrollMonth(
             Long employeeId, Long fixedAllowanceId, String payrollMonth);
 
+    /**
+     * True when the employee has been assigned this fixed allowance for at least one
+     * payroll month (i.e. the allowance was explicitly selected via the Employee
+     * Salary tab at some point). Used to gate automatic carry-forward during batch
+     * component load — allowances the employee never selected are never auto-created.
+     */
+    boolean existsByEmployee_IdAndFixedAllowance_Id(Long employeeId, Long fixedAllowanceId);
+
     // ── Import / export support ──────────────────────────────────────────
 
     long countByImportLogIdAndIsProcessedTrue(Long importLogId);

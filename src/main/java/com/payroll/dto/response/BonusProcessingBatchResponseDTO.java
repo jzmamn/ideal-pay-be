@@ -23,8 +23,6 @@ public class BonusProcessingBatchResponseDTO {
     private String bonusCode;
     private String bonusName;
     private BonusCalculationMethod calculationMethod;
-    private BigDecimal fixedAmount;
-    private Boolean formulaEnabled;
     private String formula;
 
     // Audit

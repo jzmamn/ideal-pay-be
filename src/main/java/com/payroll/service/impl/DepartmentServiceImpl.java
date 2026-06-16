@@ -1,13 +1,12 @@
 package com.payroll.service.impl;
 
+import com.payroll.config.SecurityContextHelper;
 import com.payroll.dto.request.DepartmentRequestDTO;
 import com.payroll.dto.response.DepartmentResponseDTO;
 import com.payroll.entity.Department;
-import com.payroll.entity.Usr;
 import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.DepartmentMapper;
 import com.payroll.repository.DepartmentRepository;
-import com.payroll.repository.UsrRepository;
 import com.payroll.service.DepartmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -22,15 +21,14 @@ import java.util.List;
 public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepository departmentRepository;
-    private final UsrRepository usrRepository;
     private final DepartmentMapper departmentMapper;
+    private final SecurityContextHelper securityContextHelper;
 
     @Override
     @Transactional(readOnly = true)
     public List<DepartmentResponseDTO> getAllDepartments(boolean showDefaultRow, String isActive) {
         if (!isActive.equalsIgnoreCase("true") && !isActive.equalsIgnoreCase("false") && !isActive.equalsIgnoreCase("all")) {
-            throw new IllegalArgumentException(
-                    "Invalid value for isActive. Accepted values: true, false, all");
+            throw new IllegalArgumentException("Invalid value for isActive. Accepted values: true, false, all");
         }
         Sort sort = Sort.by("id").ascending();
         List<Department> records = "all".equals(isActive)
@@ -53,9 +51,9 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     public DepartmentResponseDTO createDepartment(DepartmentRequestDTO requestDTO) {
         Department entity = departmentMapper.toEntity(requestDTO);
-        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
-        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        // Auto-generate code as DEP_<id>
+        var currentUser = securityContextHelper.getCurrentUser();
+        entity.setCreatedBy(currentUser);
+        entity.setModifiedBy(currentUser);
         Department saved = departmentRepository.save(entity);
         saved.setCode("DEP_" + saved.getId());
         return departmentMapper.toResponseDTO(departmentRepository.save(saved));
@@ -66,9 +64,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         Department existing = departmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Department", "id", id));
         departmentMapper.updateEntityFromDTO(requestDTO, existing);
-        if (requestDTO.getModifiedBy() != null) {
-            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        }
+        existing.setModifiedBy(securityContextHelper.getCurrentUser());
         return departmentMapper.toResponseDTO(departmentRepository.save(existing));
     }
 

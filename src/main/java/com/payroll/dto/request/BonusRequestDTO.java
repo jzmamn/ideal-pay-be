@@ -19,7 +19,11 @@ public class BonusRequestDTO {
     @Size(max = 255, message = "Description must not exceed 255 characters")
     private String description;
 
-    @NotNull(message = "Calculation method is required")
+    /**
+     * Optional — bonus calculation is formula-only, so there is only one valid
+     * value ({@code FORMULA_BASED}). The server forces this value regardless
+     * of what the client sends; clients no longer need to populate it.
+     */
     private BonusCalculationMethod calculationMethod;
 
     @NotNull(message = "isActive is required")
@@ -37,13 +41,10 @@ public class BonusRequestDTO {
     @NotNull(message = "liableNoPay is required")
     private Boolean liableNoPay;
 
-    /** Optional MVEL formula expression (e.g. "basicSalary * 0.1"). */
+    /** MVEL formula expression (e.g. "basicSalary * 0.1" or a literal like "50000"). Required — bonus calculation is formula-only. */
+    @NotBlank(message = "Formula is required")
     @Size(max = 500, message = "Formula must not exceed 500 characters")
     private String formula;
-
-    /** When true, the formula is used at payroll run time instead of the fixed amount. Defaults to false. */
-    @Builder.Default
-    private Boolean formulaEnabled = false;
 
     @NotNull(message = "createdBy is required")
     private Long createdBy;

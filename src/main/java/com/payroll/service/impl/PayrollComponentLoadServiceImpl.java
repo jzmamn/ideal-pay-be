@@ -142,13 +142,25 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
         List<FixedAllowance> activeList = faRepository.findByIsActiveTrue();
         int count = 0;
         for (FixedAllowance fa : activeList) {
-            // formulaEnabled=true  → evaluate MVEL formula now (load phase only, never during execution)
-            // formulaEnabled=false → use the static company-level amount (fa.amount), if set
-            boolean fromFormula = Boolean.TRUE.equals(fa.getFormulaEnabled())
-                    && fa.getFormula() != null && !fa.getFormula().isBlank();
+            boolean alreadyAssignedThisMonth = empFaRepository
+                    .findByEmployee_IdAndFixedAllowance_IdAndPayrollMonth(emp.getId(), fa.getId(), payrollMonth)
+                    .isPresent();
+
+            // Fixed Allowances are no longer auto-assigned to every employee. Only carry the
+            // component forward into a new month if the employee has explicitly selected it
+            // at least once via the Employee → Salary Tab → Fixed Allowance screen (i.e. an
+            // EmployeeFixedAllowance row exists for this employee/allowance in some month).
+            if (!alreadyAssignedThisMonth
+                    && !empFaRepository.existsByEmployee_IdAndFixedAllowance_Id(emp.getId(), fa.getId())) {
+                continue;
+            }
+
+            // Formula present → evaluate MVEL formula now (load phase only, never during execution)
+            // No formula → use the static company-level amount (fa.amount), if set
+            boolean fromFormula = fa.getFormula() != null && !fa.getFormula().isBlank();
 
             BigDecimal amt = resolveConfiguredAmount(
-                    fa.getFormulaEnabled(), fa.getFormula(), fa.getAmount(), ctx,
+                    fa.getFormula(), fa.getAmount(), ctx,
                     "FA/" + fa.getCode());
             if (amt == null) continue; // neither formula nor static amount configured — skip
 
@@ -188,6 +200,20 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
         int count = 0;
         for (FixedDeduction fd : activeList) {
             if (fd.getFormula() == null || fd.getFormula().isBlank()) continue;
+
+            boolean alreadyAssignedThisMonth = empFdRepository
+                    .findByEmployee_IdAndFixedDeduction_IdAndPayrollMonth(emp.getId(), fd.getId(), payrollMonth)
+                    .isPresent();
+
+            // Fixed Deductions are not auto-assigned to every employee. Only carry the
+            // component forward into a new month if the employee has explicitly selected it
+            // at least once via the Employee → Salary Tab → Fixed Deduction screen (i.e. an
+            // EmployeeFixedDeduction row exists for this employee/deduction in some month).
+            if (!alreadyAssignedThisMonth
+                    && !empFdRepository.existsByEmployee_IdAndFixedDeduction_Id(emp.getId(), fd.getId())) {
+                continue;
+            }
+
             BigDecimal amt = orZero(formulaEngineService.evaluate(fd.getFormula(), ctx));
             log.debug("Formula [FD/{}] → {}", fd.getCode(), amt);
 
@@ -228,8 +254,7 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
 
         for (Overtime ot : activeList) {
             BigDecimal rate;
-            if (Boolean.TRUE.equals(ot.getFormulaEnabled())
-                    && ot.getFormula() != null && !ot.getFormula().isBlank()) {
+            if (ot.getFormula() != null && !ot.getFormula().isBlank()) {
                 rate = formulaEngineService.evaluate(ot.getFormula(), ctx);
                 log.debug("OT rate formula [{}] emp={} → {}", ot.getCode(), emp.getId(), rate);
             } else {
@@ -279,8 +304,7 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
 
         for (NopayDays nd : activeList) {
             BigDecimal rate;
-            if (Boolean.TRUE.equals(nd.getFormulaEnabled())
-                    && nd.getFormula() != null && !nd.getFormula().isBlank()) {
+            if (nd.getFormula() != null && !nd.getFormula().isBlank()) {
                 rate = formulaEngineService.evaluate(nd.getFormula(), ctx);
                 log.debug("NP rate formula [{}] emp={} → {}", nd.getCode(), emp.getId(), rate);
             } else {
@@ -336,8 +360,7 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
         int count = 0;
         for (LateDeductionConfig config : activeConfigs) {
             BigDecimal rate;
-            if (Boolean.TRUE.equals(config.getFormulaEnabled())
-                    && config.getFormula() != null && !config.getFormula().isBlank()) {
+            if (config.getFormula() != null && !config.getFormula().isBlank()) {
                 rate = formulaEngineService.evaluate(config.getFormula(), ctx);
                 log.debug("Late rate formula [{}] emp={} → {}", config.getCode(), emp.getId(), rate);
             } else {
@@ -391,7 +414,7 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
         int count = 0;
         for (Bonus bonus : activeList) {
             BigDecimal amt = resolveConfiguredAmount(
-                    bonus.getFormulaEnabled(), bonus.getFormula(), null, ctx,
+                    bonus.getFormula(), null, ctx,
                     "Bonus/" + bonus.getCode());
             if (amt == null) continue;
 
@@ -424,14 +447,13 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Evaluates a formula (if enabled and non-blank) or falls back to a static amount.
+     * Evaluates a formula (if non-blank) or falls back to a static amount.
      * Returns {@code null} when neither a formula nor a positive static amount is configured,
      * signalling that this component should be skipped for this employee.
      */
-    private BigDecimal resolveConfiguredAmount(Boolean formulaEnabled, String formula,
-                                               BigDecimal staticAmount, Map<String, Object> ctx,
-                                               String label) {
-        if (Boolean.TRUE.equals(formulaEnabled) && formula != null && !formula.isBlank()) {
+    private BigDecimal resolveConfiguredAmount(String formula, BigDecimal staticAmount,
+                                               Map<String, Object> ctx, String label) {
+        if (formula != null && !formula.isBlank()) {
             BigDecimal result = formulaEngineService.evaluate(formula, ctx);
             log.debug("Formula [{}] → {}", label, result);
             return orZero(result);

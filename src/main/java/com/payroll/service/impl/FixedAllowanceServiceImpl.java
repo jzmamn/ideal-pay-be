@@ -59,7 +59,7 @@ public class FixedAllowanceServiceImpl implements FixedAllowanceService {
 
     @Override
     public FixedAllowanceResponseDTO createFixedAllowance(FixedAllowanceRequestDTO requestDTO) {
-        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
+        validateFormula(requestDTO.getFormula());
         FixedAllowance entity = fixedAllowanceMapper.toEntity(requestDTO);
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -72,7 +72,7 @@ public class FixedAllowanceServiceImpl implements FixedAllowanceService {
     public FixedAllowanceResponseDTO updateFixedAllowance(Long id, FixedAllowanceRequestDTO requestDTO) {
         FixedAllowance existing = fixedAllowanceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("FixedAllowance", "id", id));
-        validateFormula(requestDTO.getFormulaEnabled(), requestDTO.getFormula());
+        validateFormula(requestDTO.getFormula());
         fixedAllowanceMapper.updateEntityFromDTO(requestDTO, existing);
         if (requestDTO.getModifiedBy() != null) {
             existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
@@ -99,8 +99,7 @@ public class FixedAllowanceServiceImpl implements FixedAllowanceService {
         ctx.putIfAbsent("workingDays",  26);
         ctx.putIfAbsent("WORKING_DAYS", 26);
 
-        if (Boolean.TRUE.equals(fixedAllowance.getFormulaEnabled())
-                && fixedAllowance.getFormula() != null
+        if (fixedAllowance.getFormula() != null
                 && !fixedAllowance.getFormula().isBlank()) {
             String expression = fixedAllowance.getFormula();
             try {
@@ -121,7 +120,7 @@ public class FixedAllowanceServiceImpl implements FixedAllowanceService {
             }
         }
 
-        log.debug("FixedAllowance [{}] formula not enabled — no fixed amount configured", fixedAllowance.getCode());
+        log.debug("FixedAllowance [{}] no formula configured", fixedAllowance.getCode());
         return FormulaEvaluateResponseDTO.builder()
                 .expression("formula not enabled")
                 .context(sanitise(ctx))
@@ -129,20 +128,12 @@ public class FixedAllowanceServiceImpl implements FixedAllowanceService {
     }
 
     /**
-     * Validates the MVEL formula when formulaEnabled is true.
-     * Throws {@link IllegalArgumentException} (→ HTTP 400) if:
-     * <ul>
-     *   <li>formulaEnabled is true but formula is blank/null</li>
-     *   <li>formulaEnabled is true and the expression has a syntax error</li>
-     * </ul>
-     * When formulaEnabled is false or null, the formula field is ignored.
+     * Validates the MVEL formula when one is present.
+     * Throws {@link IllegalArgumentException} (→ HTTP 400) if the expression has a syntax error.
+     * A blank/null formula is allowed — it simply means no formula is configured.
      */
-    private void validateFormula(Boolean formulaEnabled, String formula) {
-        if (!Boolean.TRUE.equals(formulaEnabled)) return;
-        if (formula == null || formula.isBlank()) {
-            throw new IllegalArgumentException(
-                    "Formula expression is required when formulaEnabled is true");
-        }
+    private void validateFormula(String formula) {
+        if (formula == null || formula.isBlank()) return;
         String error = formulaEngineService.validateExpression(formula);
         if (error != null) {
             throw new IllegalArgumentException("Invalid formula: " + error);
