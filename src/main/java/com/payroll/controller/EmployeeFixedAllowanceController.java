@@ -4,6 +4,7 @@ import com.payroll.dto.request.EmployeeFixedAllowanceAssignRequestDTO;
 import com.payroll.dto.request.EmployeeFixedAllowanceRequestDTO;
 import com.payroll.dto.response.ApiResponseDTO;
 import com.payroll.dto.response.EmployeeFixedAllowanceResponseDTO;
+import com.payroll.dto.response.FormulaEvaluateResponseDTO;
 import com.payroll.service.EmployeeFixedAllowanceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -72,5 +73,22 @@ public class EmployeeFixedAllowanceController {
         return ResponseEntity.ok(ApiResponseDTO.success(
                 "Employee fixed allowances updated successfully",
                 employeeFixedAllowanceService.assignFixedAllowances(empId, requestDTO)));
+    }
+
+    /**
+     * Employee → Salary Tab → Fixed Allowance checkbox grid.
+     * Computes the amount for one Fixed Allowance/employee pair (formula evaluated against the
+     * employee's basicSalary + the payroll month's working days, or the static amount when no
+     * formula is configured). Called the instant a checkbox is checked, so the row's amount can
+     * be populated before the grid is saved.
+     */
+    @GetMapping("/employee/{empId}/preview-amount")
+    public ResponseEntity<ApiResponseDTO<FormulaEvaluateResponseDTO>> previewAmount(
+            @PathVariable Long empId,
+            @RequestParam Long faId,
+            @RequestParam(required = false) String payrollMonth) {
+        return ResponseEntity.ok(ApiResponseDTO.success(
+                "Fixed allowance amount calculated successfully",
+                employeeFixedAllowanceService.previewAmount(empId, faId, payrollMonth)));
     }
 }

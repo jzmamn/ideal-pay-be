@@ -29,11 +29,7 @@ public class EmployeeFixedDeductionAssignRequestDTO {
     @Size(max = 20, message = "Payroll month must not exceed 20 characters")
     private String payrollMonth;
 
-    @NotNull(message = "Created by is required")
-    private Long createdBy;
-
-    @NotNull(message = "Modified by is required")
-    private Long modifiedBy;
+    // createdBy / modifiedBy resolved server-side from the JWT security context
 
     @Valid
     @Builder.Default

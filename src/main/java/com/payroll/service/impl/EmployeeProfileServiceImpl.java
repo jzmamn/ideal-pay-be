@@ -66,6 +66,7 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
                 .stream().collect(Collectors.toMap(EmployeeFixedAllowanceResponseDTO::getFaId, dto -> dto, (a, b) -> b));
 
         return fixedAllowanceRepository.findAllByIsActive(true, ID_ASC).stream()
+                .filter(master -> master.getId() != -1L)
                 .filter(master -> !assignedOnly || assigned.containsKey(master.getId()))
                 .map(master -> {
                     if (assigned.containsKey(master.getId())) {
@@ -90,6 +91,7 @@ public class EmployeeProfileServiceImpl implements EmployeeProfileService {
                 .stream().collect(Collectors.toMap(EmployeeFixedDeductionResponseDTO::getFdId, dto -> dto, (a, b) -> b));
 
         return fixedDeductionRepository.findAllByIsActive(true, ID_ASC).stream()
+                .filter(master -> master.getId() != -1L)
                 .filter(master -> !assignedOnly || assigned.containsKey(master.getId()))
                 .map(master -> {
                     if (assigned.containsKey(master.getId())) {

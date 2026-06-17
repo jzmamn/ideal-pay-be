@@ -4,6 +4,7 @@ import com.payroll.dto.request.EmployeeFixedDeductionAssignRequestDTO;
 import com.payroll.dto.request.EmployeeFixedDeductionRequestDTO;
 import com.payroll.dto.response.ApiResponseDTO;
 import com.payroll.dto.response.EmployeeFixedDeductionResponseDTO;
+import com.payroll.dto.response.FormulaEvaluateResponseDTO;
 import com.payroll.service.EmployeeFixedDeductionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -72,5 +73,22 @@ public class EmployeeFixedDeductionController {
         return ResponseEntity.ok(ApiResponseDTO.success(
                 "Employee fixed deductions updated successfully",
                 employeeFixedDeductionService.assignFixedDeductions(empId, requestDTO)));
+    }
+
+    /**
+     * Employee → Salary Tab → Fixed Deduction checkbox grid.
+     * Computes the amount for one Fixed Deduction/employee pair (formula evaluated against the
+     * employee's basicSalary + the payroll month's working days; zero when no formula is
+     * configured, since Fixed Deductions have no static fallback amount). Called the instant a
+     * checkbox is checked, so the row's amount can be populated before the grid is saved.
+     */
+    @GetMapping("/employee/{empId}/preview-amount")
+    public ResponseEntity<ApiResponseDTO<FormulaEvaluateResponseDTO>> previewAmount(
+            @PathVariable Long empId,
+            @RequestParam Long fdId,
+            @RequestParam(required = false) String payrollMonth) {
+        return ResponseEntity.ok(ApiResponseDTO.success(
+                "Fixed deduction amount calculated successfully",
+                employeeFixedDeductionService.previewAmount(empId, fdId, payrollMonth)));
     }
 }

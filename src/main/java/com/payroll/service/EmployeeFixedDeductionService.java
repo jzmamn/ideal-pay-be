@@ -3,6 +3,7 @@ package com.payroll.service;
 import com.payroll.dto.request.EmployeeFixedDeductionAssignRequestDTO;
 import com.payroll.dto.request.EmployeeFixedDeductionRequestDTO;
 import com.payroll.dto.response.EmployeeFixedDeductionResponseDTO;
+import com.payroll.dto.response.FormulaEvaluateResponseDTO;
 
 import java.util.List;
 
@@ -29,4 +30,13 @@ public interface EmployeeFixedDeductionService {
      * checkbox grid.
      */
     List<EmployeeFixedDeductionResponseDTO> assignFixedDeductions(Long empId, EmployeeFixedDeductionAssignRequestDTO requestDTO);
+
+    /**
+     * Computes the amount this employee would receive for a given Fixed Deduction, by evaluating
+     * the deduction's MVEL formula against the employee's basicSalary and the payroll month's
+     * configured working days. Fixed Deductions have no static fallback amount — if no formula is
+     * configured, the result is zero. Used by the Employee &rarr; Salary Tab &rarr; Fixed Deduction
+     * checkbox grid to populate the amount the instant a row is checked.
+     */
+    FormulaEvaluateResponseDTO previewAmount(Long empId, Long fdId, String payrollMonth);
 }

@@ -34,9 +34,5 @@ public class EmployeeFixedAllowanceRequestDTO {
 
     private LocalDateTime processedDate;
 
-    @NotNull(message = "Created by is required")
-    private Long createdBy;
-
-    @NotNull(message = "Modified by is required")
-    private Long modifiedBy;
+    // createdBy / modifiedBy resolved server-side from the JWT security context
 }

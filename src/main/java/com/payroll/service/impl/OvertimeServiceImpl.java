@@ -61,6 +61,11 @@ public class OvertimeServiceImpl implements OvertimeService {
     public OvertimeResponseDTO createOvertime(OvertimeRequestDTO requestDTO) {
         validateFormula(requestDTO.getFormula());
         Overtime entity = overtimeMapper.toEntity(requestDTO);
+        // description is optional in the request DTO (only @Size-validated) but the
+        // column is NOT NULL — default to empty string instead of letting the insert fail.
+        if (entity.getDescription() == null) {
+            entity.setDescription("");
+        }
         entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         Overtime saved = overtimeRepository.save(entity);
