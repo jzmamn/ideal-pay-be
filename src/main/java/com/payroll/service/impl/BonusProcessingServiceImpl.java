@@ -10,6 +10,7 @@ import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.repository.*;
 import com.payroll.service.BonusProcessingService;
 import com.payroll.service.FormulaEngineService;
+import com.payroll.service.SystemSetupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -36,6 +37,7 @@ public class BonusProcessingServiceImpl implements BonusProcessingService {
     private final EmployeeRepository             employeeRepository;
     private final UsrRepository                  usrRepository;
     private final FormulaEngineService           formulaEngineService;
+    private final SystemSetupService             systemSetupService;
 
     // ── Calculate ─────────────────────────────────────────────────────────────
 
@@ -408,10 +410,11 @@ public class BonusProcessingServiceImpl implements BonusProcessingService {
                 ? ChronoUnit.MONTHS.between(emp.getJoinedDate(), LocalDate.now()) : 0L;
         ctx.put("basicSalary",   basicSalary);
         ctx.put("BASIC_SALARY",  basicSalary);
-        ctx.put("workingDays",   26);
-        ctx.put("WORKING_DAYS",  26);
-        ctx.put("workedDays",    26);
-        ctx.put("WORKED_DAYS",   26);
+        int workingDays = systemSetupService.getWorkingDays();
+        ctx.put("workingDays",   workingDays);
+        ctx.put("WORKING_DAYS",  workingDays);
+        ctx.put("workedDays",    workingDays);
+        ctx.put("WORKED_DAYS",   workingDays);
         ctx.put("nopayDays",     0);
         ctx.put("NOPAY_DAYS",    0);
         ctx.put("otHours",       BigDecimal.ZERO);

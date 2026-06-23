@@ -58,6 +58,9 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
     // ── Formula engine ───────────────────────────────────────────────────────
     private final FormulaEngineService formulaEngineService;
 
+    // ── Global config ────────────────────────────────────────────────────────
+    private final com.payroll.service.SystemSetupService systemSetupService;
+
     // ─────────────────────────────────────────────────────────────────────────
 
     @Override
@@ -365,7 +368,7 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
                 log.debug("Late rate formula [{}] emp={} → {}", config.getCode(), emp.getId(), rate);
             } else {
                 // Default: basicSalary / (workingDays × workingHoursPerDay)
-                int wd          = config.getWorkingDays()        != null ? config.getWorkingDays()        : 26;
+                int wd          = config.getWorkingDays()        != null ? config.getWorkingDays()        : systemSetupService.getWorkingDays();
                 int hpd         = config.getWorkingHoursPerDay() != null ? config.getWorkingHoursPerDay() : 8;
                 int denominator = wd * hpd;
                 rate = denominator > 0
@@ -466,7 +469,8 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
 
     /**
      * Looks up {@code PayrollPeriod.workingDays} for the given month/year.
-     * Falls back to 26 if no period record exists yet (e.g. period not yet created).
+     * Falls back to the global system_setup WORKING_DAYS value if no period
+     * record exists yet (e.g. period not yet created).
      */
     private int resolveWorkingDays(int month, int year) {
         return payrollPeriodRepository
@@ -474,8 +478,10 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
                 .map(PayrollPeriod::getWorkingDays)
                 .filter(wd -> wd != null && wd > 0)
                 .orElseGet(() -> {
-                    log.warn("No PayrollPeriod found for {}-{} — defaulting workingDays to 26", year, String.format("%02d", month));
-                    return 26;
+                    int fallback = systemSetupService.getWorkingDays();
+                    log.warn("No PayrollPeriod found for {}-{} — defaulting workingDays to system_setup value ({})",
+                            year, String.format("%02d", month), fallback);
+                    return fallback;
                 });
     }
 

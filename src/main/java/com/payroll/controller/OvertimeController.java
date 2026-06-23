@@ -6,6 +6,7 @@ import com.payroll.dto.response.FormulaEvaluateResponseDTO;
 import com.payroll.dto.response.OvertimeResponseDTO;
 import com.payroll.formula.PayrollContextBuilder;
 import com.payroll.service.OvertimeService;
+import com.payroll.service.SystemSetupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class OvertimeController {
 
     private final OvertimeService overtimeService;
+    private final SystemSetupService systemSetupService;
 
     // GET /payroll/overtime
     @GetMapping
@@ -89,7 +91,7 @@ public class OvertimeController {
 
         Map<String, Object> context = PayrollContextBuilder.builder()
                 .basicSalary(parseBigDecimal(body.get("basicSalary")))
-                .workingDays(parseInteger(body.get("workingDays"), 26))
+                .workingDays(parseInteger(body.get("workingDays"), systemSetupService.getWorkingDays()))
                 .nopayDays(parseInteger(body.get("nopayDays"), 0))
                 .otHours(parseBigDecimal(body.get("otHours")))
                 .otRate(parseBigDecimal(body.get("otRate")))

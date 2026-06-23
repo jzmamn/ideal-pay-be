@@ -10,6 +10,7 @@ import com.payroll.repository.NopayRepository;
 import com.payroll.repository.UsrRepository;
 import com.payroll.service.FormulaEngineService;
 import com.payroll.service.NopayService;
+import com.payroll.service.SystemSetupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -31,6 +32,7 @@ public class NopayServiceImpl implements NopayService {
     private final UsrRepository     usrRepository;
     private final NopayMapper       nopayMapper;
     private final FormulaEngineService formulaEngineService;
+    private final SystemSetupService systemSetupService;
 
     @Override
     @Transactional(readOnly = true)
@@ -92,13 +94,16 @@ public class NopayServiceImpl implements NopayService {
         Nopay nopay = nopayRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Nopay", "id", id));
 
+        // double, not BigDecimal — MVEL's compiled evaluator throws ArithmeticException
+        // ("Non-terminating decimal expansion") on BigDecimal division that doesn't
+        // terminate exactly (e.g. basicSalary / workingDays). See PayrollContextBuilder.
         Map<String, Object> ctx = new HashMap<>(context);
-        ctx.putIfAbsent("basicSalary",  BigDecimal.ZERO);
-        ctx.putIfAbsent("BASIC_SALARY", BigDecimal.ZERO);
-        ctx.putIfAbsent("workingDays",  26);
-        ctx.putIfAbsent("WORKING_DAYS", 26);
-        ctx.putIfAbsent("nopayDays",    BigDecimal.ZERO);
-        ctx.putIfAbsent("NOPAY_DAYS",   BigDecimal.ZERO);
+        ctx.putIfAbsent("basicSalary",  0.0d);
+        ctx.putIfAbsent("BASIC_SALARY", 0.0d);
+        ctx.putIfAbsent("workingDays",  systemSetupService.getWorkingDays());
+        ctx.putIfAbsent("WORKING_DAYS", systemSetupService.getWorkingDays());
+        ctx.putIfAbsent("nopayDays",    0.0d);
+        ctx.putIfAbsent("NOPAY_DAYS",   0.0d);
 
         if (nopay.getFormula() != null && !nopay.getFormula().isBlank()) {
             String expression = nopay.getFormula();

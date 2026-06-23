@@ -11,6 +11,7 @@ import com.payroll.repository.CompanyRepository;
 import com.payroll.repository.EmpPayrollRunRepository;
 import com.payroll.repository.PayrollPeriodRepository;
 import com.payroll.repository.UsrRepository;
+import com.payroll.service.SystemSetupService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +36,7 @@ class PayrollPeriodServiceImplTest {
     @Mock private EmpPayrollRunRepository runRepo;
     @Mock private CompanyRepository companyRepo;
     @Mock private UsrRepository usrRepo;
+    @Mock private SystemSetupService systemSetupService;
 
     @Spy  private PayrollPeriodMapper mapper = Mappers.getMapper(PayrollPeriodMapper.class);
 
@@ -45,12 +47,13 @@ class PayrollPeriodServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new PayrollPeriodServiceImpl(periodRepo, runRepo, companyRepo, usrRepo, mapper);
+        service = new PayrollPeriodServiceImpl(periodRepo, runRepo, companyRepo, usrRepo, mapper, systemSetupService);
         company = Company.builder().id(1L).name("Ideal Pvt Ltd").build();
         user = Usr.builder().id(7L).userName("admin").build();
         lenient().when(usrRepo.getReferenceById(7L)).thenReturn(user);
         lenient().when(periodRepo.save(any(PayrollPeriod.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
+        lenient().when(systemSetupService.getWorkingDays()).thenReturn(26);
     }
 
     private PayrollPeriodRequestDTO request() {

@@ -21,6 +21,15 @@ public class SystemSetupServiceImpl implements SystemSetupService {
     private final SystemSetupRepository systemSetupRepository;
     private final UsrRepository usrRepository;
 
+    private static final String CODE_WORKING_DAYS = "WORKING_DAYS";
+
+    /**
+     * Last-resort literal — only used if the WORKING_DAYS row itself is ever
+     * deleted from system_setup. This is the one place that value is allowed
+     * to be hardcoded; every other caller goes through {@link #getWorkingDays()}.
+     */
+    private static final int WORKING_DAYS_HARD_FALLBACK = 26;
+
     @Override
     @Transactional(readOnly = true)
     public List<SystemSetupResponseDTO> getAll() {
@@ -50,6 +59,28 @@ public class SystemSetupServiceImpl implements SystemSetupService {
         setup.setIsActive(requestDTO.getIsActive());
         setup.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
         return toDTO(systemSetupRepository.save(setup));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int getIntValue(String code, int fallback) {
+        return systemSetupRepository.findByCode(code)
+                .filter(setup -> Boolean.TRUE.equals(setup.getIsActive()))
+                .map(SystemSetup::getValue)
+                .map(value -> {
+                    try {
+                        return Integer.parseInt(value.trim());
+                    } catch (NumberFormatException ex) {
+                        return fallback;
+                    }
+                })
+                .orElse(fallback);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public int getWorkingDays() {
+        return getIntValue(CODE_WORKING_DAYS, WORKING_DAYS_HARD_FALLBACK);
     }
 
     private SystemSetup findOrThrow(Long id) {

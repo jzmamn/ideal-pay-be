@@ -50,6 +50,7 @@ public class EmployeeFixedAllowanceServiceImpl implements EmployeeFixedAllowance
     private final EmpPayrollRunRepository empPayrollRunRepository;
     private final SecurityContextHelper securityContextHelper;
     private final FormulaEngineService formulaEngineService;
+    private final com.payroll.service.SystemSetupService systemSetupService;
 
     @Override
     @Transactional(readOnly = true)
@@ -231,7 +232,7 @@ public class EmployeeFixedAllowanceServiceImpl implements EmployeeFixedAllowance
      * Falls back to 26 when the month is missing/unparsable or no period record exists yet.
      */
     private int resolveWorkingDays(String payrollMonth) {
-        if (payrollMonth == null || payrollMonth.isBlank()) return 26;
+        if (payrollMonth == null || payrollMonth.isBlank()) return systemSetupService.getWorkingDays();
         try {
             String[] parts = payrollMonth.split("-");
             int year = Integer.parseInt(parts[0]);
@@ -239,10 +240,10 @@ public class EmployeeFixedAllowanceServiceImpl implements EmployeeFixedAllowance
             return payrollPeriodRepository.findFirstByPeriodYearAndPeriodMonth(year, month)
                     .map(PayrollPeriod::getWorkingDays)
                     .filter(wd -> wd != null && wd > 0)
-                    .orElse(26);
+                    .orElseGet(systemSetupService::getWorkingDays);
         } catch (Exception ex) {
-            log.warn("Could not resolve working days for payrollMonth='{}' — defaulting to 26", payrollMonth);
-            return 26;
+            log.warn("Could not resolve working days for payrollMonth='{}' — defaulting to system_setup value", payrollMonth);
+            return systemSetupService.getWorkingDays();
         }
     }
 

@@ -94,8 +94,21 @@ public class FormulaEngineServiceImpl implements FormulaEngineService {
         String msg = root.getMessage() != null ? root.getMessage() : "";
 
         // Division by zero
-        if (root instanceof ArithmeticException || msg.contains("/ by zero")) {
+        if (msg.contains("/ by zero")) {
             return "Division by zero — ensure no divisor in the formula (e.g. workingDays) is zero.";
+        }
+
+        // BigDecimal division whose exact quotient never terminates (e.g. basicSalary
+        // / workingDays). Distinct from divide-by-zero — the divisor is fine, BigDecimal
+        // just has no rounding mode to fall back on inside MVEL's compiled evaluator.
+        if (msg.toLowerCase().contains("non-terminating decimal expansion")) {
+            return "Division in this formula doesn't divide evenly (e.g. basicSalary / workingDays) and BigDecimal has "
+                    + "no rounding mode to fall back on inside the formula engine. Round one side of the division "
+                    + "explicitly, or contact support to convert this calculation to a default (non-formula) rate.";
+        }
+
+        if (root instanceof ArithmeticException) {
+            return "Arithmetic error evaluating the formula: " + msg;
         }
 
         // MVEL undefined variable / unresolvable property

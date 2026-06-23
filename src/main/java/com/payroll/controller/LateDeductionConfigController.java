@@ -6,6 +6,7 @@ import com.payroll.dto.response.FormulaEvaluateResponseDTO;
 import com.payroll.dto.response.LateDeductionConfigResponseDTO;
 import com.payroll.formula.PayrollContextBuilder;
 import com.payroll.service.LateDeductionConfigService;
+import com.payroll.service.SystemSetupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ import java.util.Map;
 public class LateDeductionConfigController {
 
     private final LateDeductionConfigService configService;
+    private final SystemSetupService systemSetupService;
 
     // GET /payroll/late-deduction-config
     @GetMapping
@@ -81,7 +83,7 @@ public class LateDeductionConfigController {
 
         Map<String, Object> context = PayrollContextBuilder.builder()
                 .basicSalary(parseBD(body.get("basicSalary")))
-                .workingDays(parseInt(body.get("workingDays"), 26))
+                .workingDays(parseInt(body.get("workingDays"), systemSetupService.getWorkingDays()))
                 .lateHours(parseBD(body.get("lateHours")))
                 .build();
 

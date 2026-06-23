@@ -10,6 +10,7 @@ import com.payroll.repository.OvertimeRepository;
 import com.payroll.repository.UsrRepository;
 import com.payroll.service.FormulaEngineService;
 import com.payroll.service.OvertimeService;
+import com.payroll.service.SystemSetupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -31,6 +32,7 @@ public class OvertimeServiceImpl implements OvertimeService {
     private final UsrRepository usrRepository;
     private final OvertimeMapper overtimeMapper;
     private final FormulaEngineService formulaEngineService;
+    private final SystemSetupService systemSetupService;
 
     @Override
     @Transactional(readOnly = true)
@@ -98,17 +100,21 @@ public class OvertimeServiceImpl implements OvertimeService {
         Overtime overtime = overtimeRepository.findById(overtimeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Overtime", "id", overtimeId));
 
+        // NOTE: defaults are `double`, not BigDecimal — MVEL's compiled/executable
+        // evaluation throws ArithmeticException ("Non-terminating decimal expansion")
+        // when dividing BigDecimal operands whose quotient doesn't terminate (e.g.
+        // basicSalary / workingDays). See PayrollContextBuilder for the full explanation.
         Map<String, Object> ctx = new HashMap<>(context);
-        ctx.putIfAbsent("basicSalary",  BigDecimal.ZERO);
-        ctx.putIfAbsent("BASIC_SALARY", BigDecimal.ZERO);
-        ctx.putIfAbsent("workingDays",  26);
-        ctx.putIfAbsent("WORKING_DAYS", 26);
+        ctx.putIfAbsent("basicSalary",  0.0d);
+        ctx.putIfAbsent("BASIC_SALARY", 0.0d);
+        ctx.putIfAbsent("workingDays",  systemSetupService.getWorkingDays());
+        ctx.putIfAbsent("WORKING_DAYS", systemSetupService.getWorkingDays());
         ctx.putIfAbsent("nopayDays",    0);
         ctx.putIfAbsent("NOPAY_DAYS",   0);
-        ctx.putIfAbsent("otHours",      BigDecimal.ZERO);
-        ctx.putIfAbsent("OT_HOURS",     BigDecimal.ZERO);
-        ctx.putIfAbsent("otRate",       BigDecimal.ONE);
-        ctx.putIfAbsent("OT_RATE",      BigDecimal.ONE);
+        ctx.putIfAbsent("otHours",      0.0d);
+        ctx.putIfAbsent("OT_HOURS",     0.0d);
+        ctx.putIfAbsent("otRate",       1.0d);
+        ctx.putIfAbsent("OT_RATE",      1.0d);
 
         if (overtime.getFormula() != null && !overtime.getFormula().isBlank()) {
             String expression = overtime.getFormula();

@@ -11,6 +11,7 @@ import com.payroll.repository.BonusRepository;
 import com.payroll.repository.UsrRepository;
 import com.payroll.service.BonusService;
 import com.payroll.service.FormulaEngineService;
+import com.payroll.service.SystemSetupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
@@ -32,6 +33,7 @@ public class BonusServiceImpl implements BonusService {
     private final UsrRepository usrRepository;
     private final BonusMapper bonusMapper;
     private final FormulaEngineService formulaEngineService;
+    private final SystemSetupService systemSetupService;
 
     @Override
     @Transactional(readOnly = true)
@@ -94,11 +96,14 @@ public class BonusServiceImpl implements BonusService {
         Bonus bonus = bonusRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bonus", "id", id));
 
+        // double, not BigDecimal — MVEL's compiled evaluator throws ArithmeticException
+        // ("Non-terminating decimal expansion") on BigDecimal division that doesn't
+        // terminate exactly (e.g. basicSalary / workingDays). See PayrollContextBuilder.
         Map<String, Object> ctx = new HashMap<>(context);
-        ctx.putIfAbsent("basicSalary",  BigDecimal.ZERO);
-        ctx.putIfAbsent("BASIC_SALARY", BigDecimal.ZERO);
-        ctx.putIfAbsent("workingDays",  26);
-        ctx.putIfAbsent("WORKING_DAYS", 26);
+        ctx.putIfAbsent("basicSalary",  0.0d);
+        ctx.putIfAbsent("BASIC_SALARY", 0.0d);
+        ctx.putIfAbsent("workingDays",  systemSetupService.getWorkingDays());
+        ctx.putIfAbsent("WORKING_DAYS", systemSetupService.getWorkingDays());
 
         if (bonus.getFormula() != null && !bonus.getFormula().isBlank()) {
             String expression = bonus.getFormula();

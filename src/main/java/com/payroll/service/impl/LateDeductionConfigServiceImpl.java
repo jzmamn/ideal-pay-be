@@ -82,13 +82,16 @@ public class LateDeductionConfigServiceImpl implements LateDeductionConfigServic
     public FormulaEvaluateResponseDTO calculateAmount(Long configId, Map<String, Object> context) {
         LateDeductionConfig config = findOrThrow(configId);
 
+        // double, not BigDecimal — MVEL's compiled evaluator throws ArithmeticException
+        // ("Non-terminating decimal expansion") on BigDecimal division that doesn't
+        // terminate exactly (e.g. basicSalary / workingDays). See PayrollContextBuilder.
         Map<String, Object> ctx = new HashMap<>(context);
-        ctx.putIfAbsent("basicSalary",           BigDecimal.ZERO);
-        ctx.putIfAbsent("BASIC_SALARY",          BigDecimal.ZERO);
+        ctx.putIfAbsent("basicSalary",           0.0d);
+        ctx.putIfAbsent("BASIC_SALARY",          0.0d);
         ctx.putIfAbsent("workingDays",           config.getWorkingDays());
         ctx.putIfAbsent("WORKING_DAYS",          config.getWorkingDays());
         ctx.putIfAbsent("workingHoursPerDay",    config.getWorkingHoursPerDay());
-        ctx.putIfAbsent("lateHours",             BigDecimal.ZERO);
+        ctx.putIfAbsent("lateHours",             0.0d);
 
         if (config.getFormula() != null && !config.getFormula().isBlank()) {
             try {

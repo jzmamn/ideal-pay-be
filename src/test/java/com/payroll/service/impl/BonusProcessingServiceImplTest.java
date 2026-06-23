@@ -16,6 +16,7 @@ import com.payroll.repository.EmployeeBonusRepository;
 import com.payroll.repository.EmployeeRepository;
 import com.payroll.repository.UsrRepository;
 import com.payroll.service.FormulaEngineService;
+import com.payroll.service.SystemSetupService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +42,7 @@ class BonusProcessingServiceImplTest {
     private EmployeeRepository employeeRepository;
     private UsrRepository usrRepository;
     private FormulaEngineService formulaEngineService;
+    private SystemSetupService systemSetupService;
     private BonusProcessingServiceImpl service;
 
     @BeforeEach
@@ -51,13 +53,16 @@ class BonusProcessingServiceImplTest {
         employeeRepository = mock(EmployeeRepository.class);
         usrRepository = mock(UsrRepository.class);
         formulaEngineService = mock(FormulaEngineService.class);
+        systemSetupService = mock(SystemSetupService.class);
+        when(systemSetupService.getWorkingDays()).thenReturn(26);
         service = new BonusProcessingServiceImpl(
                 batchRepository,
                 employeeBonusRepository,
                 bonusRepository,
                 employeeRepository,
                 usrRepository,
-                formulaEngineService);
+                formulaEngineService,
+                systemSetupService);
     }
 
     @Test

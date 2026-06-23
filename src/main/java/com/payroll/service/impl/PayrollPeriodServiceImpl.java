@@ -12,6 +12,7 @@ import com.payroll.repository.EmpPayrollRunRepository;
 import com.payroll.repository.PayrollPeriodRepository;
 import com.payroll.repository.UsrRepository;
 import com.payroll.service.PayrollPeriodService;
+import com.payroll.service.SystemSetupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
@@ -33,6 +34,7 @@ public class PayrollPeriodServiceImpl implements PayrollPeriodService {
     private final CompanyRepository companyRepo;
     private final UsrRepository usrRepo;
     private final PayrollPeriodMapper mapper;
+    private final SystemSetupService systemSetupService;
 
     private static final Sort PERIOD_DESC =
             Sort.by(Sort.Direction.DESC, "periodYear", "periodMonth");
@@ -87,7 +89,9 @@ public class PayrollPeriodServiceImpl implements PayrollPeriodService {
                         "Company", "id", request.getCompanyId())));
         period.setPeriodCode(PayrollPeriod.buildPeriodCode(
                 request.getPeriodYear(), request.getPeriodMonth()));
-        if (period.getWorkingDays() == null) period.setWorkingDays(26);
+        if (period.getWorkingDays() == null) {
+            period.setWorkingDays(systemSetupService.getWorkingDays());
+        }
         if (period.getPayrollStatus() == null) period.setPayrollStatus(PayrollStatus.FUTURE);
         if (period.getLocked() == null) period.setLocked(false);
         if (period.getActive() == null) period.setActive(false);

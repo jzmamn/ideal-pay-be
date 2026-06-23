@@ -41,6 +41,22 @@ import java.util.Map;
  *   <li>Overtime code {@code OT_1}            → MVEL variables {@code OT_1}     (hours),
  *                                                               {@code OT_1_amount} (computed amount)</li>
  * </ul>
+ *
+ * <p><b>Why these are {@code double}, not {@code BigDecimal}:</b> MVEL2 compiles
+ * formulas via {@code ExpressionCompiler} and runs them through
+ * {@code MVEL.executeExpression} (the "executable" model). In that mode, dividing
+ * two {@code BigDecimal} operands whose exact quotient doesn't terminate in base 10
+ * (e.g. {@code basicSalary / workingDays}, which is non-terminating for almost any
+ * real salary/working-days combination) throws {@code ArithmeticException:
+ * Non-terminating decimal expansion; no exact representable decimal result} —
+ * BigDecimal's plain {@code divide(BigDecimal)} has no rounding mode to fall back
+ * on. That exception propagates out of {@code FormulaEngineService.evaluate(...)}
+ * uncaught by the per-component load loop, silently aborting that employee's whole
+ * load pass (only surfacing as an entry in {@code LoadSummaryDTO.errors}, easy to
+ * miss). Using {@code double} for context values makes MVEL perform ordinary
+ * floating-point division, which never throws; the result is converted back to a
+ * properly-scaled {@code BigDecimal} by the caller ({@code FormulaEngineService}
+ * already supports converting any {@code Number} result).
  */
 public class PayrollContextBuilder {
 
@@ -61,8 +77,8 @@ public class PayrollContextBuilder {
     public PayrollContextBuilder employee(Employee employee) {
         if (employee != null) {
             BigDecimal bs = employee.getBasicSalary() != null ? employee.getBasicSalary() : BigDecimal.ZERO;
-            context.put("basicSalary",  bs);
-            context.put("BASIC_SALARY", bs);
+            context.put("basicSalary",  bs.doubleValue());
+            context.put("BASIC_SALARY", bs.doubleValue());
             context.put("employeeId",   employee.getId());
             context.put("employeeNo",   employee.getEmployeeNo());
         }
@@ -72,8 +88,8 @@ public class PayrollContextBuilder {
     /** Sets {@code basicSalary} directly (use when employee object is not available). */
     public PayrollContextBuilder basicSalary(BigDecimal basicSalary) {
         BigDecimal bs = basicSalary != null ? basicSalary : BigDecimal.ZERO;
-        context.put("basicSalary",  bs);
-        context.put("BASIC_SALARY", bs);
+        context.put("basicSalary",  bs.doubleValue());
+        context.put("BASIC_SALARY", bs.doubleValue());
         return this;
     }
 
@@ -96,24 +112,24 @@ public class PayrollContextBuilder {
     /** Overtime hours worked during the period. */
     public PayrollContextBuilder otHours(BigDecimal otHours) {
         BigDecimal v = otHours != null ? otHours : BigDecimal.ZERO;
-        context.put("otHours",  v);
-        context.put("OT_HOURS", v);
+        context.put("otHours",  v.doubleValue());
+        context.put("OT_HOURS", v.doubleValue());
         return this;
     }
 
     /** Overtime rate multiplier (e.g. 1.5 = time-and-a-half). */
     public PayrollContextBuilder otRate(BigDecimal otRate) {
         BigDecimal v = otRate != null ? otRate : BigDecimal.ONE;
-        context.put("otRate",  v);
-        context.put("OT_RATE", v);
+        context.put("otRate",  v.doubleValue());
+        context.put("OT_RATE", v.doubleValue());
         return this;
     }
 
     /** Total late hours (used in formula test / calculate endpoints). */
     public PayrollContextBuilder lateHours(BigDecimal lateHours) {
         BigDecimal v = lateHours != null ? lateHours : BigDecimal.ZERO;
-        context.put("lateHours",  v);
-        context.put("LATE_HOURS", v);
+        context.put("lateHours",  v.doubleValue());
+        context.put("LATE_HOURS", v.doubleValue());
         return this;
     }
 
@@ -127,7 +143,7 @@ public class PayrollContextBuilder {
         if (list != null) {
             list.forEach(efa -> context.put(
                     efa.getFixedAllowance().getCode(),
-                    efa.getAmount() != null ? efa.getAmount() : BigDecimal.ZERO));
+                    (efa.getAmount() != null ? efa.getAmount() : BigDecimal.ZERO).doubleValue()));
         }
         return this;
     }
@@ -140,7 +156,7 @@ public class PayrollContextBuilder {
         if (list != null) {
             list.forEach(eva -> context.put(
                     eva.getVariableAllowance().getCode(),
-                    eva.getAmount() != null ? eva.getAmount() : BigDecimal.ZERO));
+                    (eva.getAmount() != null ? eva.getAmount() : BigDecimal.ZERO).doubleValue()));
         }
         return this;
     }
@@ -155,7 +171,7 @@ public class PayrollContextBuilder {
         if (list != null) {
             list.forEach(efd -> context.put(
                     efd.getFixedDeduction().getCode(),
-                    efd.getAmount() != null ? efd.getAmount() : BigDecimal.ZERO));
+                    (efd.getAmount() != null ? efd.getAmount() : BigDecimal.ZERO).doubleValue()));
         }
         return this;
     }
@@ -168,7 +184,7 @@ public class PayrollContextBuilder {
         if (list != null) {
             list.forEach(evd -> context.put(
                     evd.getVariableDeduction().getCode(),
-                    evd.getAmount() != null ? evd.getAmount() : BigDecimal.ZERO));
+                    (evd.getAmount() != null ? evd.getAmount() : BigDecimal.ZERO).doubleValue()));
         }
         return this;
     }
@@ -186,8 +202,8 @@ public class PayrollContextBuilder {
         if (list != null) {
             list.forEach(enp -> {
                 String code = enp.getNopayDays().getCode();
-                context.put(code,                enp.getDays()   != null ? enp.getDays()   : BigDecimal.ZERO);
-                context.put(code + "_amount",    enp.getAmount() != null ? enp.getAmount() : BigDecimal.ZERO);
+                context.put(code,             (enp.getDays()   != null ? enp.getDays()   : BigDecimal.ZERO).doubleValue());
+                context.put(code + "_amount", (enp.getAmount() != null ? enp.getAmount() : BigDecimal.ZERO).doubleValue());
             });
         }
         return this;
@@ -203,7 +219,7 @@ public class PayrollContextBuilder {
             BigDecimal totalLateHours = list.stream()
                     .map(el -> el.getHours() != null ? el.getHours() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-            context.put("lateHours", totalLateHours);
+            context.put("lateHours", totalLateHours.doubleValue());
         }
         return this;
     }
@@ -221,8 +237,8 @@ public class PayrollContextBuilder {
         if (list != null) {
             list.forEach(eot -> {
                 String code = eot.getOvertime().getCode();
-                context.put(code,                eot.getHours()  != null ? eot.getHours()  : BigDecimal.ZERO);
-                context.put(code + "_amount",    eot.getAmount() != null ? eot.getAmount() : BigDecimal.ZERO);
+                context.put(code,             (eot.getHours()  != null ? eot.getHours()  : BigDecimal.ZERO).doubleValue());
+                context.put(code + "_amount", (eot.getAmount() != null ? eot.getAmount() : BigDecimal.ZERO).doubleValue());
             });
         }
         return this;
@@ -245,16 +261,18 @@ public class PayrollContextBuilder {
 
     /** Returns the assembled context map ready for MVEL evaluation. */
     public Map<String, Object> build() {
-        context.putIfAbsent("basicSalary",  BigDecimal.ZERO);
-        context.putIfAbsent("BASIC_SALARY", BigDecimal.ZERO);
-        context.putIfAbsent("workingDays",  26);
-        context.putIfAbsent("WORKING_DAYS", 26);
+        context.putIfAbsent("basicSalary",  0.0d);
+        context.putIfAbsent("BASIC_SALARY", 0.0d);
+        // No hardcoded workingDays default here — this is a static utility with
+        // no access to SystemSetupService. Every caller resolves the value first
+        // (PayrollPeriod / system_setup WORKING_DAYS) and passes it explicitly
+        // via .workingDays(...) before build() runs.
         context.putIfAbsent("nopayDays",    0);
         context.putIfAbsent("NOPAY_DAYS",   0);
-        context.putIfAbsent("otHours",      BigDecimal.ZERO);
-        context.putIfAbsent("OT_HOURS",     BigDecimal.ZERO);
-        context.putIfAbsent("otRate",       BigDecimal.ONE);
-        context.putIfAbsent("OT_RATE",      BigDecimal.ONE);
+        context.putIfAbsent("otHours",      0.0d);
+        context.putIfAbsent("OT_HOURS",     0.0d);
+        context.putIfAbsent("otRate",       1.0d);
+        context.putIfAbsent("OT_RATE",      1.0d);
         return new HashMap<>(context);
     }
 }

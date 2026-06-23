@@ -11,6 +11,7 @@ import com.payroll.service.ComponentLine;
 import com.payroll.service.FormulaEngineService;
 import com.payroll.service.SalaryCalculationEngineService;
 import com.payroll.service.SalaryCalculationResult;
+import com.payroll.service.SystemSetupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,7 @@ public class PayrollEmployeeProcessorImpl {
     private final UsrRepository                    usrRepository;
     private final PayrollPeriodRepository          payrollPeriodRepository;
     private final SalaryCalculationEngineService   calculationEngine;
+    private final SystemSetupService               systemSetupService;
 
     private final EmployeeFixedAllowanceRepository    empFaRepository;
     private final EmployeeFixedDeductionRepository    empFdRepository;
@@ -97,7 +99,8 @@ public class PayrollEmployeeProcessorImpl {
         int workingDays = payrollPeriodRepository.findAllByPeriodCode(payrollMonth)
                 .stream().findFirst()
                 .map(PayrollPeriod::getWorkingDays)
-                .orElse(26);
+                .filter(wd -> wd != null && wd > 0)
+                .orElseGet(systemSetupService::getWorkingDays);
 
         SalaryCalculationResult result = calculationEngine.calculate(
                 employee, workingDays, faList, vaList, otList, fdList, vdList, npList, saList, lateList);

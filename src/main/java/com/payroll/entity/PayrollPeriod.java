@@ -55,10 +55,15 @@ public class PayrollPeriod {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    /** Number of working/payable days (used for nopay and OT rate calculation). */
-    @Builder.Default
+    /**
+     * Number of working/payable days (used for nopay and OT rate calculation).
+     * No Java-side default on purpose — when omitted, PayrollPeriodServiceImpl
+     * resolves it from the global WORKING_DAYS system_setup value rather than
+     * a hardcoded literal here. The column keeps a DB-level default purely as
+     * a safety net for rows inserted outside the application (SQL scripts, etc).
+     */
     @Column(name = "working_days", nullable = false, columnDefinition = "INT DEFAULT 26")
-    private Integer workingDays = 26;
+    private Integer workingDays;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payroll_status", nullable = false, length = 20,

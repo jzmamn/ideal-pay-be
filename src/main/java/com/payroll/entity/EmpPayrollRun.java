@@ -93,10 +93,13 @@ public class EmpPayrollRun {
             columnDefinition = "DECIMAL(15,2) DEFAULT '0.00'")
     private BigDecimal payeTax = BigDecimal.ZERO;
 
-    /** Working days used for this run (sourced from PayrollPeriod). */
-    @Builder.Default
+    /**
+     * Working days used for this run (sourced from PayrollPeriod, falling back
+     * to the global system_setup WORKING_DAYS value). No Java-side default —
+     * always set explicitly by the run builder.
+     */
     @Column(name = "working_days", nullable = false, columnDefinition = "INT DEFAULT 26")
-    private Integer workingDays = 26;
+    private Integer workingDays;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20,
