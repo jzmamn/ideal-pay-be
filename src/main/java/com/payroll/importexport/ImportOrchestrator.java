@@ -96,7 +96,7 @@ public class ImportOrchestrator {
     private final ImportSessionRepository sessionRepository;
     private final ImportLogRepository importLogRepository;
     private final EmployeeRepository employeeRepository;
-    private final NopayDaysRepository nopayDaysRepository;
+    private final NopayRepository nopayRepository;
     private final OvertimeRepository overtimeRepository;
     private final BonusRepository bonusRepository;
     private final FixedAllowanceRepository fixedAllowanceRepository;
@@ -376,7 +376,7 @@ public class ImportOrchestrator {
     private void persistRows(ImportEntityType entity, String payrollMonth,
                              List<ImportRowDTO> rows, Long importLogId, Usr user) {
         Map<String, Employee> empCache = new HashMap<>();
-        Map<String, NopayDays> nopayCache = new HashMap<>();
+        Map<String, Nopay> nopayCache = new HashMap<>();
         Map<String, Overtime> otCache = new HashMap<>();
         Map<String, Bonus> bonusCache = new HashMap<>();
         Map<String, FixedAllowance> faCache = new HashMap<>();
@@ -389,7 +389,7 @@ public class ImportOrchestrator {
             case EMP_NOPAY -> employeeNopayRepository.saveAll(rows.stream()
                     .map(r -> EmployeeNopay.builder()
                             .employee(employee(r, empCache))
-                            .nopayDays(nopay(r, nopayCache))
+                            .nopay(nopay(r, nopayCache))
                             .days(decimal(r, "days"))
                             .amount(decimal(r, "amount"))
                             .payrollMonth(payrollMonth)
@@ -584,10 +584,10 @@ public class ImportOrchestrator {
                         .orElseThrow(() -> new ImportException("Unknown employee: " + code)));
     }
 
-    private NopayDays nopay(ImportRowDTO row, Map<String, NopayDays> cache) {
+    private Nopay nopay(ImportRowDTO row, Map<String, Nopay> cache) {
         String code = row.getValues().get("nopayCode");
         return cache.computeIfAbsent(code.toLowerCase(Locale.ROOT),
-                k -> nopayDaysRepository.findByCodeIgnoreCase(code)
+                k -> nopayRepository.findByCodeIgnoreCase(code)
                         .orElseThrow(() -> new ImportException("Unknown no-pay code: " + code)));
     }
 

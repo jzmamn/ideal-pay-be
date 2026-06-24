@@ -201,7 +201,7 @@ public class PayrollContextBuilder {
     public PayrollContextBuilder nopayEntries(List<EmployeeNopay> list) {
         if (list != null) {
             list.forEach(enp -> {
-                String code = enp.getNopayDays().getCode();
+                String code = enp.getNopay().getCode();
                 context.put(code,             (enp.getDays()   != null ? enp.getDays()   : BigDecimal.ZERO).doubleValue());
                 context.put(code + "_amount", (enp.getAmount() != null ? enp.getAmount() : BigDecimal.ZERO).doubleValue());
             });

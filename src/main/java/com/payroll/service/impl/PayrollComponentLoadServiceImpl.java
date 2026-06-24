@@ -38,7 +38,7 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
     private final FixedAllowanceRepository       faRepository;
     private final FixedDeductionRepository       fdRepository;
     private final OvertimeRepository             otRepository;
-    private final NopayDaysRepository            npRepository;
+    private final NopayRepository                nopayRepository;
     private final LateDeductionConfigRepository  lateConfigRepository;
     private final BonusRepository                bonusRepository;
 
@@ -298,28 +298,37 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
 
     // ─────────────────────────────────────────────────────────────────────────
     // No Pay — stores RATE; amount = rate × days
+    // Loops all active Nopay types; rate denominator = employee.nopayDays.days
+    // (the NoPay days config assigned to the employee on employee.nopay_days_id).
     // ─────────────────────────────────────────────────────────────────────────
 
     private int loadNp(Employee emp, String payrollMonth, BigDecimal basicSalary,
                        int workingDays, Map<String, Object> ctx, Usr user) {
-        List<NopayDays> activeList = npRepository.findAllByIsActive(true, Sort.by("id"));
+        List<Nopay> activeList = nopayRepository.findAllByIsActive(true, Sort.by("id"));
         int count = 0;
 
-        for (NopayDays nd : activeList) {
+        // Denominator for the daily rate: the NoPay days config on the employee
+        // (e.g. 26 working days). Falls back to the period's workingDays if unset.
+        NopayDays nopayDaysCfg = emp.getNopayDays();
+        BigDecimal ruleDays = (nopayDaysCfg != null) ? nopayDaysCfg.getDays() : null;
+        BigDecimal denominator = (ruleDays != null && ruleDays.compareTo(BigDecimal.ZERO) > 0)
+                ? ruleDays
+                : BigDecimal.valueOf(workingDays);
+
+        for (Nopay np : activeList) {
             BigDecimal rate;
-            if (nd.getFormula() != null && !nd.getFormula().isBlank()) {
-                rate = formulaEngineService.evaluate(nd.getFormula(), ctx);
-                log.debug("NP rate formula [{}] emp={} → {}", nd.getCode(), emp.getId(), rate);
+            if (np.getFormula() != null && !np.getFormula().isBlank()) {
+                rate = formulaEngineService.evaluate(np.getFormula(), ctx);
+                log.debug("NP rate formula [{}] emp={} → {}", np.getCode(), emp.getId(), rate);
             } else {
-                // Default: basicSalary / workingDays
-                rate = workingDays > 0
-                        ? basicSalary.divide(BigDecimal.valueOf(workingDays), 6, RoundingMode.HALF_UP)
+                rate = denominator.compareTo(BigDecimal.ZERO) > 0
+                        ? basicSalary.divide(denominator, 6, RoundingMode.HALF_UP)
                         : BigDecimal.ZERO;
             }
 
             final BigDecimal finalRate = orZero(rate);
-            empNpRepository.findByEmployee_IdAndNopayDays_IdAndPayrollMonth(
-                    emp.getId(), nd.getId(), payrollMonth)
+            empNpRepository.findByEmployee_IdAndNopay_IdAndPayrollMonth(
+                    emp.getId(), np.getId(), payrollMonth)
                     .ifPresentOrElse(
                             existing -> {
                                 BigDecimal days = orZero(existing.getDays());
@@ -330,7 +339,7 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
                             },
                             () -> empNpRepository.save(EmployeeNopay.builder()
                                     .employee(emp)
-                                    .nopayDays(nd)
+                                    .nopay(np)
                                     .rate(finalRate)
                                     .days(BigDecimal.ZERO)
                                     .amount(BigDecimal.ZERO)
@@ -346,66 +355,62 @@ public class PayrollComponentLoadServiceImpl implements PayrollComponentLoadServ
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Late Deduction — stores RATE per config; amount = rate × hours
-    // One EmployeeLate row is created per (employee, config, month).
+    // Late Deduction — singleton config; one emp_late row per (employee, month).
+    // Rate = basicSalary / (workingDays × workingHoursPerDay), or custom formula.
     // ─────────────────────────────────────────────────────────────────────────
 
     private int loadLate(Employee emp, String payrollMonth, BigDecimal basicSalary,
                          Map<String, Object> ctx, Usr user) {
-        List<LateDeductionConfig> activeConfigs =
-                lateConfigRepository.findAllByIsActive(true, Sort.by("id"));
+        // Singleton: use the first user-created config (id > 0).
+        // Fall back to system defaults when no config has been saved yet.
+        LateDeductionConfig config = lateConfigRepository
+                .findTopByIdGreaterThanOrderByIdAsc(0L)
+                .orElse(null);
 
-        if (activeConfigs.isEmpty()) {
-            log.debug("No active LateDeductionConfig — skipping late load for emp={}", emp.getId());
-            return 0;
+        BigDecimal rate;
+        if (config != null && config.getFormula() != null && !config.getFormula().isBlank()) {
+            rate = formulaEngineService.evaluate(config.getFormula(), ctx);
+            log.debug("Late rate formula emp={} → {}", emp.getId(), rate);
+        } else {
+            int wd  = config != null && config.getWorkingDays() != null
+                      ? config.getWorkingDays() : systemSetupService.getWorkingDays();
+            int hpd = config != null && config.getWorkingHoursPerDay() != null
+                      ? config.getWorkingHoursPerDay() : 8;
+            int denominator = wd * hpd;
+            rate = denominator > 0
+                    ? basicSalary.divide(BigDecimal.valueOf(denominator), 6, RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
         }
 
-        int count = 0;
-        for (LateDeductionConfig config : activeConfigs) {
-            BigDecimal rate;
-            if (config.getFormula() != null && !config.getFormula().isBlank()) {
-                rate = formulaEngineService.evaluate(config.getFormula(), ctx);
-                log.debug("Late rate formula [{}] emp={} → {}", config.getCode(), emp.getId(), rate);
-            } else {
-                // Default: basicSalary / (workingDays × workingHoursPerDay)
-                int wd          = config.getWorkingDays()        != null ? config.getWorkingDays()        : systemSetupService.getWorkingDays();
-                int hpd         = config.getWorkingHoursPerDay() != null ? config.getWorkingHoursPerDay() : 8;
-                int denominator = wd * hpd;
-                rate = denominator > 0
-                        ? basicSalary.divide(BigDecimal.valueOf(denominator), 6, RoundingMode.HALF_UP)
-                        : BigDecimal.ZERO;
-            }
+        final BigDecimal          finalRate   = orZero(rate);
+        final LateDeductionConfig finalConfig = config;
 
-            final BigDecimal         finalRate   = orZero(rate);
-            final LateDeductionConfig finalConfig = config;
-
-            empLateRepository.findByEmployee_IdAndLateConfig_IdAndPayrollMonth(
-                            emp.getId(), config.getId(), payrollMonth)
-                    .ifPresentOrElse(
-                            existing -> {
-                                BigDecimal hours = orZero(existing.getHours());
-                                existing.setRate(finalRate);
-                                existing.setLateConfig(finalConfig);
-                                existing.setAmount(finalRate.multiply(hours)
-                                        .setScale(2, RoundingMode.HALF_UP));
-                                existing.setModifiedBy(user);
-                                empLateRepository.save(existing);
-                            },
-                            () -> empLateRepository.save(EmployeeLate.builder()
-                                    .employee(emp)
-                                    .lateConfig(finalConfig)
-                                    .rate(finalRate)
-                                    .hours(BigDecimal.ZERO)
-                                    .amount(BigDecimal.ZERO)
-                                    .payrollMonth(payrollMonth)
-                                    .isProcessed(false)
-                                    .createdBy(user)
-                                    .modifiedBy(user)
-                                    .build())
-                    );
-            count++;
-        }
-        return count;
+        // One row per (employee, month) — use the simple two-key lookup to avoid
+        // late_config_id dependency and prevent duplicate rows from the old multi-config path.
+        empLateRepository.findByEmployee_IdAndPayrollMonth(emp.getId(), payrollMonth)
+                .ifPresentOrElse(
+                        existing -> {
+                            BigDecimal hours = orZero(existing.getHours());
+                            existing.setRate(finalRate);
+                            existing.setLateConfig(finalConfig);
+                            existing.setAmount(finalRate.multiply(hours)
+                                    .setScale(2, RoundingMode.HALF_UP));
+                            existing.setModifiedBy(user);
+                            empLateRepository.save(existing);
+                        },
+                        () -> empLateRepository.save(EmployeeLate.builder()
+                                .employee(emp)
+                                .lateConfig(finalConfig)
+                                .rate(finalRate)
+                                .hours(BigDecimal.ZERO)
+                                .amount(BigDecimal.ZERO)
+                                .payrollMonth(payrollMonth)
+                                .isProcessed(false)
+                                .createdBy(user)
+                                .modifiedBy(user)
+                                .build())
+                );
+        return 1;
     }
 
     // ─────────────────────────────────────────────────────────────────────────

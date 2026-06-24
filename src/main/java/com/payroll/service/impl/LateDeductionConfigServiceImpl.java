@@ -4,22 +4,21 @@ import com.payroll.dto.request.LateDeductionConfigRequestDTO;
 import com.payroll.dto.response.FormulaEvaluateResponseDTO;
 import com.payroll.dto.response.LateDeductionConfigResponseDTO;
 import com.payroll.entity.LateDeductionConfig;
-import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.LateDeductionConfigMapper;
 import com.payroll.repository.LateDeductionConfigRepository;
 import com.payroll.repository.UsrRepository;
 import com.payroll.service.FormulaEngineService;
 import com.payroll.service.LateDeductionConfigService;
+import com.payroll.service.SystemSetupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -31,67 +30,50 @@ public class LateDeductionConfigServiceImpl implements LateDeductionConfigServic
     private final UsrRepository                 usrRepository;
     private final LateDeductionConfigMapper     configMapper;
     private final FormulaEngineService          formulaEngineService;
+    private final SystemSetupService            systemSetupService;
 
     @Override
     @Transactional(readOnly = true)
-    public List<LateDeductionConfigResponseDTO> getAll(String isActive) {
-        Sort sort = Sort.by("id").ascending();
-        List<LateDeductionConfig> records = "all".equalsIgnoreCase(isActive)
-                ? configRepository.findAll(sort)
-                : configRepository.findAllByIsActive(Boolean.parseBoolean(isActive), sort);
-        // id = -1 is the system default fallback row — never expose it to the UI
-        return configMapper.toResponseDTOList(
-                records.stream().filter(e -> e.getId() != -1L).toList());
+    public LateDeductionConfigResponseDTO get() {
+        return findSingleton()
+                .map(configMapper::toResponseDTO)
+                .orElse(null);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public LateDeductionConfigResponseDTO getById(Long id) {
-        return configMapper.toResponseDTO(findOrThrow(id));
-    }
-
-    @Override
-    public LateDeductionConfigResponseDTO create(LateDeductionConfigRequestDTO requestDTO) {
+    public LateDeductionConfigResponseDTO save(LateDeductionConfigRequestDTO requestDTO) {
         validateFormula(requestDTO.getFormula());
-        LateDeductionConfig entity = configMapper.toEntity(requestDTO);
-        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getCreatedBy()));
-        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
-        LateDeductionConfig saved = configRepository.save(entity);
-        saved.setCode("LD_" + saved.getId());
-        return configMapper.toResponseDTO(configRepository.save(saved));
-    }
+        Optional<LateDeductionConfig> existing = findSingleton();
 
-    @Override
-    public LateDeductionConfigResponseDTO update(Long id, LateDeductionConfigRequestDTO requestDTO) {
-        LateDeductionConfig existing = findOrThrow(id);
-        validateFormula(requestDTO.getFormula());
-        configMapper.updateEntityFromDTO(requestDTO, existing);
-        if (requestDTO.getModifiedBy() != null) {
-            existing.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        if (existing.isPresent()) {
+            LateDeductionConfig entity = existing.get();
+            configMapper.updateEntityFromDTO(requestDTO, entity);
+            entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+            return configMapper.toResponseDTO(configRepository.save(entity));
         }
-        return configMapper.toResponseDTO(configRepository.save(existing));
-    }
 
-    @Override
-    public void delete(Long id) {
-        configRepository.delete(findOrThrow(id));
+        // First-time create
+        LateDeductionConfig entity = configMapper.toEntity(requestDTO);
+        entity.setCode("LD_DEFAULT");
+        entity.setName(requestDTO.getName() != null && !requestDTO.getName().isBlank()
+                ? requestDTO.getName() : "Late Deduction");
+        entity.setCreatedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        entity.setModifiedBy(usrRepository.getReferenceById(requestDTO.getModifiedBy()));
+        return configMapper.toResponseDTO(configRepository.save(entity));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public FormulaEvaluateResponseDTO calculateAmount(Long configId, Map<String, Object> context) {
-        LateDeductionConfig config = findOrThrow(configId);
+    public FormulaEvaluateResponseDTO calculateAmount(Map<String, Object> context) {
+        LateDeductionConfig config = findSingleton().orElseGet(this::defaultConfig);
 
-        // double, not BigDecimal — MVEL's compiled evaluator throws ArithmeticException
-        // ("Non-terminating decimal expansion") on BigDecimal division that doesn't
-        // terminate exactly (e.g. basicSalary / workingDays). See PayrollContextBuilder.
         Map<String, Object> ctx = new HashMap<>(context);
-        ctx.putIfAbsent("basicSalary",           0.0d);
-        ctx.putIfAbsent("BASIC_SALARY",          0.0d);
-        ctx.putIfAbsent("workingDays",           config.getWorkingDays());
-        ctx.putIfAbsent("WORKING_DAYS",          config.getWorkingDays());
-        ctx.putIfAbsent("workingHoursPerDay",    config.getWorkingHoursPerDay());
-        ctx.putIfAbsent("lateHours",             0.0d);
+        ctx.putIfAbsent("basicSalary",        0.0d);
+        ctx.putIfAbsent("BASIC_SALARY",       0.0d);
+        ctx.putIfAbsent("workingDays",        config.getWorkingDays());
+        ctx.putIfAbsent("WORKING_DAYS",       config.getWorkingDays());
+        ctx.putIfAbsent("workingHoursPerDay", config.getWorkingHoursPerDay());
+        ctx.putIfAbsent("lateHours",          0.0d);
 
         if (config.getFormula() != null && !config.getFormula().isBlank()) {
             try {
@@ -102,8 +84,7 @@ public class LateDeductionConfigServiceImpl implements LateDeductionConfigServic
                         .context(sanitise(ctx))
                         .build();
             } catch (Exception ex) {
-                log.warn("Formula evaluation failed for LateDeductionConfig [{}]: {}",
-                        config.getCode(), ex.getMessage());
+                log.warn("Formula evaluation failed for late deduction config: {}", ex.getMessage());
                 return FormulaEvaluateResponseDTO.builder()
                         .expression(config.getFormula())
                         .context(sanitise(ctx))
@@ -114,19 +95,18 @@ public class LateDeductionConfigServiceImpl implements LateDeductionConfigServic
         }
 
         // Default formula: basicSalary / (workingDays * workingHoursPerDay) * lateHours
-        BigDecimal basicSalary   = toBD(ctx.get("basicSalary"));
-        BigDecimal lateHours     = toBD(ctx.get("lateHours"));
-        int        wDays         = config.getWorkingDays();
-        int        wHours        = config.getWorkingHoursPerDay();
+        BigDecimal basicSalary = toBD(ctx.get("basicSalary"));
+        BigDecimal lateHours   = toBD(ctx.get("lateHours"));
+        int wDays  = config.getWorkingDays();
+        int wHours = config.getWorkingHoursPerDay();
         BigDecimal defaultResult = (wDays * wHours == 0) ? BigDecimal.ZERO
                 : basicSalary.divide(
                         BigDecimal.valueOf((long) wDays * wHours), 10, java.math.RoundingMode.HALF_UP)
                   .multiply(lateHours)
                   .setScale(2, java.math.RoundingMode.HALF_UP);
 
-        String defaultExpr = "basicSalary / (" + wDays + " * " + wHours + ") * lateHours";
         return FormulaEvaluateResponseDTO.builder()
-                .expression(defaultExpr)
+                .expression("basicSalary / (" + wDays + " * " + wHours + ") * lateHours")
                 .result(defaultResult)
                 .context(sanitise(ctx))
                 .build();
@@ -134,9 +114,16 @@ public class LateDeductionConfigServiceImpl implements LateDeductionConfigServic
 
     // ── helpers ───────────────────────────────────────────────────────────────
 
-    private LateDeductionConfig findOrThrow(Long id) {
-        return configRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("LateDeductionConfig", "id", id));
+    private Optional<LateDeductionConfig> findSingleton() {
+        return configRepository.findTopByIdGreaterThanOrderByIdAsc(0L);
+    }
+
+    /** Transient default used for calculation when no config has been saved yet. */
+    private LateDeductionConfig defaultConfig() {
+        return LateDeductionConfig.builder()
+                .workingDays(systemSetupService.getWorkingDays())
+                .workingHoursPerDay(8)
+                .build();
     }
 
     private void validateFormula(String formula) {

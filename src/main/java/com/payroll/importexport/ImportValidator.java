@@ -34,7 +34,7 @@ public class ImportValidator {
     public static final Pattern PAYROLL_MONTH = Pattern.compile("^\\d{4}-(0[1-9]|1[0-2])$");
 
     private final EmployeeRepository employeeRepository;
-    private final NopayDaysRepository nopayDaysRepository;
+    private final NopayRepository nopayRepository;
     private final OvertimeRepository overtimeRepository;
     private final BonusRepository bonusRepository;
     private final FixedAllowanceRepository fixedAllowanceRepository;
@@ -143,7 +143,7 @@ public class ImportValidator {
                                       Map<String, Boolean> cache) {
         return cache.computeIfAbsent(entity.name() + ":" + normalize(code),
                 k -> switch (entity) {
-                    case EMP_NOPAY -> nopayDaysRepository.findByCodeIgnoreCase(code).isPresent();
+                    case EMP_NOPAY -> nopayRepository.findByCodeIgnoreCase(code).isPresent();
                     case EMP_OT -> overtimeRepository.findByCodeIgnoreCase(code).isPresent();
                     case EMP_BONUS -> bonusRepository.findByCodeIgnoreCase(code).isPresent();
                     case EMP_FA -> fixedAllowanceRepository.findByCodeIgnoreCase(code).isPresent();

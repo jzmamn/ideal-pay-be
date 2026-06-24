@@ -7,7 +7,7 @@ import com.payroll.exception.ResourceNotFoundException;
 import com.payroll.mapper.EmployeeNopayMapper;
 import com.payroll.repository.EmployeeRepository;
 import com.payroll.repository.EmployeeNopayRepository;
-import com.payroll.repository.NopayDaysRepository;
+import com.payroll.repository.NopayRepository;
 import com.payroll.repository.UsrRepository;
 import com.payroll.service.EmployeeNopayService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class EmployeeNopayServiceImpl implements EmployeeNopayService {
     private final EmployeeNopayRepository employeeNopayRepository;
     private final EmployeeNopayMapper employeeNopayMapper;
     private final EmployeeRepository employeeRepository;
-    private final NopayDaysRepository nopayDaysRepository;
+    private final NopayRepository nopayRepository;
     private final UsrRepository usrRepository;
 
     @Override
@@ -49,7 +49,7 @@ public class EmployeeNopayServiceImpl implements EmployeeNopayService {
     @Override
     public EmployeeNopayResponseDTO createEmployeeNopay(EmployeeNopayRequestDTO requestDTO) {
         EmployeeNopay entity = employeeNopayRepository
-                .findByEmployee_IdAndNopayDays_IdAndPayrollMonth(
+                .findByEmployee_IdAndNopay_IdAndPayrollMonth(
                         requestDTO.getEmpId(), requestDTO.getNopayId(), requestDTO.getPayrollMonth())
                 .orElse(null);
 
@@ -102,7 +102,7 @@ public class EmployeeNopayServiceImpl implements EmployeeNopayService {
 
     private void setRelationships(EmployeeNopay entity, EmployeeNopayRequestDTO dto) {
         entity.setEmployee(employeeRepository.getReferenceById(dto.getEmpId()));
-        entity.setNopayDays(nopayDaysRepository.getReferenceById(dto.getNopayId()));
+        entity.setNopay(nopayRepository.getReferenceById(dto.getNopayId()));
         entity.setCreatedBy(usrRepository.getReferenceById(dto.getCreatedBy()));
         entity.setModifiedBy(usrRepository.getReferenceById(dto.getModifiedBy()));
     }
@@ -111,7 +111,7 @@ public class EmployeeNopayServiceImpl implements EmployeeNopayService {
         if (dto.getEmpId() != null)
             entity.setEmployee(employeeRepository.getReferenceById(dto.getEmpId()));
         if (dto.getNopayId() != null)
-            entity.setNopayDays(nopayDaysRepository.getReferenceById(dto.getNopayId()));
+            entity.setNopay(nopayRepository.getReferenceById(dto.getNopayId()));
         if (dto.getModifiedBy() != null)
             entity.setModifiedBy(usrRepository.getReferenceById(dto.getModifiedBy()));
     }

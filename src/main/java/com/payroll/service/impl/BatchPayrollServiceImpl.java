@@ -39,7 +39,7 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
     private final VariableAllowanceRepository vaRepository;
     private final VariableDeductionRepository vdRepository;
     private final OvertimeRepository          otRepository;
-    private final NopayDaysRepository         npRepository;
+    private final NopayRepository             npRepository;
     private final LoanRepository              loanRepository;
 
     // Employee component repositories — upsert targets
@@ -190,7 +190,7 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
     private void deleteNp(Employee emp, BatchSaveEntryDTO entry, String payrollMonth) {
         npRepository.findByCodeIgnoreCase(entry.getComponentCode()).ifPresent(np ->
             empNpRepository.findAllByEmployeeIdAndPayrollMonth(emp.getId(), payrollMonth).stream()
-                .filter(r -> r.getNopayDays().getId().equals(np.getId()))
+                .filter(r -> r.getNopay().getId().equals(np.getId()))
                 .findFirst()
                 .ifPresent(empNpRepository::delete));
     }
@@ -371,14 +371,14 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
     // ── Upsert — NoPay ────────────────────────────────────────────────────────
 
     private void upsertNp(Employee emp, BatchSaveEntryDTO entry, String payrollMonth, Usr user) {
-        NopayDays np = npRepository.findByCodeIgnoreCase(entry.getComponentCode())
-                .orElseThrow(() -> new ResourceNotFoundException("NopayDays", "code", entry.getComponentCode()));
+        Nopay np = npRepository.findByCodeIgnoreCase(entry.getComponentCode())
+                .orElseThrow(() -> new ResourceNotFoundException("Nopay", "code", entry.getComponentCode()));
 
         BigDecimal days = entry.getDays() != null ? entry.getDays() : BigDecimal.ZERO;
 
         empNpRepository.findAllByEmployeeIdAndPayrollMonth(emp.getId(), payrollMonth)
                 .stream()
-                .filter(r -> r.getNopayDays().getId().equals(np.getId()))
+                .filter(r -> r.getNopay().getId().equals(np.getId()))
                 .findFirst()
                 .ifPresentOrElse(
                         existing -> {
@@ -389,7 +389,7 @@ public class BatchPayrollServiceImpl implements BatchPayrollService {
                         },
                         () -> empNpRepository.save(EmployeeNopay.builder()
                                 .employee(emp)
-                                .nopayDays(np)
+                                .nopay(np)
                                 .days(days)
                                 .amount(entry.getAmount())
                                 .payrollMonth(payrollMonth)

@@ -63,7 +63,7 @@ public class ExportService {
                     n -> new String[]{
                             n.getEmployee().getEmployeeNo(),
                             n.getEmployee().getPayrollName(),
-                            n.getNopayDays().getCode(),
+                            n.getNopay().getCode(),
                             text(n.getDays()),
                             text(n.getAmount()),
                             n.getPayrollMonth(),

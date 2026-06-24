@@ -10,7 +10,6 @@ import lombok.*;
 @Builder
 public class LateDeductionConfigRequestDTO {
 
-    @NotBlank(message = "Name is required")
     @Size(max = 150, message = "Name must not exceed 150 characters")
     private String name;
 
@@ -35,9 +34,6 @@ public class LateDeductionConfigRequestDTO {
     private Boolean liableForEtf   = true;
     private Boolean liableForPaye  = true;
     private Boolean liableForNopay = false;
-
-    @NotNull(message = "Created by is required")
-    private Long createdBy;
 
     @NotNull(message = "Modified by is required")
     private Long modifiedBy;

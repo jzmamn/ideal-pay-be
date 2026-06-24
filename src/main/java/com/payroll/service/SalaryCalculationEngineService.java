@@ -150,7 +150,7 @@ public class SalaryCalculationEngineService {
         // recorded in emp_np by the batch/individual save. Use stored amount only.
         BigDecimal totalNopay = BigDecimal.ZERO;
         for (EmployeeNopay enp : npList) {
-            NopayDays nd = enp.getNopayDays();
+            Nopay nd = enp.getNopay();
             BigDecimal amt = orZero(enp.getAmount());
             totalNopay = totalNopay.add(amt);
             lines.add(new ComponentLine(ComponentType.NOPAY, nd.getId(), nd.getCode(), nd.getName(), amt, null, enp.getDays()));

@@ -15,12 +15,12 @@ public interface EmployeeNopayRepository extends JpaRepository<EmployeeNopay, Lo
 
     List<EmployeeNopay> findAllByEmployeeId(Long empId, Sort sort);
 
-    List<EmployeeNopay> findAllByNopayDaysId(Long nopayId, Sort sort);
+    List<EmployeeNopay> findAllByNopayId(Long nopayId, Sort sort);
 
     List<EmployeeNopay> findAllByEmployeeIdAndPayrollMonth(Long empId, String payrollMonth);
 
-    Optional<EmployeeNopay> findByEmployee_IdAndNopayDays_IdAndPayrollMonth(
-            Long employeeId, Long nopayDaysId, String payrollMonth);
+    Optional<EmployeeNopay> findByEmployee_IdAndNopay_IdAndPayrollMonth(
+            Long employeeId, Long nopayId, String payrollMonth);
 
     // ── Import / export support ──────────────────────────────────────────
 
@@ -30,7 +30,7 @@ public interface EmployeeNopayRepository extends JpaRepository<EmployeeNopay, Lo
 
     void deleteAllByImportLogId(Long importLogId);
 
-    @Query("select n from EmployeeNopay n join fetch n.employee join fetch n.nopayDays " +
+    @Query("select n from EmployeeNopay n join fetch n.employee join fetch n.nopay " +
            "where n.payrollMonth = :month order by n.id")
     java.util.stream.Stream<EmployeeNopay> streamAllByPayrollMonth(@Param("month") String month);
 }

@@ -9,12 +9,10 @@ import com.payroll.service.LateDeductionConfigService;
 import com.payroll.service.SystemSetupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -23,62 +21,30 @@ import java.util.Map;
 public class LateDeductionConfigController {
 
     private final LateDeductionConfigService configService;
-    private final SystemSetupService systemSetupService;
+    private final SystemSetupService         systemSetupService;
 
     // GET /payroll/late-deduction-config
     @GetMapping
-    public ResponseEntity<ApiResponseDTO<List<LateDeductionConfigResponseDTO>>> getAll(
-            @RequestParam(value = "isActive", defaultValue = "all") String isActive) {
-        return ResponseEntity.ok(ApiResponseDTO.success(
-                "Late deduction configs fetched successfully",
-                configService.getAll(isActive)));
+    public ResponseEntity<ApiResponseDTO<LateDeductionConfigResponseDTO>> get() {
+        LateDeductionConfigResponseDTO data = configService.get();
+        if (data == null) {
+            return ResponseEntity.ok(ApiResponseDTO.success("No late deduction config found", null));
+        }
+        return ResponseEntity.ok(ApiResponseDTO.success("Late deduction config fetched successfully", data));
     }
 
-    // GET /payroll/late-deduction-config/{id}
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDTO<LateDeductionConfigResponseDTO>> getById(
-            @PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponseDTO.success(
-                "Late deduction config fetched successfully",
-                configService.getById(id)));
-    }
-
-    // POST /payroll/late-deduction-config
-    @PostMapping
-    public ResponseEntity<ApiResponseDTO<LateDeductionConfigResponseDTO>> create(
-            @Valid @RequestBody LateDeductionConfigRequestDTO requestDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponseDTO.success(
-                        "Late deduction config created successfully",
-                        configService.create(requestDTO)));
-    }
-
-    // PUT /payroll/late-deduction-config/{id}
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponseDTO<LateDeductionConfigResponseDTO>> update(
-            @PathVariable Long id,
+    // PUT /payroll/late-deduction-config
+    @PutMapping
+    public ResponseEntity<ApiResponseDTO<LateDeductionConfigResponseDTO>> save(
             @Valid @RequestBody LateDeductionConfigRequestDTO requestDTO) {
         return ResponseEntity.ok(ApiResponseDTO.success(
-                "Late deduction config updated successfully",
-                configService.update(id, requestDTO)));
+                "Late deduction config saved successfully",
+                configService.save(requestDTO)));
     }
 
-    // DELETE /payroll/late-deduction-config/{id}
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponseDTO<Void>> delete(@PathVariable Long id) {
-        configService.delete(id);
-        return ResponseEntity.ok(ApiResponseDTO.success(
-                "Late deduction config deleted successfully", null));
-    }
-
-    /**
-     * POST /payroll/late-deduction-config/{id}/calculate
-     * Test the formula with sample values.
-     * Body: { "basicSalary": 120000, "lateHours": 2 }
-     */
-    @PostMapping("/{id}/calculate")
+    // POST /payroll/late-deduction-config/calculate
+    @PostMapping("/calculate")
     public ResponseEntity<ApiResponseDTO<FormulaEvaluateResponseDTO>> calculate(
-            @PathVariable Long id,
             @RequestBody Map<String, Object> body) {
 
         Map<String, Object> context = PayrollContextBuilder.builder()
@@ -89,7 +55,7 @@ public class LateDeductionConfigController {
 
         return ResponseEntity.ok(ApiResponseDTO.success(
                 "Late deduction amount calculated successfully",
-                configService.calculateAmount(id, context)));
+                configService.calculateAmount(context)));
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────

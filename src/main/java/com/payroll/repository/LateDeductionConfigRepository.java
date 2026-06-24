@@ -16,4 +16,7 @@ public interface LateDeductionConfigRepository extends JpaRepository<LateDeducti
 
     /** Lookup by code — used by batch-save to resolve the config for a given componentCode. */
     Optional<LateDeductionConfig> findByCodeIgnoreCase(String code);
+
+    /** Returns the singleton user-created row (id > 0, i.e. not the system default at id = -1). */
+    Optional<LateDeductionConfig> findTopByIdGreaterThanOrderByIdAsc(Long id);
 }

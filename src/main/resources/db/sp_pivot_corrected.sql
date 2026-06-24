@@ -145,7 +145,7 @@ BEGIN
 END$$
 
 -- =============================================================================
--- Overtime Pivot — {code}_hours, {code}_amount, {code}_label per OT type
+-- Overtime Pivot — {code}_rate, {code}_hours, {code}_amount, {code}_label per OT type
 -- =============================================================================
 CREATE PROCEDURE `sp_emp_ot_pivot`(IN p_payroll_month VARCHAR(20))
 BEGIN
@@ -154,13 +154,14 @@ BEGIN
     SET SESSION group_concat_max_len = 1000000;
     SELECT GROUP_CONCAT(
         DISTINCT CONCAT(
+            'SUM(CASE WHEN ot.id = ', ot.id, ' THEN IFNULL(eot.rate,   0) ELSE 0 END) AS `', ot.code, '_rate`,  ',
             'SUM(CASE WHEN ot.id = ', ot.id, ' THEN IFNULL(eot.hours,  0) ELSE 0 END) AS `', ot.code, '_hours`, ',
-            'SUM(CASE WHEN ot.id = ', ot.id, ' THEN IFNULL(eot.amount, 0) ELSE 0 END) AS `', ot.code, '_amount`, ',
-            '''', REPLACE(REPLACE(ot.name, '''', ''''''), '`', ''), ''' AS `', ot.code, '_label`'
+            'SUM(CASE WHEN ot.id = ', ot.id, ' THEN IFNULL(eot.amount, 0) ELSE 0 END) AS `', ot.code, '_amount`,',
+            ' ''', REPLACE(REPLACE(ot.name, '''', ''''''), '`', ''), ''' AS `', ot.code, '_label`'
         ) ORDER BY ot.id SEPARATOR ', '
     ) INTO v_columns FROM overtime ot WHERE ot.is_active = 'Y' AND ot.id > 0;
     IF v_columns IS NULL OR v_columns = '' THEN
-        SET v_columns = '0 AS no_active_components, 0 AS no_active_components_amount, NULL AS no_active_components_label';
+        SET v_columns = '0 AS no_active_ot, 0 AS no_active_ot_hours, 0 AS no_active_ot_amount, NULL AS no_active_ot_label';
     END IF;
     SET v_sql = CONCAT(
         'SELECT e.id, e.employee_no, e.first_name, e.last_name, e.payroll_name, e.basic_salary, ',
@@ -176,34 +177,35 @@ BEGIN
 END$$
 
 -- =============================================================================
--- NoPay — flat rows with 4 columns per employee/nopay entry:
---   Nopay Rule      : name of the nopay rule on the emp_np entry  (nopay_days.name via enp)
---   Nopay Rule Days : name of the nopay rule assigned to employee (nopay_days.name via e.nopay_days_id)
---   Days            : enp.days
---   Amount          : enp.amount
+-- NoPay Pivot — {code}_rate, {code}_days, {code}_amount, {code}_label per NoPay type
 -- =============================================================================
 CREATE PROCEDURE `sp_emp_np_pivot`(IN p_payroll_month VARCHAR(20))
 BEGIN
-    SELECT
-        e.id,
-        e.employee_no,
-        e.first_name,
-        e.last_name,
-        e.payroll_name,
-        e.basic_salary,
-        nd_emp.name  AS nopay_rule,
-        nd_emp.days  AS nopay_rule_days,
-        nd_enp.code  AS nopay_code,
-        enp.days     AS days,
-        enp.amount   AS amount
-    FROM employee e
-    LEFT JOIN emp_np     enp     ON e.id            = enp.emp_id
-                                 AND enp.payroll_month = p_payroll_month
-    LEFT JOIN nopay_days nd_enp  ON enp.nopay_id    = nd_enp.id
-    LEFT JOIN nopay_days nd_emp  ON e.nopay_days_id = nd_emp.id
-    WHERE e.is_active = 'Y'
-      AND e.id > 0
-    ORDER BY e.id;
+    DECLARE v_columns LONGTEXT DEFAULT '';
+    DECLARE v_sql     LONGTEXT DEFAULT '';
+    SET SESSION group_concat_max_len = 1000000;
+    SELECT GROUP_CONCAT(
+        DISTINCT CONCAT(
+            'SUM(CASE WHEN nd.id = ', nd.id, ' THEN IFNULL(enp.rate,   0) ELSE 0 END) AS `', nd.code, '_rate`,  ',
+            'SUM(CASE WHEN nd.id = ', nd.id, ' THEN IFNULL(enp.days,   0) ELSE 0 END) AS `', nd.code, '_days`, ',
+            'SUM(CASE WHEN nd.id = ', nd.id, ' THEN IFNULL(enp.amount, 0) ELSE 0 END) AS `', nd.code, '_amount`,',
+            ' ''', REPLACE(REPLACE(nd.name, '''', ''''''), '`', ''), ''' AS `', nd.code, '_label`'
+        ) ORDER BY nd.id SEPARATOR ', '
+    ) INTO v_columns FROM nopay_days nd WHERE nd.is_active = 'Y' AND nd.id > 0;
+    IF v_columns IS NULL OR v_columns = '' THEN
+        SET v_columns = '0 AS no_active_np, 0 AS no_active_np_days, 0 AS no_active_np_amount, NULL AS no_active_np_label';
+    END IF;
+    SET v_sql = CONCAT(
+        'SELECT e.id, e.employee_no, e.first_name, e.last_name, e.payroll_name, e.basic_salary, ',
+        v_columns,
+        ' FROM employee e
+        LEFT JOIN emp_np enp ON e.id = enp.emp_id AND enp.payroll_month = ''', p_payroll_month, '''
+        LEFT JOIN nopay_days nd ON enp.nopay_id = nd.id
+        WHERE e.is_active = ''Y'' AND e.id > 0
+        GROUP BY e.id, e.employee_no, e.first_name, e.last_name, e.payroll_name, e.basic_salary
+        ORDER BY e.id'
+    );
+    SET @stmt = v_sql; PREPARE stmt FROM @stmt; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 END$$
 
 DELIMITER ;

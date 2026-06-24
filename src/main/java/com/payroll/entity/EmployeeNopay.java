@@ -54,7 +54,7 @@ public class EmployeeNopay {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nopay_id", nullable = false)
     @JsonIgnoreProperties({"createdBy", "modifiedBy", "hibernateLazyInitializer", "handler"})
-    private NopayDays nopayDays;
+    private Nopay nopay;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
